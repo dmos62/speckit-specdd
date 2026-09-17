@@ -3,7 +3,7 @@ Spec: Change Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard Change Boundary schema projection, resolver integration, validation diagnostics, actual-change verification, and deterministic output.
+  Guard Change Boundary schema projection, resolver integration, validation diagnostics, actual-change verification, preset composition, and deterministic output.
 
 Owns:
   ./test_boundary.py
@@ -21,10 +21,15 @@ Owns:
   ./verification_test_git.py
   ./verification_test_engine.py
   ./verification_test_fixture.py
+  ./test_preset.py
+  ./preset_test_support.py
+  ./preset_test_source.py
+  ./preset_test_install.py
 
 References:
   /integration/specdd/scripts/scripts.sdd
   /integration/specdd/schemas/change-boundary.schema.json
+  /integration/specdd-preset/specdd-preset.sdd
   ./fixtures/specdd-two-domain/specdd-two-domain.sdd
 
 Must:
@@ -37,3 +42,5 @@ Must:
   Git verification tests separate implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.
   Verification blocks an actual authority domain that was absent from the planned Change Boundary.
   A changed `.sdd` file does not authorize a newly introduced implementation authority in the same verification operation.
+  Preset source tests guard the pinned composition strategy and SpecDD planning, task, and convergence guidance.
+  Local preset installation tests compose over core commands and removal restores the upstream command content.

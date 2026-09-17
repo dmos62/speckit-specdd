@@ -18,6 +18,10 @@
 @globexclude .specify/extensions/specdd/**
 @globexclude .specify/extensions/.cache/**
 
+@# Installed/cached preset state; canonical source is integration/specdd-preset/**
+@globexclude .specify/presets/specdd-bridge/**
+@globexclude .specify/presets/.cache/**
+
 @# Upstream-generated Spec Kit agent commands
 @globexclude .specify-agent/commands/**
 

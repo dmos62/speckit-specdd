@@ -1,0 +1,28 @@
+Spec: SpecDD Bridge Preset
+
+Purpose:
+  Augment Spec Kit planning, task generation, and convergence with current SpecDD authority context without replacing upstream command behavior.
+
+Structure:
+  ./commands: Composing command fragments for planning, tasks, and convergence
+
+Owns:
+  ./preset.yml
+
+References:
+  ../specdd/extension.sdd
+  ./commands/plan.sdd
+  ./commands/tasks.sdd
+  ./commands/converge.sdd
+
+Must:
+  Preset command entries compose with the pinned Spec Kit core commands rather than copy or replace them.
+  Compatibility remains aligned with Spec Kit `1.0.7` and the SpecDD bridge extension `0.1.0` until project pins change.
+  Generated feature artifacts keep Spec Kit as the change-lifecycle authority and SpecDD as the persistent system authority.
+
+Must not:
+  Duplicate persistent SpecDD constraints into Spec Kit feature artifacts.
+  Automatically edit `.sdd` files or relax authority.
+
+Done when:
+  Local installation composes the planning, task, and convergence commands and removal restores the core commands.

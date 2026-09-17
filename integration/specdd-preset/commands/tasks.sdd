@@ -1,0 +1,21 @@
+Spec: SpecDD Task Augmentation
+
+Purpose:
+  Make Spec Kit implementation tasks authority-local where practical without splitting feature user stories across SpecDD domains.
+
+Owns:
+  ./tasks.md
+
+References:
+  ../../specdd/commands/context.sdd
+  ../../specdd/commands/validate.sdd
+
+Must:
+  Task generation preserves Spec Kit user-story grouping and checklist syntax.
+  Non-`.sdd` task write sets prefer one primary SpecDD authority when work is naturally decomposable.
+  Legitimate cross-domain contract work remains representable when current authority permits every write.
+  Spec evolution and authority evolution remain distinct from ordinary implementation work.
+  Task-stage validation runs before task generation reports completion.
+
+Done when:
+  The composed task command preserves upstream grouping while exposing authority-local work and validation guidance.

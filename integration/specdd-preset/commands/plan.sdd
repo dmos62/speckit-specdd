@@ -1,0 +1,19 @@
+Spec: SpecDD Plan Augmentation
+
+Purpose:
+  Add current Change Boundary impact to `speckit.plan` while preserving the upstream planning workflow.
+
+Owns:
+  ./plan.md
+
+References:
+  ../../specdd/commands/context.sdd
+
+Must:
+  Planning refreshes SpecDD context once concrete or intended implementation paths are available.
+  The plan records a concise SpecDD impact summary without copying persistent constraint text.
+  Early unresolved targets remain advisory and never become authority.
+  Anticipated authority evolution requires a separate specification operation and later re-resolution.
+
+Done when:
+  The composed planning command includes upstream planning behavior and the SpecDD planning augmentation.
