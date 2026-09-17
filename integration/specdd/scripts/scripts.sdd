@@ -35,8 +35,10 @@ Must:
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Validation consumes Change Boundary projection and exact task paths without parsing `.sdd` source.
-  Validation preserves task order, task IDs, and user-story labels in its analysis output.
+  Validation preserves task order, task IDs, user-story labels, and explicit SpecDD evolution classifications in its analysis output.
   Validation distinguishes zero-authority, single-authority, and multi-authority task write sets.
+  Evolution classifications require `.sdd` targets and remain separate from ordinary implementation writes.
+  Validation records when deliberate evolution requires fresh boundary resolution and when authority evolution ends the prior authority context.
   Unknown or conflicting authority blocks validation at the implementation stage.
   Verification derives actual implementation writes from Git and fresh SpecDD resolution.
   Generated Spec Kit state and active feature artifacts remain outside actual implementation authority checks.
@@ -45,4 +47,5 @@ Must:
 
 Must not:
   Parse `.sdd` source as a replacement for SpecDD resolver semantics.
+  Apply or synthesize proposed `.sdd` evolution.
   Rewrite Spec Kit tasks or relax SpecDD authority to make a task valid.

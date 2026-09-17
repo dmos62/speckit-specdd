@@ -15,7 +15,10 @@ Must:
   Non-`.sdd` task write sets prefer one primary SpecDD authority when work is naturally decomposable.
   Legitimate cross-domain contract work remains representable when current authority permits every write.
   Spec evolution and authority evolution remain distinct from ordinary implementation work.
+  Deliberate evolution uses `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` in ordinary task text without adding custom bracket labels.
+  Evolution tasks name only `.sdd` write targets and remain separate from ordinary implementation writes.
+  Each deliberate evolution task is followed by a separate Change Boundary refresh before dependent implementation continues.
   Task-stage validation runs before task generation reports completion.
 
 Done when:
-  The composed task command preserves upstream grouping while exposing authority-local work and validation guidance.
+  The composed task command preserves upstream grouping while exposing authority-local work, deliberate evolution, and validation guidance.

@@ -11,9 +11,10 @@ targets discovered from feature artifacts.
 
 ## Goal
 
-Project the current feature's concrete or intended write targets onto SpecDD authority by calling the existing Change
-Boundary adapter. This command creates derived state only. It does not edit `.sdd` files, infer ownership itself, or
-relax authority.
+Project the current feature's concrete or intended non-spec write targets onto SpecDD authority by calling the existing
+Change Boundary adapter. This command creates derived state only. It does not edit `.sdd` files, infer ownership itself,
+or relax authority. Deliberate `.sdd` evolution is tracked separately and never becomes an implementation boundary
+target.
 
 ## Execution
 
@@ -36,12 +37,14 @@ relax authority.
    - `BOUNDARY_FILE` as `FEATURE_DIR/.specdd/boundary.json`.
 
 4. Discover candidate targets in this order:
-   - If `$ARGUMENTS` contains explicit repository file or directory paths, use those targets and do not add discovered
-     targets.
-   - Otherwise, if `FEATURE_DIR/tasks.md` exists, collect the exact file or directory paths named by task descriptions
-     as files to create or modify.
-   - If tasks produced no targets and `FEATURE_DIR/plan.md` exists, collect exact source paths named in the project
-     structure or as concrete files/directories to create or modify.
+   - If `$ARGUMENTS` contains explicit repository file or directory paths, use those non-`.sdd` targets and do not add
+     discovered targets.
+   - Otherwise, if `FEATURE_DIR/tasks.md` exists, collect the exact non-`.sdd` file or directory paths named by task
+     descriptions as files to create or modify.
+   - If tasks produced no targets and `FEATURE_DIR/plan.md` exists, collect exact non-`.sdd` source paths named in the
+     project structure or as concrete files/directories to create or modify.
+   - Ignore `.sdd` paths during Change Boundary discovery. They are specification-evolution targets, not ordinary
+     project write targets, and do not grant implementation authority.
    - Do not derive targets from symbols, URLs, libraries, headings, similar filenames, or semantic guesses.
    - Keep intended paths even when they do not exist yet; the adapter must classify them as unresolved rather than the
      command silently dropping them.
@@ -49,8 +52,9 @@ relax authority.
 
 5. If no candidate target exists:
    - Remove `BOUNDARY_FILE` if it exists so stale derived state is not presented as current.
-   - Report that the active feature does not yet name a concrete or intended target.
-   - Report that planning can continue, but a Change Boundary cannot be generated until at least one target is known.
+   - Report that the active feature does not yet name a concrete or intended non-spec target.
+   - Report that planning or deliberate spec evolution can continue, but an implementation Change Boundary cannot be
+     generated until at least one non-spec target is known.
    - Stop without creating a replacement boundary.
 
 6. Run the existing adapter once with all discovered targets:
@@ -89,7 +93,7 @@ relax authority.
 ## Output
 
 Keep the result compact. Include the boundary path, targets, authorities, cross-boundary status, and unresolved
-diagnostics. When the feature has no target yet, state that no current boundary exists.
+diagnostics. When the feature has no non-spec target yet, state that no current boundary exists.
 
 ## Maintainer Smoke Test
 
@@ -110,12 +114,12 @@ repository root when changing this command or the adapter:
       src/auth/service.ts src/users/repository.ts
     cmp "$tmp_dir/first.json" "$tmp_dir/second.json"
 
-A successful run proves deterministic generation and replacement through the command's adapter invocation. Phase 6
-adds the installed Spec Kit command-discovery smoke test.
+A successful run proves deterministic generation and replacement through the command's adapter invocation.
 
 ## Constraints
 
 - Never edit `.sdd` files.
+- Never include `.sdd` evolution targets as implementation authority targets.
 - Never patch `.specify/`, `.specify-agent/`, or root `.specdd/` framework files to expose this command.
 - Never duplicate persistent SpecDD constraints into feature artifacts.
 - Never infer write authority from proximity, naming, or task grouping.

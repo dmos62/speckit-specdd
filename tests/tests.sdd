@@ -34,13 +34,17 @@ References:
 
 Must:
   Missing targets remain represented as unresolved diagnostics with `UNRESOLVED_TARGET`.
-  Adapter tests preserve coverage for path normalization, authority derivation, schema validation, and output modes.
+  Adapter tests preserve coverage for path normalization, authority derivation, schema validation, output modes, and exclusion of `.sdd` evolution targets from command-level Change Boundary discovery.
   The real two-domain fixture produces deterministic cross-boundary output when the SpecDD CLI is available.
   Validation tests cover zero, one, and multiple task authorities.
   Multi-authority task findings preserve task order and user-story identity without automatically blocking legitimate cross-domain work.
+  Explicit `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED` task intent remains visible in validation output without granting authority.
+  The two-domain fixture covers a deliberate durable Auth-to-Users contract as spec evolution.
+  Evolution tests keep `.sdd` work separate from ordinary implementation writes and require fresh resolution before dependent implementation.
   Implementation-stage validation blocks unknown or conflicting authority.
   Git verification tests separate implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.
   Verification blocks an actual authority domain that was absent from the planned Change Boundary.
   A changed `.sdd` file does not authorize a newly introduced implementation authority in the same verification operation.
+  Fixture verification proves authority evolution is blocked under the prior boundary and accepted only after fresh resolution.
   Preset source tests guard the pinned composition strategy and SpecDD planning, task, and convergence guidance.
   Local preset installation tests compose over core commands and removal restores the upstream command content.

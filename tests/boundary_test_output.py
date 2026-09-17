@@ -209,3 +209,17 @@ class BoundaryOutputTests(unittest.TestCase):
                 "1.5",
             ),
         )
+
+    def test_context_command_excludes_spec_evolution_targets(self):
+        content = (
+            REPO_ROOT / "integration" / "specdd" / "commands" / "context.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Ignore `.sdd` paths during Change Boundary discovery",
+            content,
+        )
+        self.assertIn(
+            "Never include `.sdd` evolution targets as implementation authority targets",
+            content,
+        )

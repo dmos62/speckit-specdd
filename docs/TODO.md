@@ -32,25 +32,13 @@ The preset:
 - runs task-stage SpecDD validation before task generation reports completion,
 - incorporates `SPECDD_VIOLATION`, `SPECDD_DRIFT`, `MISSING_SPEC_EVOLUTION`, and `AUTHORITY_VIOLATION` into convergence while preserving upstream append-only behavior.
 
-Preset tests cover source contracts plus an isolated local Spec Kit initialization that installs the extension and preset, verifies composed commands, removes the preset, and confirms core commands are restored. The prior worktree-mutating extension smoke is no longer needed because installation is exercised in the isolated test repository.
+Phase 10 deliberate spec-evolution handling is implemented without adding another source of truth. Evolution tasks use ordinary task-text prefixes `SPEC_EVOLUTION_REQUIRED:` and `AUTHORITY_EVOLUTION_REQUIRED:`; validation projects those classifications into machine-readable output, requires `.sdd`-only evolution scope, and records whether a fresh Change Boundary is required and whether the prior authority context ends. Change Boundary discovery excludes `.sdd` evolution targets, and task generation places a separate context-refresh task between deliberate evolution and dependent implementation. The validation command surfaces proposed `.sdd` deltas only as advisory output and never applies them. Fixture verification covers the authority-snapshot invariant: authority changed by a specification operation remains unusable under the old boundary and becomes usable only in a subsequent operation after fresh resolution.
 
-## 10. Phase 10 — Add deliberate spec-evolution handling
-
-### TODO
-- [ ] Represent `SPEC_EVOLUTION_REQUIRED` explicitly in durable bridge output where needed.
-- [ ] Represent `AUTHORITY_EVOLUTION_REQUIRED` explicitly in durable bridge output where needed.
-- [ ] Surface proposed `.sdd` deltas without applying them automatically.
-- [ ] End the current authority context after an authority-changing spec edit.
-- [ ] Require a fresh Change Boundary before implementation continues.
-- [ ] Test a new durable Auth-to-Users contract.
-- [ ] Test an intentional change to write authority.
-- [ ] Verify newly proposed authority is unusable until re-resolution.
-
-Exit criteria: legitimate architecture evolution works without allowing an operation to self-authorize.
+Preset tests cover source contracts plus an isolated local Spec Kit initialization that installs the extension and preset, verifies composed commands, removes the preset, and confirms core commands are restored. The command runner decodes subprocess output as UTF-8 so the smoke remains stable on Windows hosts that otherwise default to a legacy code page.
 
 ## 11. Phase 11 — Add lifecycle hooks
 
-Only start after context, validate, verify, and preset composition work manually.
+Only start after context, validate, verify, preset composition, and deliberate spec-evolution handling work manually.
 
 ### TODO
 - [ ] Verify supported hook names and failure semantics in the pinned Spec Kit release.
@@ -79,7 +67,7 @@ Exit criteria: critical authority gates are structural rather than dependent onl
 
 ### TODO
 - [ ] Expand real-CLI integration coverage for unresolved paths, invalid specs, multiple domains, and CLI failures.
-- [ ] Automate semantic scenarios A-E from `docs/spec.md`; existing fixture coverage for local, cross-domain, and unauthorized-write behavior should be reused rather than duplicated.
+- [ ] Automate semantic scenarios A-E from `docs/spec.md`; reuse existing fixture coverage for local, cross-domain, unauthorized-write, explicit spec-evolution, and authority re-resolution behavior rather than duplicating it.
 - [ ] Add a regression test for every integration bug found during development.
 
 Exit criteria: deterministic checks are automated and agentic semantic cases have repeatable acceptance procedures.
@@ -115,14 +103,14 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Start Phase 10 with deliberate spec evolution:
+Start Phase 11 with lifecycle hooks:
 
-- [ ] Define the smallest representation for `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED` that does not create another source of truth.
-- [ ] Reuse the current authority-snapshot invariant rather than adding parallel authorization logic.
-- [ ] Add fixture coverage for a durable Auth-to-Users contract before adding automatic lifecycle hooks.
-- [ ] Keep `.sdd` delta generation advisory; do not apply specification changes automatically.
+- [ ] Inspect the pinned Spec Kit `1.0.7` hook contract and identify supported lifecycle names and blocking semantics.
+- [ ] Prefer deterministic post-plan and post-tasks bridge gates only where hook failures propagate reliably.
+- [ ] Keep pre-implementation authority validation blocking; fall back to workflow structure if hooks can be ignored.
+- [ ] Keep hook behavior thin and delegate context, validation, and verification mechanics to the existing bridge commands.
 
-Do not start hooks, workflow overlays, or bundle packaging before deliberate spec-evolution handling works against the pinned releases.
+Do not start workflow overlays or bundle packaging until hook reliability against the pinned release is known.
 
 ## 20. Definition of done for v0.1
 

@@ -15,10 +15,15 @@ Must:
   Multi-authority tasks are reported without automatically treating legitimate cross-domain contract work as invalid.
   Unknown or conflicting write authority blocks implementation-stage validation.
   Agentic reasoning distinguishes `IMPLEMENTATION_CONFLICT`, `SPEC_EVOLUTION_REQUIRED`, and `AUTHORITY_EVOLUTION_REQUIRED` when deterministic findings require architectural interpretation.
+  Explicit `SPEC_EVOLUTION_REQUIRED:` and `AUTHORITY_EVOLUTION_REQUIRED:` task-text prefixes remain visible in deterministic validation output without granting authority.
+  Evolution tasks keep `.sdd` changes separate from ordinary implementation writes.
+  Deliberate evolution reports the smallest proposed `.sdd` delta as advisory output without applying it.
+  Authority evolution ends the prior authority context and requires fresh Change Boundary resolution before dependent implementation.
   Authority-local decomposition guidance does not rewrite `tasks.md` automatically.
 
 Must not:
   Edit `.sdd` files.
+  Treat proposed specification evolution as authority for the current operation.
   Relax durable SpecDD authority to make a task valid.
   Synchronize Spec Kit tasks with SpecDD `Tasks:` entries.
 
@@ -28,4 +33,6 @@ Depends on:
 Done when:
   One-authority fixture tasks validate without cross-boundary findings.
   A multi-authority fixture task preserves its feature and user-story context while exposing authority-local target groups.
+  Deliberate durable-contract evolution is explicitly represented without mixing implementation writes.
+  Authority evolution remains unusable under the prior boundary and requires fresh resolution.
   Implementation-stage validation blocks unresolved or conflicting authority.

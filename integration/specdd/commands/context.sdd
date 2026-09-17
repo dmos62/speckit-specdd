@@ -9,6 +9,7 @@ Owns:
 Must:
   The command locates the active Spec Kit feature using supported Spec Kit state.
   Candidate targets prefer explicit paths from current feature artifacts over inference.
+  Candidate targets exclude `.sdd` evolution paths because specification edits do not grant implementation authority.
   Early planning may produce a boundary with unresolved targets when concrete targets are not yet available.
   Rerunning the command replaces derived `boundary.json` state with freshly generated output.
   The command reports authority domains, unresolved targets, and cross-boundary status.
@@ -16,6 +17,7 @@ Must:
 
 Must not:
   Edit `.sdd` files.
+  Treat specification-evolution targets as implementation authority.
   Reimplement SpecDD resolver or ownership semantics.
 
 Depends on:

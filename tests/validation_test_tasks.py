@@ -2,16 +2,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from boundary_test_support import validation
+from boundary_test_support import (
+    REPO_ROOT,
+    validation,
+)
 
 
 class ValidationTaskParsingTests(unittest.TestCase):
     def test_preserves_task_order_id_story_and_exact_paths(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(
-                temporary
-            ).resolve()
-
+            root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
                 root,
                 """
@@ -20,57 +20,23 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
+        self.assertEqual(2, len(tasks))
+        self.assertEqual(0, tasks[0].order)
+        self.assertEqual("T010", tasks[0].task_id)
+        self.assertEqual("US1", tasks[0].story)
         self.assertEqual(
-            2,
-            len(tasks),
-        )
-        self.assertEqual(
-            0,
-            tasks[0].order,
-        )
-        self.assertEqual(
-            "T010",
-            tasks[0].task_id,
-        )
-        self.assertEqual(
-            "US1",
-            tasks[0].story,
-        )
-        self.assertEqual(
-            (
-                "src/auth/service.ts",
-                "src/users/repository.ts",
-            ),
+            ("src/auth/service.ts", "src/users/repository.ts"),
             tasks[0].targets,
         )
-        self.assertEqual(
-            (),
-            tasks[0].spec_targets,
-        )
-
-        self.assertEqual(
-            "T011",
-            tasks[1].task_id,
-        )
-        self.assertEqual(
-            "US2",
-            tasks[1].story,
-        )
-        self.assertEqual(
-            (),
-            tasks[1].targets,
-        )
-        self.assertEqual(
-            ("project.sdd",),
-            tasks[1].spec_targets,
-        )
+        self.assertEqual((), tasks[0].spec_targets)
+        self.assertEqual("T011", tasks[1].task_id)
+        self.assertEqual("US2", tasks[1].story)
+        self.assertEqual((), tasks[1].targets)
+        self.assertEqual(("project.sdd",), tasks[1].spec_targets)
 
     def test_invalid_or_glob_targets_are_kept_out_of_write_targets(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(
-                temporary
-            ).resolve()
-
+            root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
                 root,
                 """
@@ -78,24 +44,15 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
+        self.assertEqual((), tasks[0].targets)
         self.assertEqual(
-            (),
-            tasks[0].targets,
-        )
-        self.assertEqual(
-            (
-                "../outside.ts",
-                "src/auth/*.ts",
-            ),
+            ("../outside.ts", "src/auth/*.ts"),
             tasks[0].invalid_targets,
         )
 
     def test_ignores_urls_as_repository_targets(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(
-                temporary
-            ).resolve()
-
+            root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
                 root,
                 """
@@ -103,7 +60,119 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
+        self.assertEqual(("docs/setup.md",), tasks[0].targets)
+
+    def test_preserves_explicit_specdd_evolution_classifications(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T020 [US1] SPEC_EVOLUTION_REQUIRED: Update `src/users/users.sdd`
+- [ ] T021 [US1] AUTHORITY_EVOLUTION_REQUIRED: Update `src/users/repository.sdd`
+""",
+            )
+
         self.assertEqual(
-            ("docs/setup.md",),
-            tasks[0].targets,
+            ("SPEC_EVOLUTION_REQUIRED",),
+            tasks[0].evolution_markers,
         )
+        self.assertEqual(
+            ("AUTHORITY_EVOLUTION_REQUIRED",),
+            tasks[1].evolution_markers,
+        )
+
+    def test_spec_evolution_projects_fresh_boundary_requirement(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T020 [US1] SPEC_EVOLUTION_REQUIRED: Update `src/users/users.sdd`
+""",
+            )
+
+        result = validation.validate_feature(
+            {
+                "feature": "001-login",
+                "targets": [],
+                "authorities": [],
+                "crossBoundary": False,
+                "unresolved": [],
+            },
+            tasks,
+            stage="tasks",
+            expected_feature="001-login",
+        )
+
+        task = result["tasks"][0]
+        self.assertEqual("SPEC_EVOLUTION_REQUIRED", task["classification"])
+        self.assertEqual(
+            {
+                "classification": "SPEC_EVOLUTION_REQUIRED",
+                "specTargets": ["src/users/users.sdd"],
+                "requiresFreshBoundary": True,
+                "endsAuthorityContext": False,
+            },
+            task["evolution"],
+        )
+        self.assertTrue(
+            result["summary"]["freshBoundaryRequiredAfterEvolution"]
+        )
+        self.assertFalse(
+            result["summary"]["authorityContextEndsAfterEvolution"]
+        )
+        self.assertEqual([], result["diagnostics"])
+
+    def test_authority_evolution_cannot_mix_implementation_writes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T021 [US1] AUTHORITY_EVOLUTION_REQUIRED: Update `src/users/users.sdd` and `src/users/repository.ts`
+""",
+            )
+
+        result = validation.validate_feature(
+            {
+                "feature": "001-login",
+                "targets": [
+                    {
+                        "path": "src/users/repository.ts",
+                        "primaryAuthority": "src/users/users.sdd",
+                    }
+                ],
+                "authorities": ["src/users/users.sdd"],
+                "crossBoundary": False,
+                "unresolved": [],
+            },
+            tasks,
+            stage="implementation",
+            expected_feature="001-login",
+        )
+
+        self.assertEqual(
+            "AUTHORITY_EVOLUTION_REQUIRED",
+            result["tasks"][0]["classification"],
+        )
+        self.assertTrue(
+            result["tasks"][0]["evolution"]["endsAuthorityContext"]
+        )
+        mixed = [
+            item
+            for item in result["diagnostics"]
+            if item["code"] == "EVOLUTION_SCOPE_MIXED"
+        ]
+        self.assertEqual(1, len(mixed))
+        self.assertEqual("blocking", mixed[0]["severity"])
+        self.assertTrue(result["summary"]["blocking"])
+
+    def test_validate_command_surfaces_advisory_spec_delta(self):
+        content = (
+            REPO_ROOT / "integration" / "specdd" / "commands" / "validate.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("Proposed `.sdd` delta", content)
+        self.assertIn("Do not apply the proposed delta", content)
+        self.assertIn("requiresFreshBoundary", content)

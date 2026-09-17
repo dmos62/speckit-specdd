@@ -106,3 +106,42 @@ class RealFixtureValidationTests(unittest.TestCase):
         self.assertFalse(
             result["summary"]["blocking"]
         )
+
+    def test_durable_auth_to_users_contract_is_explicit_spec_evolution(self):
+        if not FIXTURE_ROOT.is_dir():
+            self.skipTest(
+                "two-domain fixture is not available"
+            )
+
+        tasks = validation.parse_tasks(
+            FIXTURE_ROOT,
+            """
+- [ ] T003 [US1] SPEC_EVOLUTION_REQUIRED: Extend src/users/users.sdd with a durable Auth-to-Users identity-link contract
+""",
+        )
+        result = validation.validate_feature(
+            self.build_fixture_boundary(),
+            tasks,
+            stage="tasks",
+            expected_feature="two-domain-fixture",
+        )
+
+        task = result["tasks"][0]
+        self.assertEqual(
+            "SPEC_EVOLUTION_REQUIRED",
+            task["classification"],
+        )
+        self.assertEqual(
+            ["src/users/users.sdd"],
+            task["specTargets"],
+        )
+        self.assertTrue(
+            task["evolution"]["requiresFreshBoundary"]
+        )
+        self.assertFalse(
+            task["evolution"]["endsAuthorityContext"]
+        )
+        self.assertEqual(
+            [],
+            result["diagnostics"],
+        )

@@ -75,11 +75,19 @@ class PresetSourceTests(unittest.TestCase):
             content,
         )
         self.assertIn(
-            "SPEC_EVOLUTION_REQUIRED",
+            "`SPEC_EVOLUTION_REQUIRED:`",
             content,
         )
         self.assertIn(
-            "AUTHORITY_EVOLUTION_REQUIRED",
+            "`AUTHORITY_EVOLUTION_REQUIRED:`",
+            content,
+        )
+        self.assertIn(
+            "never combine an evolution task's `.sdd` targets",
+            content,
+        )
+        self.assertIn(
+            "separate follow-up task that refreshes `speckit.specdd.context`",
             content,
         )
         self.assertIn(

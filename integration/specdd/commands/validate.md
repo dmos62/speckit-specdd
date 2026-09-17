@@ -68,6 +68,10 @@ This command never rewrites tasks, edits `.sdd` files, or relaxes SpecDD authori
    - `STALE_BOUNDARY`: current task targets or feature identity no longer match the boundary projection.
    - `AUTHORITY_VIOLATION`: implementation-stage authority is unresolved or conflicting and implementation must not
      proceed.
+   - `EVOLUTION_CLASSIFICATION_CONFLICT`: a task declares both supported evolution classes and must be corrected.
+   - `EVOLUTION_SPEC_TARGET_REQUIRED`: an evolution task does not name a `.sdd` target.
+   - `EVOLUTION_SCOPE_MIXED`: an evolution task mixes `.sdd` evolution with ordinary implementation writes instead of
+     keeping the operations separate.
 
 8. Preserve Spec Kit task identity:
    - Keep original task order.
@@ -83,15 +87,29 @@ This command never rewrites tasks, edits `.sdd` files, or relaxes SpecDD authori
    - Use `SPEC_EVOLUTION_REQUIRED` when the requested behavior genuinely requires a durable system-contract change.
    - Use `AUTHORITY_EVOLUTION_REQUIRED` when the requested behavior genuinely requires persistent ownership or write
      permission to change.
+   - Explicit evolution tasks use `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` in ordinary task text,
+     not a custom checklist marker. The validator projects that intent into the task `classification` and `evolution`
+     fields without treating it as authority.
    - Legitimate contract work may remain cross-boundary when the current authority model already permits the required
      writes and the task is not usefully decomposable.
    - A task merely touching multiple authorities is not sufficient evidence for spec or authority evolution.
 
-10. Enforce the authority-snapshot invariant:
-    - Never treat a proposed `.sdd` change as authority for the current implementation operation.
-    - If `AUTHORITY_EVOLUTION_REQUIRED` applies, surface the required spec change separately.
-    - After an authority-changing spec edit, end the current authority context and require a fresh
-      `/speckit.specdd.context` run before implementation resumes.
+10. For each deliberate evolution classification, include a compact Proposed `.sdd` delta subsection in the command
+    response:
+    - Name the exact target `.sdd` file or files.
+    - Describe the smallest affected sections and entries needed for the durable contract.
+    - Keep the proposal advisory and concise; do not duplicate unrelated inherited rules.
+    - Do not apply the proposed delta from this command.
+    - State that the proposal is not authority for the current operation.
+
+11. Enforce the authority-snapshot invariant:
+    - Never treat a proposed or newly edited `.sdd` file as authority for the current implementation operation.
+    - The validator's evolution projection sets `requiresFreshBoundary` for deliberate spec evolution.
+    - `AUTHORITY_EVOLUTION_REQUIRED` also sets `endsAuthorityContext`; after that specification operation is applied,
+      the current authority context is over.
+    - Apply specification evolution separately, then run `/speckit.specdd.context` before any implementation task relies
+      on the changed contract or authority.
+    - Newly proposed authority remains unusable until that fresh resolution exists.
 
 ## Output
 
@@ -102,9 +120,11 @@ Report, in task order:
 - write targets,
 - primary authority domains,
 - deterministic task classification,
+- explicit evolution projection when present,
 - diagnostics and severity,
 - authority-local decomposition guidance when useful,
-- any agentic classification that is required.
+- any agentic classification that is required,
+- advisory proposed `.sdd` delta when deliberate evolution is required.
 
 If any blocking diagnostic exists, state that implementation must not proceed under the current boundary.
 
