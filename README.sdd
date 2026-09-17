@@ -1,0 +1,31 @@
+Spec: Project README
+
+Purpose:
+  Provide the user-facing introduction to the Spec Kit × SpecDD bridge, its installation model, core concepts, and normal usage.
+
+Owns:
+  ./README.md
+
+References:
+  ./docs/spec.md
+  ./docs/development.md
+  ./integration/specdd/extension.sdd
+  ./integration/specdd/workflow-overlay.sdd
+  ./integration/specdd-preset/specdd-preset.sdd
+
+Must:
+  Explain the Spec Kit change-lifecycle role and SpecDD persistent-system role before command-level usage.
+  Installation guidance uses repository bootstrap and identifies `codex` as the registrar-backed Spec Kit integration required by pinned Spec Kit `1.0.7`.
+  Canonical bridge source remains distinct from generated extension, preset, command, and workflow state materialized through supported Spec Kit commands.
+  Describe the Change Boundary as derived, rebuildable, feature-scoped state rather than another source of truth.
+  Explain the normal `context` → `validate` → `authorize` → `verify` lifecycle and the structural workflow gates that enforce it.
+  Explain that specification evolution is separate from implementation authority and dependent implementation requires fresh Change Boundary resolution after evolution.
+  Include a concise cross-domain example showing one feature with authority-local implementation work across independently governed domains.
+  Detailed development-host prerequisites, rematerialization procedures, and maintenance commands remain in ./docs/development.md.
+
+Must not:
+  Present generated Spec Kit or SpecDD integration state as canonical bridge source.
+  Present changed `.sdd` state as retroactive authority for implementation in the same operation.
+
+Done when:
+  A new user can install the bridge, understand the Spec Kit and SpecDD responsibility split, and follow the normal authority-aware workflow from the README.

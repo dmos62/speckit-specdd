@@ -37,7 +37,7 @@ Pinned Spec Kit `1.0.7` supports project workflow overlays with `id`, `extends`,
 
 Phase 14 development-host installation and rematerialization are documented in `docs/development.md`, including the supported Codex integration, the pinned `generic` registration limitation, and supported extension, preset, and workflow-overlay commands.
 
-The user-facing root README remains blocked by SpecDD write authority: no current `Owns` or `Can modify` entry covers `README.md`. `HUMAN-REQUEST.md` records the explicit operator authorization needed before that file can be created.
+The user-facing root README is now governed by `README.sdd`. This operation establishes its SpecDD ownership only; create `README.md` in a subsequent operation after taking a fresh authority snapshot.
 
 ## 14. Phase 14 — Documentation
 
@@ -71,7 +71,7 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Resolve `HUMAN-REQUEST.md` first so the user-facing root README has explicit SpecDD write authority. Then continue Phase 14 with that README.
+Create the user-facing root README first. `README.sdd` now owns `README.md`; resolve a fresh authority snapshot before creating it.
 
 - [ ] Explain the Spec Kit change-lifecycle versus SpecDD persistent-system split before command details.
 - [ ] Document bootstrap, the Codex integration requirement, extension/preset installation, and workflow-overlay materialization from canonical source.

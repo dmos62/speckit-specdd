@@ -6,6 +6,7 @@ Purpose:
   Provide a local integration lab for a thin bridge that projects SpecDD system authority into the Spec Kit change lifecycle without forking, merging, or duplicating either system.
 
 Structure:
+  ./README.md: User-facing project overview, installation, concepts, and normal usage
   ./integration: Bridge extension and Spec Kit preset source
   ./fixtures: Integration-test systems used to exercise authority behavior
   ./docs: Project specification, implementation plan, and development guidance
