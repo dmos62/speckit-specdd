@@ -15,6 +15,7 @@
 @globexclude .specdd/bootstrap.local.md
 
 @# Installed/cached extension state; canonical source is integration/specdd/**
+@globexclude .specify/extensions.yml
 @globexclude .specify/extensions/specdd/**
 @globexclude .specify/extensions/.cache/**
 

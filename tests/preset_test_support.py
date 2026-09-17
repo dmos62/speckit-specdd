@@ -28,14 +28,22 @@ def skill_file(
 
 
 def skill_body(content: str) -> str:
-    """Return command body while ignoring serializer-only frontmatter changes."""
+    """Return semantic command body, ignoring Codex registrar serialization."""
     lines = content.splitlines(keepends=True)
-    if not lines or lines[0].strip() != "---":
-        return content
+    if lines and lines[0].strip() == "---":
+        for index, line in enumerate(lines[1:], start=1):
+            if line.strip() == "---":
+                content = "".join(lines[index + 1 :])
+                break
 
-    for index, line in enumerate(lines[1:], start=1):
-        if line.strip() == "---":
-            return "".join(lines[index + 1 :])
+    content = content.lstrip("\r\n")
+    body_lines = content.splitlines(keepends=True)
+    if (
+        body_lines
+        and body_lines[0].startswith("# Speckit ")
+        and body_lines[0].strip().endswith(" Skill")
+    ):
+        content = "".join(body_lines[1:]).lstrip("\r\n")
 
     return content
 

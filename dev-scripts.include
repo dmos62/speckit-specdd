@@ -1,10 +1,8 @@
-@# Surface bootstrap health, active integration and hooks, bridge manifests, isolated install tests, fixture lint, patch integrity, and worktree state.
+@# Surface bootstrap health, workflow state for Phase 12, full tests, fixture lint, patch integrity, and worktree state.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
-@cli! bash -c "specify integration list"
-@cli! bash -c "specify extension list --json && cat .specify/extensions.yml"
-@cli! bash -c "specify preset list"
-@cli! bash -c "cat integration/specdd/extension.sdd && printf '\n--- extension.yml ---\n' && cat integration/specdd/extension.yml"
-@cli! bash -c "cat integration/specdd-preset/specdd-preset.sdd && printf '\n--- preset.yml ---\n' && cat integration/specdd-preset/preset.yml"
+@cli! bash -c "specify workflow info speckit"
+@cli! bash -c "specify workflow resolve speckit"
+@cli! bash -c "specify workflow overlay list speckit"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
