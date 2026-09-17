@@ -1,0 +1,39 @@
+Spec: Spec Kit SpecDD Integration Lab
+
+Platform: Spec Kit/SpecDD/Node.js/Python/Shell
+
+Purpose:
+  Integrate the Spec Kit change lifecycle with SpecDD persistent system contracts through a thin derived bridge while preserving each system as the authority for its own model.
+
+Structure:
+  ./integration: Bridge extension and preset source governed by local specs
+  ./fixtures: Integration-test systems governed by local specs
+  ./docs: Project design and development documentation
+  ./scripts: Bootstrap and repository maintenance automation
+
+Owns:
+  ./docs/spec.md
+  ./docs/TODO.md
+  ./docs/development.md
+  ./scripts/bootstrap.sh
+  ./dev-scripts.include
+  ./HUMAN-REQUEST.md
+  ./DEBUGGING.md
+
+References:
+  ./docs/spec.md
+  ./docs/development.md
+
+Must:
+  Spec Kit remains the canonical change lifecycle and feature-task system.
+  SpecDD remains the canonical persistent system specification and authority model.
+  Bridge mechanics delegate SpecDD resolution to the installed SpecDD tooling rather than independently interpreting SpecDD semantics.
+  Derived integration state remains reconstructible from authoritative Spec Kit artifacts and SpecDD specifications.
+  Bridge source remains separate from generated Spec Kit state.
+  Authority changes take effect for implementation only after the changed SpecDD state is resolved in a new authority context.
+
+Must not:
+  Patch or fork upstream Spec Kit or SpecDD core to provide bridge behavior.
+  Maintain a copied SpecDD constraint set in Spec Kit feature artifacts or derived bridge state.
+  Synchronize Spec Kit feature tasks with SpecDD `Tasks` entries.
+  Automatically edit `.sdd` files or relax SpecDD authority as bridge behavior.
