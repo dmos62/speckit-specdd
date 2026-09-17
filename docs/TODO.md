@@ -9,11 +9,11 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 The v0.1 semantic bridge is implemented and its release acceptance gate has passed.
 
-Clean-clone acceptance succeeded from committed source:
+The latest clean-clone acceptance succeeded from committed source:
 
-    0db92087e4ab743078f631a99a58b4e8676dba2c
+    78834d9105b70d2b4a5a36ac8885765649a2d963
 
-The exercised host and tool evidence was:
+This supersedes the previously recorded accepted commit. The exercised host and tool evidence remains:
 
 - Windows 10 `10.0.19045` on AMD64.
 - Node.js `v22.14.0`.
@@ -36,13 +36,13 @@ Supported development-mode installation rematerialized generated state under `.a
 
 Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. Other operating systems, Python versions, and adjacent Spec Kit or SpecDD versions remain unverified until exercised directly.
 
-The remaining v0.1 action is the release tag.
+The remaining v0.1 action is to create the `v0.1` tag at the accepted commit above. This is a repository-ref operation rather than a working-tree file change.
 
 ## 15. Phase 15 — v0.1 hardening
 
 ### TODO
 
-- [ ] Tag v0.1 from the accepted release state.
+- [ ] Tag `v0.1` at accepted release commit `78834d9105b70d2b4a5a36ac8885765649a2d963`.
 
 ## 18. Deferred work
 
@@ -50,11 +50,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-The clean-clone release gate is complete.
+The clean-clone release gate is complete for `78834d9105b70d2b4a5a36ac8885765649a2d963`.
 
-Before tagging v0.1, confirm the intended release commit still contains the accepted state and that no newer canonical-source changes require the acceptance gate to be rerun.
+Create the `v0.1` tag at that exact commit. Do not move the tag to later bookkeeping-only changes.
 
-After the tag is created, delete the remaining Phase 15 task. With no remaining implementation work, this TODO should then be empty.
+After the tag is confirmed, delete the remaining Phase 15 task. With no remaining implementation work, this TODO should then be empty.
 
 ## 21. Core implementation constraint
 
