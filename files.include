@@ -22,8 +22,9 @@
 @globexclude .specify/presets/specdd-bridge/**
 @globexclude .specify/presets/.cache/**
 
-@# Upstream-generated Spec Kit agent commands
+@# Generated Spec Kit agent command registrations
 @globexclude .specify-agent/commands/**
+@globexclude .agents/skills/speckit-*/**
 
 @# Generated Spec Kit installation/bookkeeping metadata
 @globexclude .specify/integrations/*.manifest.json

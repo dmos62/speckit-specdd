@@ -7,11 +7,24 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRESET_ROOT = REPO_ROOT / "integration" / "specdd-preset"
 EXTENSION_ROOT = REPO_ROOT / "integration" / "specdd"
-GENERIC_COMMANDS_DIR = Path(".specify-agent") / "commands"
+BOOTSTRAP_PATH = REPO_ROOT / "scripts" / "bootstrap.sh"
+CODEX_SKILLS_DIR = Path(".agents") / "skills"
 
 
 def command_available(name: str) -> bool:
     return shutil.which(name) is not None
+
+
+def skill_file(
+    root: Path,
+    command: str,
+) -> Path:
+    return (
+        root
+        / CODEX_SKILLS_DIR
+        / command.replace(".", "-")
+        / "SKILL.md"
+    )
 
 
 def run_command(

@@ -1,6 +1,10 @@
 import unittest
 
-from preset_test_support import PRESET_ROOT
+from preset_test_support import (
+    BOOTSTRAP_PATH,
+    EXTENSION_ROOT,
+    PRESET_ROOT,
+)
 
 
 class PresetSourceTests(unittest.TestCase):
@@ -38,6 +42,82 @@ class PresetSourceTests(unittest.TestCase):
                 f'name: "{command}"',
                 manifest,
             )
+
+    def test_extension_declares_blocking_lifecycle_hooks(self):
+        manifest = (
+            EXTENSION_ROOT / "extension.yml"
+        ).read_text(encoding="utf-8")
+
+        for command in (
+            "speckit.specdd.context",
+            "speckit.specdd.validate",
+            "speckit.specdd.authorize",
+            "speckit.specdd.verify",
+        ):
+            self.assertIn(
+                command,
+                manifest,
+            )
+
+        for event in (
+            "after_plan",
+            "after_tasks",
+            "before_implement",
+            "after_implement",
+        ):
+            self.assertIn(
+                f"{event}:",
+                manifest,
+            )
+
+        self.assertEqual(
+            4,
+            manifest.count("optional: false"),
+        )
+
+        authorize = (
+            EXTENSION_ROOT
+            / "commands"
+            / "authorize.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '--stage "implementation"',
+            authorize,
+        )
+        self.assertIn(
+            "`summary.blocking`",
+            authorize,
+        )
+
+    def test_bootstrap_selects_registrar_backed_codex_integration(self):
+        content = BOOTSTRAP_PATH.read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            'readonly ACTIVE_INTEGRATION="codex"',
+            content,
+        )
+        self.assertIn(
+            'readonly ACTIVE_COMMANDS_DIR=".agents/skills"',
+            content,
+        )
+        self.assertIn(
+            'specify integration switch "$ACTIVE_INTEGRATION" --script ps',
+            content,
+        )
+        self.assertIn(
+            "specify extension add integration/specdd --dev --force",
+            content,
+        )
+        self.assertIn(
+            "specify preset add --dev integration/specdd-preset --priority 10",
+            content,
+        )
+        self.assertNotIn(
+            "--integration generic",
+            content,
+        )
 
     def test_plan_fragment_projects_context_without_copying_constraints(self):
         content = (

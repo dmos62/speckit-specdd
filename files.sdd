@@ -1,0 +1,15 @@
+Spec: Iteration File Context
+
+Purpose:
+  Keep programming-iteration context broad across canonical project source while excluding generated command materializations and caches that duplicate canonical inputs.
+
+Owns:
+  ./files.include
+
+Must:
+  Canonical bridge, specification, test, workflow, and development files remain available when their file types are included.
+  Generated Spec Kit command registrations are excluded when their canonical source is available elsewhere.
+  Exclusions may remain prophylactic when generated state is absent.
+
+Done when:
+  Implementing agents receive broad useful repository context without duplicate generated command bodies.

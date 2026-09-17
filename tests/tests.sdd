@@ -3,7 +3,7 @@ Spec: Change Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard Change Boundary schema projection, resolver integration, validation diagnostics, actual-change verification, preset composition, and deterministic output.
+  Guard Change Boundary schema projection, resolver integration, validation diagnostics, actual-change verification, preset composition, lifecycle hook materialization, and deterministic output.
 
 Owns:
   ./test_boundary.py
@@ -46,5 +46,5 @@ Must:
   Verification blocks an actual authority domain that was absent from the planned Change Boundary.
   A changed `.sdd` file does not authorize a newly introduced implementation authority in the same verification operation.
   Fixture verification proves authority evolution is blocked under the prior boundary and accepted only after fresh resolution.
-  Preset source tests guard the pinned composition strategy and SpecDD planning, task, and convergence guidance.
-  Local preset installation tests compose over core commands and removal restores the upstream command content.
+  Preset source tests guard the pinned composition strategy, registrar-backed bootstrap selection, lifecycle hooks, and SpecDD planning, task, and convergence guidance.
+  Local preset installation tests use the Codex registrar, materialize bridge commands and hooks, compose over core skills, and restore upstream skill content on removal.

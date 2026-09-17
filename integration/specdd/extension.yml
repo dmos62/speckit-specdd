@@ -27,9 +27,34 @@ provides:
     - name: speckit.specdd.validate
       file: commands/validate.md
       description: "Validate Spec Kit task write scope against the current SpecDD Change Boundary."
+    - name: speckit.specdd.authorize
+      file: commands/authorize.md
+      description: "Authorize implementation against the active feature's existing SpecDD authority snapshot."
     - name: speckit.specdd.verify
       file: commands/verify.md
       description: "Verify actual implementation changes against the planned SpecDD authority snapshot."
+
+hooks:
+  after_plan:
+    command: speckit.specdd.context
+    optional: false
+    priority: 10
+    description: "Refresh the feature Change Boundary after planning."
+  after_tasks:
+    command: speckit.specdd.validate
+    optional: false
+    priority: 10
+    description: "Validate final task write scope against current SpecDD authority."
+  before_implement:
+    command: speckit.specdd.authorize
+    optional: false
+    priority: 10
+    description: "Block implementation when current task scope lacks trustworthy authority."
+  after_implement:
+    command: speckit.specdd.verify
+    optional: false
+    priority: 10
+    description: "Verify actual implementation writes against the planned authority snapshot."
 
 tags:
   - specdd

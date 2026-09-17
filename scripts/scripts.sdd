@@ -1,0 +1,26 @@
+Spec: Repository Bootstrap
+
+Platform: Bash/Spec Kit 1.0.7/SpecDD CLI 1.1.1
+
+Purpose:
+  Reproduce the pinned development toolchain and activate a registrar-backed Spec Kit integration that materializes the local SpecDD bridge.
+
+Owns:
+  ./bootstrap.sh
+
+References:
+  ../integration/specdd/extension.sdd
+  ../integration/specdd-preset/specdd-preset.sdd
+
+Must:
+  Bootstrap preserves the pinned Spec Kit, SpecDD CLI, and SpecDD framework versions.
+  The active Spec Kit integration is `codex` so extension and preset commands can be registered under pinned Spec Kit `1.0.7`.
+  Existing initialized repositories change active integration through supported Spec Kit integration commands.
+  The local bridge extension and preset are installed from canonical repository source before verification.
+  Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, and `specdd lint` without changing repository state.
+
+Must not:
+  Patch generated Spec Kit commands, installed extension state, installed preset state, or SpecDD framework files directly.
+
+Done when:
+  Bootstrap apply followed by check succeeds with the bridge available through the active Codex integration.

@@ -1,0 +1,19 @@
+Spec: Development Setup Guide
+
+Purpose:
+  Document the reproducible local environment and generated-state boundaries used to develop the Spec Kit and SpecDD integration.
+
+Owns:
+  ./development.md
+
+References:
+  ../scripts/scripts.sdd
+
+Must:
+  Development guidance records the pinned tool versions used by repository bootstrap.
+  Development guidance identifies the supported registrar-backed Spec Kit integration used for local bridge execution.
+  Generated Spec Kit command and installation state remains distinct from canonical bridge source under `../integration/`.
+  Migration between active integrations uses supported Spec Kit commands rather than manual generated-state edits.
+
+Done when:
+  A clean development host can reproduce the supported local setup by following the guide and repository bootstrap.

@@ -5,11 +5,11 @@ from pathlib import Path
 
 from preset_test_support import (
     EXTENSION_ROOT,
-    GENERIC_COMMANDS_DIR,
     PRESET_ROOT,
     command_available,
     require_success,
     run_command,
+    skill_file,
 )
 
 
@@ -20,7 +20,7 @@ from preset_test_support import (
     "Spec Kit, SpecDD, and Git are required for the preset install smoke test",
 )
 class PresetInstallTests(unittest.TestCase):
-    def test_local_install_composes_without_materializing_generic_commands(self):
+    def test_local_install_materializes_codex_commands_and_hooks(self):
         version = run_command(
             PRESET_ROOT,
             "specify",
@@ -56,30 +56,33 @@ class PresetInstallTests(unittest.TestCase):
                     "--script",
                     "ps",
                     "--integration",
-                    "generic",
-                    "--integration-options=--commands-dir .specify-agent/commands",
+                    "codex",
                 ),
             )
 
             expectations = {
-                "speckit.plan.md": (
+                "speckit.plan": (
+                    "speckit.plan.md",
                     "## Phases",
                     "## SpecDD Planning Augmentation",
                 ),
-                "speckit.tasks.md": (
+                "speckit.tasks": (
+                    "speckit.tasks.md",
                     "## Task Generation Rules",
                     "## SpecDD Task Augmentation",
                 ),
-                "speckit.converge.md": (
+                "speckit.converge": (
+                    "speckit.converge.md",
                     "## Convergence Findings",
                     "## SpecDD Convergence Augmentation",
                 ),
             }
-            baseline_commands = {
-                filename: (
-                    root / GENERIC_COMMANDS_DIR / filename
+            baseline_skills = {
+                command: skill_file(
+                    root,
+                    command,
                 ).read_text(encoding="utf-8")
-                for filename in expectations
+                for command in expectations
             }
 
             require_success(
@@ -120,23 +123,54 @@ class PresetInstallTests(unittest.TestCase):
                 installed_extensions["specdd"]["enabled"]
             )
             self.assertEqual(
-                3,
+                4,
                 installed_extensions["specdd"]["provides"]["commands"],
             )
+            self.assertEqual(
+                4,
+                installed_extensions["specdd"]["provides"]["hooks"],
+            )
 
-            for command in (
-                "speckit.specdd.context.md",
-                "speckit.specdd.validate.md",
-                "speckit.specdd.verify.md",
-            ):
-                with self.subTest(generic_extension_command=command):
-                    self.assertFalse(
-                        (
-                            root
-                            / GENERIC_COMMANDS_DIR
-                            / command
-                        ).exists()
+            bridge_commands = (
+                "speckit.specdd.context",
+                "speckit.specdd.validate",
+                "speckit.specdd.authorize",
+                "speckit.specdd.verify",
+            )
+            for command in bridge_commands:
+                with self.subTest(
+                    bridge_command=command
+                ):
+                    self.assertTrue(
+                        skill_file(
+                            root,
+                            command,
+                        ).is_file()
                     )
+
+            hook_state_path = (
+                root
+                / ".specify"
+                / "extensions.yml"
+            )
+            hook_state = hook_state_path.read_text(
+                encoding="utf-8"
+            )
+            for event in (
+                "after_plan",
+                "after_tasks",
+                "before_implement",
+                "after_implement",
+            ):
+                self.assertIn(
+                    f"{event}:",
+                    hook_state,
+                )
+            for command in bridge_commands:
+                self.assertIn(
+                    command,
+                    hook_state,
+                )
 
             require_success(
                 self,
@@ -160,33 +194,35 @@ class PresetInstallTests(unittest.TestCase):
             )
             composed_dir = preset_dir / ".composed"
 
-            for filename, markers in expectations.items():
-                with self.subTest(composed=filename):
+            for command, markers in expectations.items():
+                with self.subTest(
+                    composed=command
+                ):
+                    filename, upstream, augmentation = markers
                     composed = (
                         composed_dir / filename
                     ).read_text(encoding="utf-8")
-                    self.assertIn(
-                        markers[0],
-                        composed,
-                    )
-                    self.assertIn(
-                        markers[1],
-                        composed,
-                    )
-                    self.assertLess(
-                        composed.index(markers[0]),
-                        composed.index(markers[1]),
-                    )
-
-                    generic = (
-                        root
-                        / GENERIC_COMMANDS_DIR
-                        / filename
+                    materialized = skill_file(
+                        root,
+                        command,
                     ).read_text(encoding="utf-8")
-                    self.assertEqual(
-                        baseline_commands[filename],
-                        generic,
-                    )
+
+                    for content in (
+                        composed,
+                        materialized,
+                    ):
+                        self.assertIn(
+                            upstream,
+                            content,
+                        )
+                        self.assertIn(
+                            augmentation,
+                            content,
+                        )
+                        self.assertLess(
+                            content.index(upstream),
+                            content.index(augmentation),
+                        )
 
             require_success(
                 self,
@@ -202,16 +238,16 @@ class PresetInstallTests(unittest.TestCase):
                 preset_dir.exists()
             )
 
-            for filename in expectations:
-                with self.subTest(generic_restored=filename):
-                    generic = (
-                        root
-                        / GENERIC_COMMANDS_DIR
-                        / filename
-                    ).read_text(encoding="utf-8")
+            for command, baseline in baseline_skills.items():
+                with self.subTest(
+                    core_skill_restored=command
+                ):
                     self.assertEqual(
-                        baseline_commands[filename],
-                        generic,
+                        baseline,
+                        skill_file(
+                            root,
+                            command,
+                        ).read_text(encoding="utf-8"),
                     )
 
             require_success(
@@ -246,4 +282,27 @@ class PresetInstallTests(unittest.TestCase):
             self.assertNotIn(
                 "specdd",
                 remaining_extensions,
+            )
+
+            for command in bridge_commands:
+                with self.subTest(
+                    bridge_command_removed=command
+                ):
+                    self.assertFalse(
+                        skill_file(
+                            root,
+                            command,
+                        ).exists()
+                    )
+
+            remaining_hook_state = (
+                hook_state_path.read_text(
+                    encoding="utf-8"
+                )
+                if hook_state_path.is_file()
+                else ""
+            )
+            self.assertNotIn(
+                "speckit.specdd.",
+                remaining_hook_state,
             )

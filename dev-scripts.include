@@ -1,5 +1,8 @@
-@# Surface bootstrap health, bridge manifests, isolated install/composition tests, fixture lint, patch integrity, and worktree state to the next iteration.
+@# Surface bootstrap health, active integration and hooks, bridge manifests, isolated install tests, fixture lint, patch integrity, and worktree state.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
+@cli! bash -c "specify integration list"
+@cli! bash -c "specify extension list --json && cat .specify/extensions.yml"
+@cli! bash -c "specify preset list"
 @cli! bash -c "cat integration/specdd/extension.sdd && printf '\n--- extension.yml ---\n' && cat integration/specdd/extension.yml"
 @cli! bash -c "cat integration/specdd-preset/specdd-preset.sdd && printf '\n--- preset.yml ---\n' && cat integration/specdd-preset/preset.yml"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
