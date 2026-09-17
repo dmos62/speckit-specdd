@@ -1,0 +1,26 @@
+Spec: SpecDD Context Command
+
+Purpose:
+  Expose feature-scoped Change Boundary generation through Spec Kit while keeping SpecDD resolution and authority derivation in the existing bridge adapter.
+
+Owns:
+  ./context.md
+
+Must:
+  The command locates the active Spec Kit feature using supported Spec Kit state.
+  Candidate targets prefer explicit paths from current feature artifacts over inference.
+  Early planning may produce a boundary with unresolved targets when concrete targets are not yet available.
+  Rerunning the command replaces derived `boundary.json` state with freshly generated output.
+  The command reports authority domains, unresolved targets, and cross-boundary status.
+  The command distinguishes invalid target paths from unresolved targets.
+
+Must not:
+  Edit `.sdd` files.
+  Reimplement SpecDD resolver or ownership semantics.
+
+Depends on:
+  ../scripts/boundary.py
+
+Done when:
+  Unchanged feature targets regenerate semantically equivalent Change Boundary state.
+  A fixture feature can generate and regenerate a valid `boundary.json`.
