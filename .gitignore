@@ -17,3 +17,4 @@ __pycache__/
 
 # Derived integration state
 specs/*/.specdd/boundary.json
+.specify/extensions/.cache/
