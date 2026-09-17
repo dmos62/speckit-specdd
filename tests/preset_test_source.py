@@ -65,6 +65,9 @@ class PresetSourceTests(unittest.TestCase):
         content = (
             PRESET_ROOT / "commands" / "tasks.md"
         ).read_text(encoding="utf-8")
+        normalized = " ".join(
+            content.split()
+        )
 
         self.assertIn(
             "Preserve Spec Kit user-story grouping",
@@ -72,7 +75,7 @@ class PresetSourceTests(unittest.TestCase):
         )
         self.assertIn(
             "one primary SpecDD authority",
-            content,
+            normalized,
         )
         self.assertIn(
             "`SPEC_EVOLUTION_REQUIRED:`",

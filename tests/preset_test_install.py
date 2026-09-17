@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -72,14 +73,34 @@ class PresetInstallTests(unittest.TestCase):
                 ),
             )
 
-            for filename in (
-                "speckit.specdd.context.md",
-                "speckit.specdd.validate.md",
-                "speckit.specdd.verify.md",
-            ):
-                self.assertTrue(
-                    (root / GENERIC_COMMANDS_DIR / filename).is_file()
+            extension_list = run_command(
+                root,
+                "specify",
+                "extension",
+                "list",
+                "--json",
+            )
+            require_success(
+                self,
+                extension_list,
+            )
+            installed_extensions = {
+                item["id"]: item
+                for item in json.loads(
+                    extension_list.stdout
                 )
+            }
+            self.assertIn(
+                "specdd",
+                installed_extensions,
+            )
+            self.assertTrue(
+                installed_extensions["specdd"]["enabled"]
+            )
+            self.assertEqual(
+                3,
+                installed_extensions["specdd"]["provides"]["commands"],
+            )
 
             require_success(
                 self,
@@ -149,10 +170,25 @@ class PresetInstallTests(unittest.TestCase):
                     "--force",
                 ),
             )
-            self.assertFalse(
-                (
-                    root
-                    / GENERIC_COMMANDS_DIR
-                    / "speckit.specdd.context.md"
-                ).exists()
+
+            extension_list = run_command(
+                root,
+                "specify",
+                "extension",
+                "list",
+                "--json",
+            )
+            require_success(
+                self,
+                extension_list,
+            )
+            remaining_extensions = {
+                item["id"]
+                for item in json.loads(
+                    extension_list.stdout
+                )
+            }
+            self.assertNotIn(
+                "specdd",
+                remaining_extensions,
             )
