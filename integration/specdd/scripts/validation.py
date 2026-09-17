@@ -14,6 +14,7 @@ if str(SCRIPT_DIR) not in sys.path:
     )
 
 from validation_cli import (  # noqa: E402,F401
+    _result_exit_code,
     main,
     parse_args,
 )
@@ -23,6 +24,7 @@ from validation_engine import (  # noqa: E402,F401
     validate_feature,
 )
 from validation_tasks import (  # noqa: E402,F401
+    extract_repository_targets,
     parse_tasks,
     parse_tasks_file,
 )

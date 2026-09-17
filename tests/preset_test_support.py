@@ -7,6 +7,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRESET_ROOT = REPO_ROOT / "integration" / "specdd-preset"
 EXTENSION_ROOT = REPO_ROOT / "integration" / "specdd"
+WORKFLOW_OVERLAY_PATH = (
+    EXTENSION_ROOT
+    / "workflow-overlay.yml"
+)
 BOOTSTRAP_PATH = REPO_ROOT / "scripts" / "bootstrap.sh"
 CODEX_SKILLS_DIR = Path(".agents") / "skills"
 

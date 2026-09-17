@@ -97,6 +97,51 @@ def _normalize_task_target(root: Path, raw: str) -> str:
     return normalize_target(root, candidate).path
 
 
+def extract_repository_targets(
+    root: Path,
+    text: str,
+) -> tuple[
+    tuple[str, ...],
+    tuple[str, ...],
+    tuple[str, ...],
+]:
+    targets: list[str] = []
+    spec_targets: list[str] = []
+    invalid_targets: list[str] = []
+
+    for raw in _raw_targets(text):
+        try:
+            normalized = _normalize_task_target(
+                root,
+                raw,
+            )
+        except BoundaryError:
+            invalid_targets.append(
+                raw
+            )
+            continue
+
+        collection = (
+            spec_targets
+            if normalized.lower().endswith(".sdd")
+            else targets
+        )
+        if normalized not in collection:
+            collection.append(
+                normalized
+            )
+
+    return (
+        tuple(targets),
+        tuple(spec_targets),
+        tuple(
+            dict.fromkeys(
+                invalid_targets
+            )
+        ),
+    )
+
+
 def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
     tasks: list[TaskRecord] = []
 
@@ -108,24 +153,14 @@ def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
         body = match.group("body")
         task_id_match = _TASK_ID_RE.match(body)
         story_match = _STORY_RE.search(body)
-        targets: list[str] = []
-        spec_targets: list[str] = []
-        invalid_targets: list[str] = []
-
-        for raw in _raw_targets(body):
-            try:
-                normalized = _normalize_task_target(root, raw)
-            except BoundaryError:
-                invalid_targets.append(raw)
-                continue
-
-            collection = (
-                spec_targets
-                if normalized.lower().endswith(".sdd")
-                else targets
-            )
-            if normalized not in collection:
-                collection.append(normalized)
+        (
+            targets,
+            spec_targets,
+            invalid_targets,
+        ) = extract_repository_targets(
+            root,
+            body,
+        )
 
         tasks.append(
             TaskRecord(
@@ -141,9 +176,9 @@ def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
                     else None
                 ),
                 text=body,
-                targets=tuple(targets),
-                spec_targets=tuple(spec_targets),
-                invalid_targets=tuple(dict.fromkeys(invalid_targets)),
+                targets=targets,
+                spec_targets=spec_targets,
+                invalid_targets=invalid_targets,
                 evolution_markers=tuple(
                     dict.fromkeys(_EVOLUTION_RE.findall(body))
                 ),

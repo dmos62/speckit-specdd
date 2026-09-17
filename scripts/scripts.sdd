@@ -10,6 +10,7 @@ Owns:
 
 References:
   ../integration/specdd/extension.sdd
+  ../integration/specdd/workflow-overlay.sdd
   ../integration/specdd-preset/specdd-preset.sdd
 
 Must:
@@ -17,10 +18,11 @@ Must:
   The active Spec Kit integration is `codex` so extension and preset commands can be registered under pinned Spec Kit `1.0.7`.
   Existing initialized repositories change active integration through supported Spec Kit integration commands.
   The local bridge extension and preset are installed from canonical repository source before verification.
-  Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, and `specdd lint` without changing repository state.
+  The structural SpecDD workflow overlay is installed through supported Spec Kit workflow-overlay commands.
+  Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, workflow-overlay resolution, and `specdd lint` without changing repository state.
 
 Must not:
-  Patch generated Spec Kit commands, installed extension state, installed preset state, or SpecDD framework files directly.
+  Patch generated Spec Kit commands, installed extension state, installed preset state, workflow-overlay state, or SpecDD framework files directly.
 
 Done when:
-  Bootstrap apply followed by check succeeds with the bridge available through the active Codex integration.
+  Bootstrap apply followed by check succeeds with the bridge and structural workflow gates available through the active Codex integration.

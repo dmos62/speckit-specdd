@@ -27,6 +27,11 @@
 @globexclude .specify-agent/commands/**
 @globexclude .agents/skills/speckit-*/**
 
+@# Generated Spec Kit workflow state; canonical overlay source is integration/specdd/workflow-overlay.yml
+@globexclude .specify/workflows/speckit/**
+@globexclude .specify/workflows/overlays/**
+@globexclude .specify/workflows/runs/**
+
 @# Generated Spec Kit templates and initialization bookkeeping
 @globexclude .specify/templates/**
 @globexclude .specify/init-options.json

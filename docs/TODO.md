@@ -23,33 +23,15 @@ The repository generated state has been migrated successfully to the Codex integ
 
 The isolated Codex preset smoke compares semantic upstream skill bodies after preset removal. Spec Kit `1.0.7` may reserialize YAML frontmatter and add a registrar-generated `# Speckit ... Skill` heading while restoring a core skill; those serializer-only differences are ignored while the original command body and absence of the SpecDD augmentation remain required.
 
-The extension registers mandatory lifecycle hooks for:
+The extension retains mandatory lifecycle hooks for agent-facing context, validation, authorization, and verification when commands are used directly. Hook dispatch remains agent-mediated and is not the structural enforcement boundary.
 
-- post-plan Change Boundary refresh,
-- post-tasks validation,
-- pre-implementation authorization,
-- post-implementation verification.
+The structural workflow overlay is implemented at `integration/specdd/workflow-overlay.yml` and is installed through `specify workflow overlay add`. It adds deterministic shell steps after planning, after task generation, before implementation, and after implementation. The task gate refreshes the Change Boundary from exact task targets before validation; authorization reuses that snapshot without refresh; verification compares actual Git writes with the same planned snapshot and fresh resulting authority.
 
-Hook dispatch in pinned Spec Kit remains agent-mediated. The hooks make the gates available at the correct lifecycle points but do not provide engine-level failure propagation. Phase 12 remains responsible for structural enforcement.
+`integration/specdd/scripts/workflow_gate.py` resolves the active Spec Kit feature and delegates to the existing boundary, validation, and verification mechanics. Validation and verification CLIs support failure thresholds so deterministic `error` or `blocking` findings return nonzero status when invoked as workflow gates. The overlay does not set `continue_on_error`, so failures halt workflow execution structurally.
 
 Phase 10 deliberate spec-evolution handling remains implemented without adding another source of truth. Evolution tasks use ordinary task-text prefixes `SPEC_EVOLUTION_REQUIRED:` and `AUTHORITY_EVOLUTION_REQUIRED:`; validation requires `.sdd`-only evolution scope and records whether fresh Change Boundary resolution is required.
 
 Pinned Spec Kit `1.0.7` supports project workflow overlays with `id`, `extends`, optional priority and enabled state, and step edits using `insert_before`, `insert_after`, `replace`, or `remove`. Project overlays are installed through `specify workflow overlay add` rather than by editing `.specify/workflows/` directly. Workflow step failure halts execution unless `continue_on_error: true` is explicitly configured.
-
-## 12. Phase 12 — Add workflow overlay
-
-Pinned hooks are agent-dispatched, so critical deterministic gates still need workflow structure with explicit failure propagation.
-
-Canonical overlay source must remain outside generated `.specify/` state and be installed through supported Spec Kit workflow-overlay commands.
-
-### TODO
-
-- [ ] Add deterministic context, task validation, pre-implementation authority, and post-implementation verification steps.
-- [ ] Test step ordering and failure propagation.
-- [ ] Avoid duplicating equivalent hook behavior when a hook is useful only as agent-facing lifecycle guidance.
-- [ ] Document the final responsibility split between hooks and overlay steps.
-
-Exit criteria: critical authority gates are structural rather than dependent only on prompt memory or hook-dispatch compliance.
 
 ## 13. Phase 13 — Complete the test matrix
 
@@ -95,14 +77,13 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Start Phase 12 with the workflow overlay.
+Start Phase 13 with the real-CLI and semantic acceptance matrix.
 
-- [ ] Establish canonical overlay source and its SpecDD ownership outside generated `.specify/` state.
-- [ ] Install the overlay through `specify workflow overlay add`, not by editing generated workflow state.
-- [ ] Keep pre-implementation authority validation structurally blocking.
-- [ ] Ensure deterministic gate commands return failure status when their blocking result must halt the workflow.
-- [ ] Use hooks as lifecycle guidance and workflow steps for deterministic failure propagation.
-- [ ] Do not patch generated `.agents/skills`, `.specify-agent/commands`, or upstream Spec Kit core files.
+- [ ] Add real-CLI cases for unresolved targets, malformed or invalid specs, multiple authority domains, and resolver execution failures.
+- [ ] Map semantic scenarios A-E from `docs/spec.md` to existing fixture tests and add only missing acceptance coverage.
+- [ ] Keep deterministic mechanism tests distinct from agentic architectural-classification procedures.
+- [ ] Add focused regression coverage for any integration defect exposed while expanding the matrix.
+- [ ] Preserve the pinned toolchain and structural workflow gates while extending coverage.
 
 ## 20. Definition of done for v0.1
 

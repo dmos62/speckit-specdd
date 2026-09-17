@@ -1,0 +1,32 @@
+Spec: SpecDD Workflow Gate
+
+Platform: Python/Spec Kit/SpecDD CLI
+
+Purpose:
+  Orchestrate deterministic SpecDD workflow stages around the active Spec Kit feature while reusing the existing boundary, validation, and verification mechanics.
+
+Owns:
+  ./workflow_gate.py
+
+References:
+  ../commands/context.sdd
+  ../commands/validate.sdd
+  ../commands/authorize.sdd
+  ../commands/verify.sdd
+
+Must:
+  Active feature resolution uses Spec Kit persisted or environment-provided feature state.
+  Planning context discovers explicit repository paths without interpreting `.sdd` ownership itself.
+  Task-stage execution refreshes the Change Boundary from exact non-`.sdd` task targets before deterministic validation.
+  Task-stage validation returns failure status for deterministic `error` or `blocking` diagnostics.
+  Authorization uses the existing Change Boundary without refreshing it and returns failure status for deterministic `error` or `blocking` diagnostics.
+  Verification compares actual changes with the existing planned boundary and returns failure status for deterministic `error` or `blocking` diagnostics.
+  Planning with no concrete non-spec target removes stale derived boundary state without treating absent early scope as authority.
+
+Must not:
+  Parse `.sdd` files as a replacement for SpecDD resolution.
+  Refresh the Change Boundary during authorization or verification.
+  Treat specification changes as retroactive implementation authority.
+
+Done when:
+  The workflow overlay can use this entry point for all four structural lifecycle stages and blocking deterministic findings propagate as nonzero shell status.

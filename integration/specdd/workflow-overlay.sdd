@@ -1,0 +1,26 @@
+Spec: SpecDD Workflow Overlay
+
+Purpose:
+  Add deterministic SpecDD lifecycle enforcement to the installed Spec Kit workflow without modifying generated workflow state.
+
+Owns:
+  ./workflow-overlay.yml
+
+References:
+  ./scripts/workflow_gate.sdd
+
+Must:
+  The overlay extends the installed `speckit` workflow through supported step edits.
+  Planning context runs after the base `plan` step.
+  Task boundary refresh and validation run after the base `tasks` step.
+  Implementation authorization runs before the base `implement` step without refreshing the authority snapshot.
+  Actual-change verification runs after the base `implement` step.
+  Structural gate steps use shell execution so deterministic nonzero status halts the workflow by default.
+  Agent lifecycle hooks remain separate from structural workflow enforcement.
+
+Must not:
+  Patch the installed base workflow under `.specify/`.
+  Set `continue_on_error` on a structural SpecDD gate.
+
+Done when:
+  Workflow resolution places context, task validation, authorization, and verification around the intended base steps.

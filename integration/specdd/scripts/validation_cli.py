@@ -19,6 +19,12 @@ from validation_engine import (
 from validation_tasks import parse_tasks_file
 from validation_types import ValidationError
 
+_FAIL_ON = (
+    "never",
+    "error",
+    "blocking",
+)
+
 
 def parse_args(
     argv: Sequence[str] | None = None,
@@ -75,6 +81,15 @@ def parse_args(
         default="-",
         help=(
             "Output path, or '-' for stdout (default)"
+        ),
+    )
+    parser.add_argument(
+        "--fail-on",
+        choices=_FAIL_ON,
+        default="never",
+        help=(
+            "Return status 1 when the selected diagnostic "
+            "severity threshold is present"
         ),
     )
     return parser.parse_args(argv)
@@ -171,6 +186,54 @@ def _write_output(
         )
 
 
+def _result_exit_code(
+    result: Mapping[str, Any],
+    fail_on: str,
+) -> int:
+    if fail_on == "never":
+        return 0
+
+    summary = result.get(
+        "summary",
+        {}
+    )
+    counts = (
+        summary.get(
+            "countsBySeverity",
+            {},
+        )
+        if isinstance(summary, Mapping)
+        else {}
+    )
+    if not isinstance(counts, Mapping):
+        return 0
+
+    if fail_on == "blocking":
+        return (
+            1
+            if counts.get(
+                "blocking",
+                0,
+            )
+            else 0
+        )
+
+    return (
+        1
+        if (
+            counts.get(
+                "error",
+                0,
+            )
+            or counts.get(
+                "blocking",
+                0,
+            )
+        )
+        else 0
+    )
+
+
 def main(
     argv: Sequence[str] | None = None,
 ) -> int:
@@ -222,6 +285,10 @@ def main(
             result,
             args.output,
         )
+        return _result_exit_code(
+            result,
+            args.fail_on,
+        )
     except (
         BoundaryError,
         ValidationError,
@@ -232,5 +299,3 @@ def main(
             file=sys.stderr,
         )
         return 2
-
-    return 0

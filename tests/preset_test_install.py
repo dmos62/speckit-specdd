@@ -6,6 +6,7 @@ from pathlib import Path
 from preset_test_support import (
     EXTENSION_ROOT,
     PRESET_ROOT,
+    WORKFLOW_OVERLAY_PATH,
     command_available,
     require_success,
     run_command,
@@ -24,6 +25,12 @@ HOOK_EVENTS = (
     "after_tasks",
     "before_implement",
     "after_implement",
+)
+WORKFLOW_STEPS = (
+    "specdd-context",
+    "specdd-task-validation",
+    "specdd-authorize",
+    "specdd-verify",
 )
 COMPOSED_EXPECTATIONS = {
     "speckit.plan": (
@@ -82,6 +89,68 @@ class PresetInstallTests(unittest.TestCase):
                 )
                 for command in COMPOSED_EXPECTATIONS
             }
+
+            require_success(
+                self,
+                run_command(
+                    root,
+                    "specify",
+                    "workflow",
+                    "overlay",
+                    "add",
+                    str(WORKFLOW_OVERLAY_PATH),
+                    "--priority",
+                    "10",
+                ),
+            )
+            overlay_list = run_command(
+                root,
+                "specify",
+                "workflow",
+                "overlay",
+                "list",
+                "speckit",
+            )
+            require_success(self, overlay_list)
+            self.assertIn(
+                "specdd-bridge",
+                overlay_list.stdout,
+            )
+
+            resolved = run_command(
+                root,
+                "specify",
+                "workflow",
+                "resolve",
+                "speckit",
+            )
+            require_success(self, resolved)
+            for step in WORKFLOW_STEPS:
+                self.assertIn(
+                    step,
+                    resolved.stdout,
+                )
+
+            order = (
+                "plan",
+                "specdd-context",
+                "review-plan",
+                "tasks",
+                "specdd-task-validation",
+                "specdd-authorize",
+                "implement",
+                "specdd-verify",
+            )
+            positions = [
+                resolved.stdout.index(
+                    f"• {step}:"
+                )
+                for step in order
+            ]
+            self.assertEqual(
+                sorted(positions),
+                positions,
+            )
 
             require_success(
                 self,
@@ -212,3 +281,29 @@ class PresetInstallTests(unittest.TestCase):
                 else ""
             )
             self.assertNotIn("speckit.specdd.", remaining_hook_state)
+
+            require_success(
+                self,
+                run_command(
+                    root,
+                    "specify",
+                    "workflow",
+                    "overlay",
+                    "remove",
+                    "speckit",
+                    "specdd-bridge",
+                ),
+            )
+            overlay_list = run_command(
+                root,
+                "specify",
+                "workflow",
+                "overlay",
+                "list",
+                "speckit",
+            )
+            require_success(self, overlay_list)
+            self.assertNotIn(
+                "specdd-bridge",
+                overlay_list.stdout,
+            )

@@ -1,0 +1,33 @@
+id: "specdd-bridge"
+extends: "speckit"
+priority: 10
+enabled: true
+
+edits:
+  - insert_after: plan
+    step:
+      id: specdd-context
+      type: shell
+      run: "uv run --no-project python integration/specdd/scripts/workflow_gate.py context"
+      timeout: 300
+
+  - insert_after: tasks
+    step:
+      id: specdd-task-validation
+      type: shell
+      run: "uv run --no-project python integration/specdd/scripts/workflow_gate.py tasks"
+      timeout: 300
+
+  - insert_before: implement
+    step:
+      id: specdd-authorize
+      type: shell
+      run: "uv run --no-project python integration/specdd/scripts/workflow_gate.py authorize"
+      timeout: 300
+
+  - insert_after: implement
+    step:
+      id: specdd-verify
+      type: shell
+      run: "uv run --no-project python integration/specdd/scripts/workflow_gate.py verify"
+      timeout: 300

@@ -8,6 +8,9 @@ readonly SPECDD_FRAMEWORK_VERSION="1.5"
 readonly MIN_NODE_MAJOR="22"
 readonly ACTIVE_INTEGRATION="codex"
 readonly ACTIVE_COMMANDS_DIR=".agents/skills"
+readonly WORKFLOW_OVERLAY_ID="specdd-bridge"
+readonly WORKFLOW_OVERLAY_SOURCE="integration/specdd/workflow-overlay.yml"
+readonly WORKFLOW_OVERLAY_PRIORITY="10"
 readonly MODE="${1:-apply}"
 
 fail() {
@@ -85,6 +88,27 @@ require_skill_contains() {
   grep -Fq "$marker" "$skill_file" || fail "expected materialized content is missing from ${skill_file}: ${marker}"
 }
 
+check_workflow_overlay() {
+  local overlay_list
+  local resolved_workflow
+  local step_id
+
+  overlay_list="$(specify workflow overlay list speckit)"
+  grep -Fq "$WORKFLOW_OVERLAY_ID" <<<"$overlay_list" || fail \
+    "SpecDD workflow overlay is not installed: ${WORKFLOW_OVERLAY_ID}"
+
+  resolved_workflow="$(specify workflow resolve speckit)"
+  for step_id in \
+    specdd-context \
+    specdd-task-validation \
+    specdd-authorize \
+    specdd-verify
+  do
+    grep -Fq "$step_id" <<<"$resolved_workflow" || fail \
+      "resolved Spec Kit workflow is missing structural step: ${step_id}"
+  done
+}
+
 check_bridge_state() {
   [[ -d .specify/extensions/specdd ]] || fail "local SpecDD bridge extension is not installed"
   [[ -d .specify/presets/specdd-bridge ]] || fail "local SpecDD bridge preset is not installed"
@@ -113,6 +137,8 @@ check_bridge_state() {
   do
     grep -Fq "$command_name" .specify/extensions.yml || fail "registered hook command is missing: ${command_name}"
   done
+
+  check_workflow_overlay
 }
 
 check_initialized_state() {
@@ -150,12 +176,30 @@ run_checks() {
   specify extension list --json
   printf '%s\n' '--- Spec Kit presets ---'
   specify preset list
+  printf '%s\n' '--- Spec Kit workflow overlays ---'
+  specify workflow overlay list speckit
+  printf '%s\n' '--- Resolved Spec Kit workflow ---'
+  specify workflow resolve speckit
   printf '%s\n' '--- Spec Kit environment ---'
   specify check
   printf '%s\n' '--- SpecDD CLI package ---'
   npm list --global --depth=0 "specdd@${SPECDD_CLI_VERSION}"
   printf '%s\n' '--- SpecDD lint ---'
   specdd lint
+}
+
+install_workflow_overlay() {
+  [[ -f "$WORKFLOW_OVERLAY_SOURCE" ]] || fail \
+    "workflow overlay source is missing: ${WORKFLOW_OVERLAY_SOURCE}"
+
+  specify workflow overlay remove \
+    speckit \
+    "$WORKFLOW_OVERLAY_ID" \
+    >/dev/null 2>&1 || true
+
+  specify workflow overlay add \
+    "$WORKFLOW_OVERLAY_SOURCE" \
+    --priority "$WORKFLOW_OVERLAY_PRIORITY"
 }
 
 install_bridge() {
@@ -166,6 +210,7 @@ install_bridge() {
   fi
 
   specify preset add --dev integration/specdd-preset --priority 10
+  install_workflow_overlay
 }
 
 apply_bootstrap() {

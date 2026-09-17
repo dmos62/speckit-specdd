@@ -14,6 +14,7 @@ if str(SCRIPT_DIR) not in sys.path:
     )
 
 from verification_cli import (  # noqa: E402,F401
+    _result_exit_code,
     main,
     parse_args,
 )

@@ -5,6 +5,9 @@ Platform: Python/SpecDD CLI
 Purpose:
   Build deterministic Change Boundary, validation, and actual-change verification state from SpecDD resolver output without reimplementing SpecDD semantics.
 
+Structure:
+  ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
+
 Owns:
   ./boundary.py
   ./boundary_builder.py
@@ -37,10 +40,12 @@ Must:
   Validation consumes Change Boundary projection and exact task paths without parsing `.sdd` source.
   Validation preserves task order, task IDs, user-story labels, and explicit SpecDD evolution classifications in its analysis output.
   Validation distinguishes zero-authority, single-authority, and multi-authority task write sets.
+  Validation CLI callers may request nonzero process status when deterministic `error` or `blocking` diagnostics are present.
   Evolution classifications require `.sdd` targets and remain separate from ordinary implementation writes.
   Validation records when deliberate evolution requires fresh boundary resolution and when authority evolution ends the prior authority context.
   Unknown or conflicting authority blocks validation at the implementation stage.
   Verification derives actual implementation writes from Git and fresh SpecDD resolution.
+  Verification CLI callers may request nonzero process status when deterministic `error` or `blocking` diagnostics are present.
   Generated Spec Kit state and active feature artifacts remain outside actual implementation authority checks.
   Verification compares actual authorities with the planned Change Boundary and blocks unknown, conflicting, or newly introduced authority.
   Changed `.sdd` files remain separate from ordinary implementation writes and do not grant authority to the current verification operation.
