@@ -1,5 +1,9 @@
 @filegroup
 @glob **/*.md
+@glob **/*.ts
+@glob **/*.sdd
+@glob **/*.py
+@glob **/*.json
 @globexclude node_modules/**
 @globexclude pnpm-lock.yaml
 @globexclude dist/**
