@@ -8,6 +8,9 @@
 @globexclude node_modules/**
 @globexclude pnpm-lock.yaml
 @globexclude dist/**
+@globexclude .specdd/bootstrap.local.md
+@globexclude .specify/extensions/specdd/**
+@globexclude .specify/extensions/.cache/**
 @endfilegroup
 
 @comment
