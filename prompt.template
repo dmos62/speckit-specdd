@@ -9,21 +9,13 @@ Edit `files.include` to change which files/folders are made available to the nex
 General `files.include` policy: we want to include the maximum of files that can be useful (now or later): that is preferable to being selective, because currently all important files can fit inside the LLM agent's context. However, we still want to exclude generated artifacts and files that will not be useful to an implementing agent. IMPORTANT: if you are shown a file that cannot be relevant to an implementor, add a `@globexclude` directive for that file so that it doesn't waste LLM context.
 
 
-@comment
-
-
-Reference writing: for each subrepo, when it's implemented and ready to be used by other upstream subrepos (i.e. this doesn't apply to subrepos that don't have upstream subrepos, like those in `examples/`), write a focused reference whose audience will be subrepos importing this one as a direct dependency: a top-level file in the subrepo called `external-reference.md`. Its purpose is to let downstream consumers know everything needed to know in order to use it: this is so that an LLM agent (or any implementor of the downstream consumer) can simply look at this reference, instead of having to browse the code. Importantly, `external-reference.md` documents should be orthogonal between subrepos: we'll often have multiple in context, and information repeated would be noise and wasted tokens. Always keep these references up-to-date.
-
-@endcomment
-@comment
-@endcomment
 @include dev-scripts.include
 
 Edit `dev-scripts.include` to change which script outputs are made available to the next programming iteration: adjust this as is appropriate. Note that `pnpm` script calls (can be multiple, one per line) are wrapped in `@cli! bash -c "pnpm {script}"`.
 @file dev-scripts.include
 
 @comment
-@endcomment
+
 Fix errors, failed tests, if there are any. If not, work on the TODO.
 
 Unless there are significant regressions that should be focused on instead, do the first large task in `TODO.md`. If there are no large tasks, do a group of smaller ones. Record in the TODO whatever information is relevant for the other steps. When step is done, delete it from the TODO. When all steps are done, the TODO should be empty.
@@ -40,18 +32,6 @@ Use DEBUGGING.md to record information relevant when debugging hard problems ove
 
 Be proactive about getting rid of unnecessary code/text and refactoring code for better reuse, better maintenance.
 
-@comment
-Make sure a linter is setup to limit Typescript code file length to 250 lines, white-space excluded: we want modular code style, focused files. Exceptions are allowed, but only where a file genuinely has to be this big.
-
-Note, that working on this monorepo will essentially have these steps (which will repeat and combine in various patterns):
-A) find the next coherent batch of tasks to do, then, either do them; or, if necessary, edit `subrepos-to-include.include` and/or `dev-scripts.include`, and submit your changes so that these tasks could be done in the next programming iteration when due to the `*.include` edits you made the necessary files are available and the necessary scripts/cli-calls are executed.
-B) after you make changes, submit them, and wait for the next programming iteration to show you whether the check scripts (as called via declarations in `dev-scripts.include`) succeeded and whether you should fix any failures or whether you can continue on to the next batch of tasks (A).
-C) you are blocked by something that a human needs to help you with, so you make and submit HUMAN-REQUEST.md, and don't do anything until you're unblocked.
-
-This monorepo relies on clean separation of concerns between subrepos, documents: not letting a repo become bloated or unfocused: it's your responsibility to maintain that as best as possible.
-
-An important pattern is that your response will influence what information you have available in the next request made to you, and you have to "cede control" to the next request (by submitting your changes) so as to get that information you need.
-@endcomment
 
 You must split code and documentation files into small files, so that they don't exceed 250 lines. We need focused, highly orthogonal files.
 
@@ -59,11 +39,9 @@ You must split code and documentation files into small files, so that they don't
 
 
 @llmformat
+@endcomment
 
-
-
-
-
+Let's discuss.
 
 
 
