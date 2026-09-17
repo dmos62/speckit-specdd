@@ -31,6 +31,19 @@ Upstream references used for this baseline:
 
 Do not silently advance these pins during v0.1. Upgrade them only as a deliberate compatibility task with the fixture and acceptance tests rerun.
 
+## Path handling evidence
+
+Path handling is host-sensitive and is tested without converting path-library behavior into an operating-system compatibility claim. The selected Windows 10 evidence host exercises these bridge behaviors through the repository test suite:
+
+- repository-relative `/` and `\` separators normalize to `/` in derived repository paths;
+- drive-qualified absolute paths are accepted only when they resolve inside the selected repository root;
+- POSIX-style absolute paths are rejected as foreign on Windows, while conditional tests reject Windows absolute paths when the suite is run on a non-Windows host;
+- backticked task paths preserve spaces and literal grouping characters such as `[`/`]` and `{`/`}`, while wildcard `*` and `?` patterns remain invalid as exact task targets;
+- Git porcelain `-z --no-renames` path discovery preserves spaces and literal grouping characters before repository normalization;
+- SpecDD resolver paths use the same host-style absolute-path checks before being normalized to repository-relative `/` form.
+
+These checks establish behavior only on hosts where they actually run. A conditional test passing on another operating system is useful regression evidence for that branch, but support for that operating system remains unclaimed until the full bootstrap, fixture, workflow, and acceptance checks are exercised there.
+
 ## Prerequisites
 
 Install Git, Node.js 22+, npm, uv, and the Codex CLI before running repository bootstrap.

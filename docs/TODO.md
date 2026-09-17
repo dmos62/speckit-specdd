@@ -9,13 +9,15 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 The manual context → validate → implement → verify vertical slice is present.
 
-Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. Direct compatibility evidence is intentionally narrower than the prerequisite syntax: Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and framework `1.5` are the only tested tool versions currently claimed. The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64 and Spec Kit reported Python `3.12.11`; other operating systems, Python versions, and adjacent tool versions remain unverified. Bootstrap check output now records the exact Node and bridge Python versions for future evidence.
+Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. Direct compatibility evidence is intentionally narrower than the prerequisite syntax: Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and framework `1.5` are the only tested tool versions currently claimed. The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64 and Spec Kit reported Python `3.12.11`; other operating systems, Python versions, and adjacent tool versions remain unverified. Bootstrap check output records the exact Node and bridge Python versions for future evidence.
+
+Phase 15 path handling is hardened around concrete repository paths without broadening operating-system claims. Repository-relative `/` and `\` forms normalize to repository `/` form, the Windows evidence path covers drive-qualified absolute targets inside the repository, foreign absolute path styles are rejected before resolver or active-feature use, backticked task paths preserve spaces and literal bracket/brace characters, wildcard `*` and `?` task patterns remain non-exact, and Git porcelain `-z --no-renames` coverage preserves paths containing spaces and bracket characters. Conditional non-Windows checks are regression coverage only; they do not establish support for an unexercised host.
 
 Change Boundary v1 is defined by `integration/specdd/schemas/change-boundary.schema.json`. The adapter uses the real SpecDD resolver, derives authority only from resolved `Owns` entries, keeps derived state deterministic, and normalizes invalid targets, resolver failures, malformed output, and ownership ambiguity into structured unresolved diagnostics.
 
 The bridge commands provide context generation, task validation, implementation authorization, and actual-change verification. Deliberate `.sdd` evolution remains separate from implementation authority and the authority-snapshot invariant remains enforced.
 
-External dependency hardening now keeps infrastructure failures distinct from authority diagnostics. Bootstrap reports missing Git, Node.js, npm, uv, Codex, Spec Kit, and SpecDD with dependency-specific remediation; structural workflow steps fail with status `2` when uv is absent; adapter and verification entry points report missing SpecDD or Git as infrastructure errors. Resolver failures and malformed resolver output remain `RESOLUTION_FAILED`, nonzero `specdd lint` remains `SPECDD_VIOLATION`, deterministic gate findings use status `1`, and bridge setup/runtime failures use status `2`.
+External dependency hardening keeps infrastructure failures distinct from authority diagnostics. Bootstrap reports missing Git, Node.js, npm, uv, Codex, Spec Kit, and SpecDD with dependency-specific remediation; structural workflow steps fail with status `2` when uv is absent; adapter and verification entry points report missing SpecDD or Git as infrastructure errors. Resolver failures and malformed resolver output remain `RESOLUTION_FAILED`, nonzero `specdd lint` remains `SPECDD_VIOLATION`, deterministic gate findings use status `1`, and bridge setup/runtime failures use status `2`.
 
 Phase 9 preset composition is implemented at `integration/specdd-preset/`. The pinned Spec Kit `1.0.7` preset contract stores command overrides in `provides.templates` with `type: "command"` and supports append composition.
 
@@ -43,13 +45,12 @@ The user-facing root `README.md` is governed by `README.sdd` and documents the r
 
 Focused Change Boundary documentation is implemented at `docs/change-boundary.md` under `docs/change-boundary.sdd`. The guide documents lifecycle-specific target discovery, deterministic regeneration, unresolved handling, stale-boundary behavior, authority-snapshot preservation, and disposable derived state without duplicating installation or maintenance procedures.
 
-Compatibility assertions now guard the exact Spec Kit, SpecDD CLI, and SpecDD framework pins across canonical bootstrap and manifest source. No semantic version range broader than directly exercised versions is treated as tested compatibility.
+Compatibility assertions guard the exact Spec Kit, SpecDD CLI, and SpecDD framework pins across canonical bootstrap and manifest source. No semantic version range broader than directly exercised versions is treated as tested compatibility.
 
 ## 15. Phase 15 — v0.1 hardening
 
 ### TODO
 
-- [ ] Verify supported operating-system path handling.
 - [ ] Make generated state deterministic enough for tests.
 - [ ] Confirm the default policy for `boundary.json` is generated/uncommitted state unless review evidence proves otherwise.
 - [ ] Confirm uninstall leaves no patched upstream files.
@@ -62,11 +63,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Verify supported operating-system path handling without broadening compatibility claims beyond direct evidence.
+Make generated state deterministic enough for tests without turning generated Spec Kit state into canonical source.
 
-Start from `boundary_paths.py`, Git porcelain handling, active-feature path normalization, and the Windows 10 evidence host. Exercise repository-relative separators, drive-qualified absolute paths, paths containing spaces and wildcard characters, and host-specific rejection of foreign absolute paths. Keep SpecDD resolver output normalization deterministic and do not infer support for untested operating systems from path-library behavior alone.
+Start by inventorying bridge-owned derived outputs and the current test comparison strategy: Change Boundary JSON, validation/verification JSON, installed preset composition smoke state, extension hook bookkeeping, and workflow-overlay materialization. Preserve semantic comparisons where Spec Kit legitimately reserializes upstream content, and require byte-stable output only for bridge-owned artifacts whose canonical inputs are identical.
 
-Use the compatibility evidence emitted by `bash scripts/bootstrap.sh --check` when evaluating environment-specific behavior. Record only operating-system and path forms that the repository checks and acceptance scenarios have actually exercised.
+Look specifically for timestamps, environment-dependent absolute paths, unordered collections, temporary paths, or host-specific serializer output that leaks into asserted bridge state. Prefer normalizing bridge-owned data at generation boundaries rather than post-processing generated upstream files. Record any unavoidable upstream nondeterminism as semantic test normalization rather than patching `.specify/` or `.agents/skills/` outputs.
 
 ## 20. Definition of done for v0.1
 

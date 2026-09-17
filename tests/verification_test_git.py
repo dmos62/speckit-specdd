@@ -148,6 +148,29 @@ class VerificationGitTests(unittest.TestCase):
             ],
         )
 
+    def test_preserves_spaces_and_literal_grouping_characters_in_git_paths(self):
+        temporary, root = self.initialize_repository()
+        with temporary:
+            special = root / "src/auth/provider [legacy].ts"
+            special.write_text(
+                "export const provider = true;\n",
+                encoding="utf-8",
+            )
+
+            changes = verification.collect_git_changes(
+                root,
+                feature_dir="specs/001-login",
+            )
+
+        matching = [
+            item
+            for item in changes.writes
+            if item.path == "src/auth/provider [legacy].ts"
+        ]
+        self.assertEqual(1, len(matching))
+        self.assertEqual("UNTRACKED", matching[0].status)
+        self.assertFalse(matching[0].deleted)
+
     def test_marks_deleted_project_file(self):
         temporary, root = self.initialize_repository()
         with temporary:

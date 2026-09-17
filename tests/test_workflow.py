@@ -1,6 +1,7 @@
 import unittest
 
 from workflow_test_gate import (
+    WorkflowFeaturePathTests,
     WorkflowGateExitTests,
 )
 from workflow_test_source import (
@@ -8,6 +9,7 @@ from workflow_test_source import (
 )
 
 __all__ = [
+    "WorkflowFeaturePathTests",
     "WorkflowGateExitTests",
     "WorkflowSourceTests",
 ]

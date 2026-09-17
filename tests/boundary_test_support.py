@@ -24,6 +24,13 @@ VERIFICATION_SCRIPT_PATH = (
     / "scripts"
     / "verification.py"
 )
+WORKFLOW_GATE_SCRIPT_PATH = (
+    REPO_ROOT
+    / "integration"
+    / "specdd"
+    / "scripts"
+    / "workflow_gate.py"
+)
 FIXTURE_ROOT = (
     REPO_ROOT
     / "tests"
@@ -59,4 +66,8 @@ validation = _load_module(
 verification = _load_module(
     "specdd_verification",
     VERIFICATION_SCRIPT_PATH,
+)
+workflow_gate = _load_module(
+    "specdd_workflow_gate",
+    WORKFLOW_GATE_SCRIPT_PATH,
 )

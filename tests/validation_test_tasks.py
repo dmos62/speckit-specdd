@@ -34,6 +34,25 @@ class ValidationTaskParsingTests(unittest.TestCase):
         self.assertEqual((), tasks[1].targets)
         self.assertEqual(("project.sdd",), tasks[1].spec_targets)
 
+    def test_backticked_paths_preserve_spaces_and_literal_grouping_characters(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T012 [US1] Update `src/auth/provider [legacy].ts` and `docs/guide {draft}.md`
+""",
+            )
+
+        self.assertEqual(
+            (
+                "src/auth/provider [legacy].ts",
+                "docs/guide {draft}.md",
+            ),
+            tasks[0].targets,
+        )
+        self.assertEqual((), tasks[0].invalid_targets)
+
     def test_invalid_or_glob_targets_are_kept_out_of_write_targets(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
@@ -47,6 +66,22 @@ class ValidationTaskParsingTests(unittest.TestCase):
         self.assertEqual((), tasks[0].targets)
         self.assertEqual(
             ("../outside.ts", "src/auth/*.ts"),
+            tasks[0].invalid_targets,
+        )
+
+    def test_unquoted_grouping_syntax_is_not_treated_as_exact_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T001 [US1] Update src/auth/provider[legacy].ts
+""",
+            )
+
+        self.assertEqual((), tasks[0].targets)
+        self.assertEqual(
+            ("src/auth/provider[legacy].ts",),
             tasks[0].invalid_targets,
         )
 
