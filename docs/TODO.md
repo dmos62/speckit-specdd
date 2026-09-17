@@ -29,14 +29,16 @@ The adapter at `integration/specdd/scripts/boundary.py` consumes compact resolve
 
 The context command source at `integration/specdd/commands/context.md` resolves the active feature through Spec Kit state, prefers explicit user targets, otherwise discovers exact targets from `tasks.md` before `plan.md`, and delegates normalization, resolver, ownership, schema validation, and atomic replacement to the adapter. Intended-but-missing paths remain unresolved diagnostics. If no target is named, stale derived boundary state is removed. The command reports authorities, cross-boundary status, and unresolved diagnostics by code. The Python test suite includes fixture-backed deterministic regeneration coverage; installed command discovery remains Phase 6 work.
 
+The extension manifest now has a same-basename governing spec at `integration/specdd/extension.sdd`. It durably owns `integration/specdd/extension.yml`, references the existing context command contract, and preserves the pinned compatibility baseline. This authority was established in a dedicated operation; manifest creation must occur in a subsequent operation so the authority-snapshot invariant remains intact.
+
 ## 6. Phase 6 — Create the Spec Kit extension manifest
 
 Create `integration/specdd/extension.yml`.
 
-The current effective SpecDD authority does not cover `integration/specdd/extension.yml`: the root project spec owns selected repository artifacts but does not grant `Owns` or `Can modify` authority for this manifest path, and no nearer supplied spec owns it. Do not create the manifest by relying on authority added during the same operation. Establish the path's durable SpecDD ownership or modification authority deliberately, then begin a fresh operation before creating the manifest.
+Durable ownership for `integration/specdd/extension.yml` is established by `integration/specdd/extension.sdd`. The ownership change was made in a dedicated authority operation, so creation of the manifest must begin in a fresh operation under newly resolved SpecDD context.
 
 ### TODO
-- [ ] Establish explicit SpecDD ownership or modification authority for `integration/specdd/extension.yml` in a separate authority operation.
+- [ ] Create `integration/specdd/extension.yml` under its same-basename SpecDD contract.
 - [ ] Validate the manifest against the pinned Spec Kit release.
 - [ ] Declare extension identity, version, Spec Kit compatibility, SpecDD tool dependency, and `speckit.specdd.context`.
 - [ ] Install the extension locally with Spec Kit development installation support.
@@ -182,8 +184,7 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 ## 19. Next coding session
 
 Stop after the next narrow vertical-slice step:
-- [ ] Establish durable SpecDD write authority for `integration/specdd/extension.yml`, then start a fresh operation.
-- [ ] Create the local extension manifest.
+- [ ] Start a fresh operation and create the local extension manifest under `integration/specdd/extension.sdd`.
 - [ ] Install the extension with pinned Spec Kit development installation support.
 - [ ] Run `speckit.specdd.context` through Spec Kit and regenerate one valid `boundary.json`.
 

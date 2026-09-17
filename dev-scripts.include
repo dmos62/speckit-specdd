@@ -1,5 +1,6 @@
-@# Surface bootstrap health, the complete Change Boundary Python suite, fixture lint, patch integrity, and worktree state to the next iteration.
+@# Surface bootstrap health, the extension-manifest authority contract, the complete Change Boundary Python suite, fixture lint, patch integrity, and worktree state to the next iteration.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
+@cli! bash -c "cat integration/specdd/extension.sdd"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
