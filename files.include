@@ -1,0 +1,27 @@
+@filegroup
+@glob **/*.md
+@glob **/*.ts
+@glob **/*.sdd
+@glob **/*.py
+@glob **/*.json
+@glob **/*.sh
+
+@globexclude node_modules/**
+@globexclude pnpm-lock.yaml
+@globexclude dist/**
+
+@# Local/generated SpecDD state
+@globexclude .specdd/bootstrap.local.md
+
+@# Installed/cached extension state; canonical source is integration/specdd/**
+@globexclude .specify/extensions/specdd/**
+@globexclude .specify/extensions/.cache/**
+
+@# Upstream-generated Spec Kit agent commands
+@globexclude .specify-agent/commands/**
+
+@# Generated Spec Kit installation/bookkeeping metadata
+@globexclude .specify/integrations/*.manifest.json
+@globexclude .specify/memory/.constitution-template.json
+@globexclude .specify/workflows/workflow-registry.json
+@endfilegroup
