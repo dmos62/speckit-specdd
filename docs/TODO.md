@@ -9,13 +9,12 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 Build the remaining integration in this order:
 
-1. package the context command in the local Spec Kit extension,
-2. implement validation and task-partition guidance,
-3. implement verification from actual changed files,
-4. augment Spec Kit planning, tasks, and convergence,
-5. add deliberate spec-evolution handling,
-6. add hooks and then a workflow overlay,
-7. harden tests, documentation, and compatibility.
+1. implement validation and task-partition guidance,
+2. implement verification from actual changed files,
+3. augment Spec Kit planning, tasks, and convergence,
+4. add deliberate spec-evolution handling,
+5. add hooks and then a workflow overlay,
+6. harden tests, documentation, and compatibility.
 
 Do not begin bundle packaging, automatic `.sdd` editing, or workflow automation before the manual vertical slice works.
 
@@ -27,23 +26,11 @@ Change Boundary v1 uses JSON Schema Draft 2020-12 at `integration/specdd/schemas
 
 The adapter at `integration/specdd/scripts/boundary.py` consumes compact resolver JSON, derives primary authority from resolved `Owns`, validates the checked-in schema, writes atomically, and normalizes invalid targets, resolver failures, malformed output, and authority ambiguity into structured unresolved diagnostics. Tests cover normalization, SpecDD glob semantics, authority derivation, schema validation, output modes, and the real two-domain fixture. SpecDD CLI version detection reads the installed npm package and falls back to `npm list --global`; framework version comes from the nearest `.specdd/bootstrap.md`.
 
-The context command source at `integration/specdd/commands/context.md` resolves the active feature through Spec Kit state, prefers explicit user targets, otherwise discovers exact targets from `tasks.md` before `plan.md`, and delegates normalization, resolver, ownership, schema validation, and atomic replacement to the adapter. Intended-but-missing paths remain unresolved diagnostics. If no target is named, stale derived boundary state is removed. The command reports authorities, cross-boundary status, and unresolved diagnostics by code. The Python test suite includes fixture-backed deterministic regeneration coverage; installed command discovery remains Phase 6 work.
+The context command source at `integration/specdd/commands/context.md` resolves the active feature through Spec Kit state, prefers explicit user targets, otherwise discovers exact targets from `tasks.md` before `plan.md`, and delegates normalization, resolver, ownership, schema validation, and atomic replacement to the adapter. Intended-but-missing paths remain unresolved diagnostics. If no target is named, stale derived boundary state is removed. The command reports authorities, cross-boundary status, and unresolved diagnostics by code.
 
-The extension manifest at `integration/specdd/extension.yml` is now authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and only `speckit.specdd.context`. `dev-scripts.include` now surfaces a transient local install/discovery/remove smoke so manifest compatibility and generated-state cleanup can be proven before Phase 6 is removed.
+The extension manifest at `integration/specdd/extension.yml` is authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and only `speckit.specdd.context`.
 
-## 6. Phase 6 — Validate and install the Spec Kit extension manifest
-
-The manifest is intentionally minimal for the first vertical slice. `validate`, `verify`, presets, and hooks remain undeclared until their source contracts exist.
-
-### TODO
-- [ ] Validate the manifest against the pinned Spec Kit release.
-- [ ] Install the extension locally with Spec Kit development installation support.
-- [ ] Verify the context command is discovered by the active integration.
-- [ ] Add `validate` and `verify` declarations only after those commands exist.
-- [ ] Add hooks only after manual commands are reliable.
-- [ ] Confirm uninstall leaves Spec Kit core unchanged.
-
-Exit criteria: the local extension installs without patching Spec Kit core and exposes `speckit.specdd.context`.
+Local development installation has been validated against Spec Kit `1.0.7`. The generic integration registers `speckit.specdd.context` from the extension manifest and removes the generated command during uninstall. The lifecycle smoke treats `.specify/extensions/.registry` as generated Spec Kit bookkeeping: it rejects semantic registry changes, tolerates Spec Kit's whitespace-only rewrite, restores the tracked bytes after the check, and verifies that install/uninstall leaves no generated extension or command state behind.
 
 ## 7. Phase 7 — Implement validation and task partition guidance
 
@@ -179,20 +166,21 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Stop after validating Phase 6 and one installed-command smoke:
-- [ ] Review the transient extension lifecycle check surfaced by `dev-scripts.include`; fix any manifest, discovery, or cleanup failure.
-- [ ] If the lifecycle check passes, reinstall `integration/specdd` locally and run `speckit.specdd.context` through the active generic integration to regenerate one valid `boundary.json`.
-- [ ] Remove Phase 6 once its remaining TODOs and exit criteria are satisfied.
+Start Phase 7 with the deterministic validation model:
+- [ ] Define a compact diagnostic data structure and severity semantics.
+- [ ] Reuse Change Boundary target/authority projection rather than parsing `.sdd`.
+- [ ] Add fixture-backed cases for zero, one, and multiple authorities before adding agentic classifications.
+- [ ] Add `speckit.specdd.validate` to the extension manifest only after its command contract exists.
 
-Do not start validation, presets, workflow overlays, or bundle packaging before the installed context command works.
+Do not start presets, hooks, workflow overlays, or bundle packaging before manual validation works.
 
 ## 20. Definition of done for v0.1
 
 - [ ] Spec Kit core is unmodified.
 - [ ] SpecDD core is unmodified.
-- [ ] The bridge installs locally as a Spec Kit extension.
-- [ ] The bridge uses the real SpecDD resolver.
-- [ ] `speckit.specdd.context` generates a valid, rebuildable Change Boundary.
+- [x] The bridge installs locally as a Spec Kit extension.
+- [x] The bridge uses the real SpecDD resolver.
+- [x] `speckit.specdd.context` generates a valid, rebuildable Change Boundary through its adapter.
 - [ ] `speckit.specdd.validate` recognizes authority and system-evolution issues.
 - [ ] `speckit.specdd.verify` checks actual implementation scope.
 - [ ] The preset supplies SpecDD context during planning and task generation.
