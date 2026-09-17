@@ -1,8 +1,6 @@
-@# Surface SpecDD authority context, bootstrap health, Change Boundary tests, fixture lint, patch integrity, and worktree state to the next iteration.
-@cli! bash -c "find . -name '*.sdd' -print | sort"
+@# Surface bootstrap health, the complete Change Boundary Python suite, fixture lint, patch integrity, and worktree state to the next iteration.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
-@cli! bash -c "uv run --no-project python tests/test_change_boundary_schema.py"
-@cli! bash -c "uv run --no-project python tests/test_boundary.py"
+@cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"

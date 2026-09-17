@@ -1,0 +1,109 @@
+import json
+import shutil
+import subprocess
+import sys
+import unittest
+
+from boundary_test_support import (
+    FIXTURE_ROOT,
+    REPO_ROOT,
+    SCRIPT_PATH,
+    boundary,
+)
+
+
+@unittest.skipUnless(
+    shutil.which("specdd"),
+    "SpecDD CLI is required for the fixture integration test",
+)
+class RealFixtureIntegrationTests(unittest.TestCase):
+    def run_fixture(self):
+        return subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT_PATH),
+                "--root",
+                str(FIXTURE_ROOT),
+                "--feature",
+                "two-domain-fixture",
+                "src/users/repository.ts",
+                "src/auth/service.ts",
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_two_domain_fixture_produces_valid_cross_boundary(self):
+        if not FIXTURE_ROOT.is_dir():
+            self.skipTest(
+                "two-domain fixture is not available"
+            )
+
+        result = self.run_fixture()
+        rerun = self.run_fixture()
+
+        self.assertEqual(
+            0,
+            result.returncode,
+            result.stderr,
+        )
+        self.assertEqual(
+            0,
+            rerun.returncode,
+            rerun.stderr,
+        )
+        self.assertEqual(
+            result.stdout,
+            rerun.stdout,
+        )
+
+        payload = json.loads(
+            result.stdout
+        )
+        schema = boundary.load_schema(
+            REPO_ROOT
+        )
+        boundary.validate_boundary(
+            payload,
+            schema,
+        )
+
+        self.assertEqual(
+            [
+                "src/auth/auth.sdd",
+                "src/users/users.sdd",
+            ],
+            payload["authorities"],
+        )
+        self.assertTrue(
+            payload["crossBoundary"]
+        )
+        self.assertEqual(
+            [],
+            payload["unresolved"],
+        )
+        self.assertEqual(
+            [
+                "src/auth/service.ts",
+                "src/users/repository.ts",
+            ],
+            [
+                target["path"]
+                for target in payload["targets"]
+            ],
+        )
+
+        rendered = json.dumps(
+            payload,
+            sort_keys=True,
+        )
+        self.assertIn(
+            "1.1.1",
+            rendered,
+        )
+        self.assertIn(
+            "1.5",
+            rendered,
+        )

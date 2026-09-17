@@ -1,0 +1,25 @@
+Spec: Change Boundary Tests
+
+Platform: Python/unittest
+
+Purpose:
+  Guard Change Boundary schema projection, resolver integration, diagnostics, and deterministic output.
+
+Owns:
+  ./test_boundary.py
+  ./boundary_test_support.py
+  ./boundary_test_paths.py
+  ./boundary_test_resolver.py
+  ./boundary_test_output.py
+  ./boundary_test_fixture.py
+  ./test_change_boundary_schema.py
+
+References:
+  /integration/specdd/scripts/scripts.sdd
+  /integration/specdd/schemas/change-boundary.schema.json
+  ./fixtures/specdd-two-domain/specdd-two-domain.sdd
+
+Must:
+  Missing targets remain represented as unresolved diagnostics with `UNRESOLVED_TARGET`.
+  Adapter tests preserve coverage for path normalization, authority derivation, schema validation, and output modes.
+  The real two-domain fixture produces deterministic cross-boundary output when the SpecDD CLI is available.
