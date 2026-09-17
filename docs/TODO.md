@@ -32,6 +32,8 @@ context → validate → implement → verify
 
 Bootstrap automation and compatibility pins live in `scripts/bootstrap.sh` and `docs/development.md`.
 
+Current blocker as of 2026-09-17: `bash scripts/bootstrap.sh --check` exits with `bootstrap: Spec Kit is not initialized; run: bash scripts/bootstrap.sh`. Bootstrap mutates external tool installations and creates upstream-generated state, so it must be completed by the human operator in the actual development checkout using `HUMAN-REQUEST.md`. Do not synthesize the missing generated state or advance to Phase 1 until the resulting check output has been reviewed.
+
 ### TODO
 
 - [ ] Run `bash scripts/bootstrap.sh` from the repository root.
@@ -308,7 +310,7 @@ Critical authority gates are structurally represented rather than depending only
 - [ ] Unit-test path normalization, boundary construction, schema validation, authority sets, cross-boundary detection, and error normalization.
 - [ ] Integration-test real SpecDD CLI success, unresolved paths, invalid specs, multiple domains, and CLI failures.
 - [ ] Test local extension/preset installation without upstream patches.
-- [ ] Automate semantic scenarios A-H from `docs/spec.md`.
+- [ ] Automate semantic scenarios A-E from `docs/spec.md`.
 - [ ] Add a regression test for every integration bug found during development.
 
 ### Exit criteria
