@@ -1,0 +1,19 @@
+# Node
+node_modules/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# SpecDD machine-local override
+.specdd/bootstrap.local.md
+
+# Derived integration state
+specs/*/.specdd/boundary.json

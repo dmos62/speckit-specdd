@@ -1,2 +1,3 @@
-@# Example command (commented out), normal commands start with @cli!, note, `bash -c` wrapping necessary.
-@#cli! bash -c "pnpm check"
+@# Surface bootstrap/toolchain problems and generated-state drift to the next iteration.
+@cli! bash -c "bash scripts/bootstrap.sh --check"
+@cli! bash -c "git status --short"
