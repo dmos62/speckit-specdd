@@ -28,22 +28,23 @@ context → validate → implement → verify
 
 ---
 
-## 2. Phase 2 — Build the minimal SpecDD fixture
+## 2. Phase 2 — Verify the minimal SpecDD fixture
+
+The fixture now lives under `tests/fixtures/specdd-two-domain/` with a basename-matched root spec, independent Auth and Users directory specs, an Auth-owned service, and Users-owned contract and repository files.
+
+Auth depends on the Users-facing identity lookup contract while `../users/repository.ts` remains forbidden and outside Auth write authority. This gives later bridge tests local valid work, accidental cross-domain writes, and legitimate multi-domain target sets without inventing a third authority model.
+
+`dev-scripts.include` now surfaces fixture lint plus compact machine-readable resolution for both an Auth target and a Users target. Use those real outputs to establish adapter normalization assumptions rather than guessing the SpecDD CLI result shape.
 
 ### TODO
 
-- [ ] Create the root project spec.
-- [ ] Create independent Auth and Users specs.
-- [ ] Create minimal source files owned by those domains.
-- [ ] Encode an approved Auth-to-Users read/dependency contract without granting Auth write authority over Users internals.
-- [ ] Confirm `specdd lint` passes.
-- [ ] Resolve one Auth path and one Users path with machine-readable output.
-- [ ] Capture representative resolver output only if it materially simplifies deterministic tests.
-- [ ] Document resolver information that is missing before adding bridge-side compensation.
+- [ ] Confirm `specdd lint` passes with the fixture included.
+- [ ] Inspect the Auth and Users machine-readable resolver output.
+- [ ] Record only resolver information that is missing before adding bridge-side compensation.
 
 ### Exit criteria
 
-The fixture supports valid local writes, invalid cross-domain writes, and legitimate multi-domain feature work.
+The fixture supports valid local writes, invalid cross-domain writes, and legitimate multi-domain feature work, and the resolver output needed by the adapter is understood.
 
 ---
 
@@ -332,7 +333,6 @@ Do not implement before v0.1 proves the semantic bridge:
 
 Stop after the first narrow vertical slice:
 
-- [ ] Create the Auth/Users fixture.
 - [ ] Inspect real JSON from `specdd resolve` for both domains.
 - [ ] Finalize Change Boundary v1 from actual resolver output.
 - [ ] Implement and test `boundary.py`.

@@ -1,0 +1,16 @@
+Spec: Auth
+
+Purpose:
+  Authenticate external identities through the approved Users-facing identity lookup contract.
+
+Owns:
+  ./service.ts
+
+Must:
+  External identity lookup uses @ExternalIdentityLookup.
+
+Forbids:
+  ../users/repository.ts
+
+Depends on:
+  ../users/identity-contract.ts

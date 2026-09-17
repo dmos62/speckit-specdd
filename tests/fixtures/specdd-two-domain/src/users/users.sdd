@@ -1,0 +1,15 @@
+Spec: Users
+
+Purpose:
+  Provide external identity lookup while keeping Users persistence internals locally owned.
+
+Owns:
+  ./identity-contract.ts
+  ./repository.ts
+  @ExternalIdentityLookup
+
+Must:
+  @ExternalIdentityLookup exposes lookup without repository mutation capabilities.
+
+Exposes:
+  @ExternalIdentityLookup

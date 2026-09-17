@@ -1,0 +1,8 @@
+Spec: SpecDD Two Domain Fixture
+Platform: TypeScript
+
+Purpose:
+  Provide deterministic Auth and Users authority domains for bridge integration tests.
+
+Must:
+  Auth and Users remain separately governed so cross-domain writes are detectable.
