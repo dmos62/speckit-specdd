@@ -9,7 +9,7 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 Build the remaining integration in this order:
 
-1. define and implement Change Boundary v1,
+1. implement the Change Boundary v1 adapter,
 2. expose `speckit.specdd.context`,
 3. implement validation and task-partition guidance,
 4. implement verification from actual changed files,
@@ -26,24 +26,7 @@ context → validate → implement → verify
 
 The pinned SpecDD 1.1.1 resolver contract has been inspected against the two-domain fixture. For both Auth and Users targets, `directories` contains root-to-local resolved context, each resolved spec exposes a repository-relative forward-slash `path`, and section bodies contain the raw `Owns`, `Depends on`, `Forbids`, and other resolved entries needed by the bridge. `rootDirectoryPath` and `targetPath` are host-absolute and platform-specific, so derived bridge state must normalize away those machine-local values. The resolver does not emit a dedicated primary-authority field; the adapter therefore needs a narrow authority derivation from the already-resolved spec chain and `Owns` entries while preserving SpecDD path semantics rather than parsing `.sdd` source independently.
 
----
-
-## 3. Phase 3 — Define Change Boundary schema v1
-
-Create `integration/specdd/schemas/change-boundary.schema.json`.
-
-### TODO
-
-- [ ] Choose and declare the JSON Schema draft.
-- [ ] Define required top-level properties and repository-relative path rules.
-- [ ] Define target, primary-authority, resolved-spec, and unresolved-target representations.
-- [ ] Define diagnostic generation metadata without copying complete `.sdd` rules.
-- [ ] Decide whether timestamps and tool versions belong in generation metadata.
-- [ ] Add schema validation tests for one authority, multiple authorities, unresolved paths, and cross-boundary features.
-
-### Exit criteria
-
-`boundary.json` is disposable, reconstructible, schema-valid derived state and is not a second SpecDD database.
+Change Boundary v1 now uses JSON Schema Draft 2020-12 at `integration/specdd/schemas/change-boundary.schema.json`. Normalized repository paths are non-empty, repository-relative, forward-slash paths with no absolute prefixes, backslashes, duplicate separators, trailing slash, or `.`/`..` path segments. Resolved spec and authority paths end in `.sdd`. `crossBoundary` is consistent with the number of distinct authority paths: `true` requires at least two and `false` permits at most one. Unresolved entries preserve the original input and may include a normalized path when one exists. Generation metadata records the SpecDD CLI and framework versions but deliberately omits a timestamp so regeneration can remain deterministic. The schema contract is exercised without adding a project dependency by `tests/test_change_boundary_schema.py`; Phase 4 should make generated adapter output conform to this exact shape and perform production schema validation.
 
 ---
 
@@ -313,7 +296,6 @@ Do not implement before v0.1 proves the semantic bridge:
 
 Stop after the first narrow vertical slice:
 
-- [ ] Finalize Change Boundary v1 from the recorded resolver contract.
 - [ ] Implement and test `boundary.py`.
 - [ ] Generate one valid `boundary.json`.
 - [ ] Implement minimal `speckit.specdd.context`.

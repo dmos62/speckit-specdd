@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:speckit-specdd:change-boundary:v1",
+  "title": "Spec Kit x SpecDD Change Boundary v1",
+  "description": "Disposable derived state projecting SpecDD resolution onto one Spec Kit feature.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "feature",
+    "targets",
+    "authorities",
+    "crossBoundary",
+    "unresolved",
+    "generation"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "feature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/target"
+      }
+    },
+    "authorities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/specPath"
+      },
+      "uniqueItems": true
+    },
+    "crossBoundary": {
+      "type": "boolean"
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unresolvedTarget"
+      }
+    },
+    "generation": {
+      "$ref": "#/$defs/generation"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "crossBoundary": {
+            "const": true
+          }
+        },
+        "required": [
+          "crossBoundary"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authorities": {
+            "minItems": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "crossBoundary": {
+            "const": false
+          }
+        },
+        "required": [
+          "crossBoundary"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authorities": {
+            "maxItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "repositoryRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*\\/$).+$"
+    },
+    "specPath": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/repositoryRelativePath"
+        },
+        {
+          "pattern": "\\.sdd$"
+        }
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "primaryAuthority",
+        "resolvedSpecs"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/repositoryRelativePath"
+        },
+        "primaryAuthority": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/specPath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolvedSpecs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/specPath"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "unresolvedTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normalizedPath": {
+          "$ref": "#/$defs/repositoryRelativePath"
+        },
+        "code": {
+          "enum": [
+            "INVALID_TARGET",
+            "UNRESOLVED_TARGET",
+            "RESOLUTION_FAILED",
+            "AMBIGUOUS_AUTHORITY"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidateAuthorities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/specPath"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "specddCliVersion",
+        "specddFrameworkVersion"
+      ],
+      "properties": {
+        "specddCliVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specddFrameworkVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
