@@ -29,18 +29,14 @@ The adapter at `integration/specdd/scripts/boundary.py` consumes compact resolve
 
 The context command source at `integration/specdd/commands/context.md` resolves the active feature through Spec Kit state, prefers explicit user targets, otherwise discovers exact targets from `tasks.md` before `plan.md`, and delegates normalization, resolver, ownership, schema validation, and atomic replacement to the adapter. Intended-but-missing paths remain unresolved diagnostics. If no target is named, stale derived boundary state is removed. The command reports authorities, cross-boundary status, and unresolved diagnostics by code. The Python test suite includes fixture-backed deterministic regeneration coverage; installed command discovery remains Phase 6 work.
 
-The extension manifest now has a same-basename governing spec at `integration/specdd/extension.sdd`. It durably owns `integration/specdd/extension.yml`, references the existing context command contract, and preserves the pinned compatibility baseline. This authority was established in a dedicated operation; manifest creation must occur in a subsequent operation so the authority-snapshot invariant remains intact.
+The extension manifest at `integration/specdd/extension.yml` is now authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and only `speckit.specdd.context`. `dev-scripts.include` now surfaces a transient local install/discovery/remove smoke so manifest compatibility and generated-state cleanup can be proven before Phase 6 is removed.
 
-## 6. Phase 6 — Create the Spec Kit extension manifest
+## 6. Phase 6 — Validate and install the Spec Kit extension manifest
 
-Create `integration/specdd/extension.yml`.
-
-Durable ownership for `integration/specdd/extension.yml` is established by `integration/specdd/extension.sdd`. The ownership change was made in a dedicated authority operation, so creation of the manifest must begin in a fresh operation under newly resolved SpecDD context.
+The manifest is intentionally minimal for the first vertical slice. `validate`, `verify`, presets, and hooks remain undeclared until their source contracts exist.
 
 ### TODO
-- [ ] Create `integration/specdd/extension.yml` under its same-basename SpecDD contract.
 - [ ] Validate the manifest against the pinned Spec Kit release.
-- [ ] Declare extension identity, version, Spec Kit compatibility, SpecDD tool dependency, and `speckit.specdd.context`.
 - [ ] Install the extension locally with Spec Kit development installation support.
 - [ ] Verify the context command is discovered by the active integration.
 - [ ] Add `validate` and `verify` declarations only after those commands exist.
@@ -183,10 +179,10 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Stop after the next narrow vertical-slice step:
-- [ ] Start a fresh operation and create the local extension manifest under `integration/specdd/extension.sdd`.
-- [ ] Install the extension with pinned Spec Kit development installation support.
-- [ ] Run `speckit.specdd.context` through Spec Kit and regenerate one valid `boundary.json`.
+Stop after validating Phase 6 and one installed-command smoke:
+- [ ] Review the transient extension lifecycle check surfaced by `dev-scripts.include`; fix any manifest, discovery, or cleanup failure.
+- [ ] If the lifecycle check passes, reinstall `integration/specdd` locally and run `speckit.specdd.context` through the active generic integration to regenerate one valid `boundary.json`.
+- [ ] Remove Phase 6 once its remaining TODOs and exit criteria are satisfied.
 
 Do not start validation, presets, workflow overlays, or bundle packaging before the installed context command works.
 

@@ -1,6 +1,7 @@
-@# Surface bootstrap health, the extension-manifest authority contract, the complete Change Boundary Python suite, fixture lint, patch integrity, and worktree state to the next iteration.
+@# Surface bootstrap health, extension manifest/install discovery, the Change Boundary suite, fixture lint, patch integrity, and worktree state to the next iteration.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
-@cli! bash -c "cat integration/specdd/extension.sdd"
+@cli! bash -c "cat integration/specdd/extension.sdd && printf '\n--- extension.yml ---\n' && cat integration/specdd/extension.yml"
+@cli! bash -c "set -euo pipefail; specify extension add integration/specdd --dev --force; specify extension info specdd; test -f .specify-agent/commands/speckit.specdd.context.md; grep -F 'Build or refresh the active feature' .specify-agent/commands/speckit.specdd.context.md; specify extension remove specdd --force; if git status --porcelain --untracked-files=all -- .specify .specify-agent | grep -q .; then git status --short --untracked-files=all -- .specify .specify-agent; exit 1; fi"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
