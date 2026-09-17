@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "specdd": {
+      "version": "0.1.0",
+      "source": "local",
+      "manifest_hash": "sha256:0e917a8c4e4190a2a609462f5ceda64d268f9a09865c152e11ef9f3c4b7dc966",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {},
+      "registered_skills": [],
+      "installed_at": "2026-09-17T13:22:19.664395+00:00"
+    }
+  }
+}
