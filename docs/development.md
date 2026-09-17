@@ -65,6 +65,38 @@ The script intentionally refuses to rewrite an existing SpecDD bootstrap whose f
 
 Integration switching, extension installation, preset installation, and workflow-overlay installation are performed through supported Spec Kit commands. Do not manually patch `.specify/`, `.agents/skills/`, `.specify-agent/commands/`, or root `.specdd/` framework state to expose the bridge.
 
+## Rematerialize bridge source during development
+
+`bash scripts/bootstrap.sh` is the normal installation path. When Spec Kit and SpecDD are already initialized and only canonical bridge source changed, the extension, preset, and workflow overlay can be rematerialized independently through supported Spec Kit commands.
+
+The active integration must remain `codex`. If necessary, switch it first:
+
+    specify integration switch codex --script ps
+
+Reinstall the bridge extension:
+
+    specify extension add integration/specdd --dev --force
+
+Recompose the bridge preset from canonical source:
+
+    specify preset remove specdd-bridge || true
+    specify preset add --dev integration/specdd-preset --priority 10
+
+Reinstall the structural workflow overlay:
+
+    specify workflow overlay remove speckit specdd-bridge || true
+    specify workflow overlay add integration/specdd/workflow-overlay.yml --priority 10
+
+These commands intentionally operate through Spec Kit instead of copying source into generated locations. Under pinned Spec Kit `1.0.7`, do not switch to the `generic` integration for bridge execution: it is not registrar-backed for these commands.
+
+After rematerialization, verify the installed components with:
+
+    specify extension list --json
+    specify preset list
+    specify workflow overlay list speckit
+    specify workflow resolve speckit
+    bash scripts/bootstrap.sh --check
+
 ## Structural workflow enforcement
 
 Canonical workflow-overlay source is:
@@ -100,6 +132,8 @@ For workflow-specific inspection:
     specify workflow resolve speckit
 
 The resolved workflow should place SpecDD context after `plan`, task validation after `tasks`, authorization before `implement`, and verification after `implement`.
+
+If check mode reports that `specdd-bridge` is not installed, run `bash scripts/bootstrap.sh` once. Check mode intentionally does not materialize missing generated state.
 
 ## Generated state
 

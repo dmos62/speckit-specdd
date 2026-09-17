@@ -35,13 +35,15 @@ Phase 13 test-matrix coverage is complete. Real SpecDD CLI fixture coverage incl
 
 Pinned Spec Kit `1.0.7` supports project workflow overlays with `id`, `extends`, optional priority and enabled state, and step edits using `insert_before`, `insert_after`, `replace`, or `remove`. Project overlays are installed through `specify workflow overlay add` rather than by editing `.specify/workflows/` directly. Workflow step failure halts execution unless `continue_on_error: true` is explicitly configured.
 
+Phase 14 development-host installation and rematerialization are documented in `docs/development.md`, including the supported Codex integration, the pinned `generic` registration limitation, and supported extension, preset, and workflow-overlay commands.
+
+The user-facing root README remains blocked by SpecDD write authority: no current `Owns` or `Can modify` entry covers `README.md`. `HUMAN-REQUEST.md` records the explicit operator authorization needed before that file can be created.
+
 ## 14. Phase 14 — Documentation
 
 ### TODO
 
 - [ ] Write the project README after the first vertical slice works.
-- [ ] Document installation and local development for both the extension and preset.
-- [ ] Document the supported Codex active integration and the pinned Spec Kit `1.0.7` generic command-registration limitation.
 - [ ] Document Change Boundary semantics and regeneration.
 - [ ] Document bridge command usage and diagnostics.
 - [ ] Document task-partition guidance and why Spec Kit tasks are not synchronized with SpecDD tasks.
@@ -69,7 +71,7 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Start Phase 14 with the user-facing project README and installation path.
+Resolve `HUMAN-REQUEST.md` first so the user-facing root README has explicit SpecDD write authority. Then continue Phase 14 with that README.
 
 - [ ] Explain the Spec Kit change-lifecycle versus SpecDD persistent-system split before command details.
 - [ ] Document bootstrap, the Codex integration requirement, extension/preset installation, and workflow-overlay materialization from canonical source.
