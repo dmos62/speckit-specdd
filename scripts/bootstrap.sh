@@ -118,7 +118,6 @@ check_bridge_state() {
 check_initialized_state() {
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "current directory is not a Git working tree"
   [[ -d .specify ]] || fail "Spec Kit is not initialized; run: bash scripts/bootstrap.sh"
-  [[ -d "$ACTIVE_COMMANDS_DIR" ]] || fail "Codex Spec Kit skills are missing at ${ACTIVE_COMMANDS_DIR}"
   [[ -f .specdd/bootstrap.md ]] || fail "SpecDD is not initialized; run: bash scripts/bootstrap.sh"
 
   speckit_matches_pin || fail "Spec Kit ${SPECKIT_VERSION} is required; run: bash scripts/bootstrap.sh"
@@ -128,6 +127,8 @@ check_initialized_state() {
   active_integration="$(spec_kit_active_integration || true)"
   [[ "$active_integration" == "$ACTIVE_INTEGRATION" ]] || fail \
     "Spec Kit active integration must be '${ACTIVE_INTEGRATION}'; found '${active_integration:-unknown}'"
+
+  [[ -d "$ACTIVE_COMMANDS_DIR" ]] || fail "Codex Spec Kit skills are missing at ${ACTIVE_COMMANDS_DIR}"
 
   local framework_version
   framework_version="$(specdd_framework_version || true)"

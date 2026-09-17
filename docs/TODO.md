@@ -30,9 +30,13 @@ Hook dispatch in pinned Spec Kit remains agent-mediated. The hooks make the gate
 
 Phase 10 deliberate spec-evolution handling remains implemented without adding another source of truth. Evolution tasks use ordinary task-text prefixes `SPEC_EVOLUTION_REQUIRED:` and `AUTHORITY_EVOLUTION_REQUIRED:`; validation requires `.sdd`-only evolution scope and records whether fresh Change Boundary resolution is required.
 
+The isolated Codex preset smoke treats upstream skill restoration semantically. Spec Kit `1.0.7` may reserialize YAML frontmatter when a preset is removed, so the test requires the original command body to be restored and the SpecDD augmentation to be absent rather than requiring byte-identical frontmatter formatting.
+
 ## 11. Phase 11 — Activate lifecycle hooks
 
 Source changes now select a registrar-backed active integration, expose a dedicated implementation authorization command, register mandatory lifecycle hooks, and update the isolated installation smoke to require command and preset materialization through Codex.
+
+The current checked-in generated state is still on the `generic` integration. `bash scripts/bootstrap.sh --check` is therefore expected to fail until the apply-mode migration requested in `HUMAN-REQUEST.md` is run successfully.
 
 ### TODO
 

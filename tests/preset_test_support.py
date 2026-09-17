@@ -27,6 +27,19 @@ def skill_file(
     )
 
 
+def skill_body(content: str) -> str:
+    """Return command body while ignoring serializer-only frontmatter changes."""
+    lines = content.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return content
+
+    for index, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            return "".join(lines[index + 1 :])
+
+    return content
+
+
 def run_command(
     root: Path,
     *args: str,

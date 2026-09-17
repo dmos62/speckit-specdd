@@ -26,6 +26,11 @@
 @globexclude .specify-agent/commands/**
 @globexclude .agents/skills/speckit-*/**
 
+@# Generated Spec Kit templates and initialization bookkeeping
+@globexclude .specify/templates/**
+@globexclude .specify/init-options.json
+@globexclude .specify/integration.json
+
 @# Generated Spec Kit installation/bookkeeping metadata
 @globexclude .specify/integrations/*.manifest.json
 @globexclude .specify/memory/.constitution-template.json

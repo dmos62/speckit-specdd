@@ -2,7 +2,9 @@
 
 Phase 11 changes the supported local Spec Kit integration from `generic` to the registrar-backed `codex` integration. The generated Spec Kit state must be migrated through the supported CLI so the new extension commands, preset augmentations, and lifecycle hooks can be exercised in the real repository.
 
-From the repository root in bash, run:
+The latest check-only run still reports the `generic` integration and no `.agents/skills` directory. That is expected before migration: `bash scripts/bootstrap.sh --check` verifies state but does not change it.
+
+From the repository root in bash, run the apply-mode bootstrap:
 
     bash scripts/bootstrap.sh
 
