@@ -37,19 +37,9 @@ Pinned Spec Kit `1.0.7` supports project workflow overlays with `id`, `extends`,
 
 Phase 14 development-host installation and rematerialization are documented in `docs/development.md`, including the supported Codex integration, the pinned `generic` registration limitation, and supported extension, preset, and workflow-overlay commands.
 
-The user-facing root `README.md` is now governed by `README.sdd` and documents the responsibility split, bootstrap path, generated-state boundary, normal authority-aware lifecycle, specification-evolution invariant, cross-domain model, and common troubleshooting. Keep maintenance-heavy development-host detail in `docs/development.md` rather than expanding the README.
+The user-facing root `README.md` is governed by `README.sdd` and documents the responsibility split, bootstrap path, generated-state boundary, normal authority-aware lifecycle, specification-evolution invariant, cross-domain model, command usage, lifecycle-specific inputs and outputs, deterministic diagnostics, constitution-versus-root-SpecDD responsibilities, and common troubleshooting. Direct command hooks are distinguished from structural workflow enforcement.
 
 Focused Change Boundary documentation is implemented at `docs/change-boundary.md` under `docs/change-boundary.sdd`. The guide documents lifecycle-specific target discovery, deterministic regeneration, unresolved handling, stale-boundary behavior, authority-snapshot preservation, and disposable derived state without duplicating installation or maintenance procedures.
-
-## 14. Phase 14 — Documentation
-
-### TODO
-
-- [ ] Document bridge command usage and diagnostics.
-- [ ] Document task-partition guidance and why Spec Kit tasks are not synchronized with SpecDD tasks.
-- [ ] Document constitution versus root SpecDD responsibilities.
-- [ ] Document the authority-snapshot invariant and spec-evolution lifecycle.
-- [ ] Add a cross-domain example and troubleshooting for missing CLI or unresolved targets.
 
 ## 15. Phase 15 — v0.1 hardening
 
@@ -71,11 +61,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Document bridge command usage and diagnostics.
+Pin the tested compatibility range from actual repository evidence.
 
-Keep the documentation focused on the four bridge commands, lifecycle-specific inputs and outputs, deterministic diagnostic meanings, and the distinction between direct command hooks and structural workflow gates. Avoid repeating Change Boundary semantics already covered by `docs/change-boundary.md` or development-host procedures from `docs/development.md`.
+Start from the existing exact v0.1 pins and the currently passing bootstrap, installation smoke, resolver fixture, workflow, and acceptance tests. Do not broaden compatibility claims beyond versions that have direct test evidence. Keep compatibility checks in canonical source rather than generated Spec Kit state.
 
-If a new focused documentation file is needed, establish its governing `.sdd` contract as a specification operation first. Create the owned non-spec document only in a subsequent authority operation after re-resolving repository authority.
+If broader Spec Kit, SpecDD CLI, framework, Node.js, Python, or operating-system compatibility needs additional evidence, record the unsupported or unverified range explicitly rather than inferring it from version syntax.
 
 ## 20. Definition of done for v0.1
 

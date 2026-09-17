@@ -23,6 +23,16 @@ In practice:
 
 Spec Kit tasks are not synchronized with SpecDD `Tasks:` entries. They serve different purposes: Spec Kit tasks execute a feature, while SpecDD tasks are local planning context for a durable system contract.
 
+## Development governance versus system contracts
+
+The Spec Kit constitution and the root SpecDD specification intentionally govern different concerns.
+
+The constitution owns development-process rules such as testing expectations, review requirements, migration procedures, compatibility checks, and security-development practices.
+
+The root SpecDD specification owns durable system and product rules such as architecture boundaries, persistent dependency direction, ownership, modification authority, and contracts that future implementation work must preserve.
+
+A rule belongs in the layer matching its meaning. The bridge does not copy constitution rules into `.sdd` files or persistent SpecDD constraints into feature artifacts.
+
 ## Compatibility
 
 The v0.1 development baseline is intentionally pinned:
@@ -98,22 +108,15 @@ It is safe to regenerate. The `.sdd` hierarchy remains authoritative.
 
 As planning becomes more concrete, the bridge can refresh the boundary from more precise implementation paths. Unresolved early planning scope is advisory; unresolved implementation authority is not permission.
 
+Detailed Change Boundary lifecycle semantics are documented in [docs/change-boundary.md](docs/change-boundary.md).
+
 ## Normal lifecycle
 
-The bridge exposes four commands:
-
-| Command | Purpose |
-| --- | --- |
-| `/speckit.specdd.context` | Build or refresh the feature Change Boundary. |
-| `/speckit.specdd.validate` | Validate task write scope against the current boundary. |
-| `/speckit.specdd.authorize` | Gate implementation against the existing authority snapshot. |
-| `/speckit.specdd.verify` | Compare actual Git writes with the planned authority snapshot and fresh SpecDD resolution. |
-
-The normal sequence is:
+The normal bridge sequence is:
 
     context → validate → authorize → implement → verify
 
-The installed Spec Kit workflow overlay enforces the same lifecycle structurally:
+The installed Spec Kit workflow overlay enforces the corresponding lifecycle structurally:
 
     plan
       → specdd-context
@@ -124,7 +127,27 @@ The installed Spec Kit workflow overlay enforces the same lifecycle structurally
       → implement
       → specdd-verify
 
-Agent lifecycle hooks remain useful for command-level context and reporting, but the workflow overlay is the deterministic enforcement boundary. Its shell steps propagate failing validation or verification status through the Spec Kit workflow.
+Agent lifecycle hooks remain useful when bridge commands are invoked directly. They provide command-level context and reporting, but they are not the deterministic enforcement boundary. The workflow overlay executes bridge scripts as shell gates, so error or blocking diagnostics can stop workflow execution.
+
+## Bridge command usage
+
+The four bridge commands share the active Spec Kit feature but have different authority semantics.
+
+| Command | Inputs and target discovery | Result |
+| --- | --- | --- |
+| `/speckit.specdd.context` | Explicit non-`.sdd` target arguments take precedence; otherwise exact targets come from `tasks.md`, then `plan.md`. | Rebuilds `.specdd/boundary.json` from fresh SpecDD resolution. If no concrete target exists, stale boundary state is removed instead of reused. |
+| `/speckit.specdd.validate` | Uses the existing boundary and `tasks.md`. Optional stage is `planning`, `tasks`, or `implementation`; default is `tasks`. | Reports task authorities, unresolved or stale scope, multi-authority tasks, and explicit specification-evolution structure. It does not rewrite tasks. |
+| `/speckit.specdd.authorize` | Uses the existing boundary and `tasks.md` at implementation strictness. | Blocks implementation when current scope has stale, unknown, conflicting, or otherwise unauthorized authority. It never refreshes the boundary. |
+| `/speckit.specdd.verify` | Uses actual Git changes, the existing planned boundary, fresh SpecDD resolution for existing implementation targets, and `specdd lint`. | Reports authority violations, unplanned same-domain drift, specification changes, control-state changes, and SpecDD lint failures without changing repository state. |
+
+Typical direct invocations are:
+
+    /speckit.specdd.context
+    /speckit.specdd.validate tasks
+    /speckit.specdd.authorize
+    /speckit.specdd.verify
+
+The task-stage structural workflow gate deliberately refreshes the boundary from finalized task targets before validation. Authorization and verification deliberately do not refresh it because the existing file is the implementation operation's authority snapshot.
 
 ## Authority and cross-domain work
 
@@ -147,13 +170,15 @@ A feature such as external-identity login can remain one Spec Kit user story whi
 - Users changes its contract or persistence behavior in Users-owned files.
 - Cross-domain interaction uses the Users-facing contract rather than treating Users internals as Auth-owned implementation.
 
-A task that touches several authorities is not automatically invalid. The bridge reports the authority groups so an agent can decide whether the work should be decomposed or is legitimate cross-domain contract work.
+A task that touches several authorities is not automatically invalid. The bridge reports authority groups so naturally separable work can become authority-local tasks while remaining under the same feature and user story.
+
+Legitimate cross-domain contract work can remain together when the current authority model permits every write and decomposition would reduce coherence.
 
 What the bridge must not do is relax SpecDD authority merely to make a task pass.
 
 ## Specification evolution
 
-Some features require a durable system-contract change rather than ordinary implementation under the existing contracts.
+Some features require a durable system-contract change rather than ordinary implementation under existing contracts.
 
 The bridge distinguishes:
 
@@ -174,19 +199,28 @@ A changed `.sdd` file never retroactively authorizes implementation writes made 
 
 This authority-snapshot invariant prevents a task from granting itself new permissions and immediately relying on them.
 
-## Validation and verification findings
+## Diagnostics
 
-Common deterministic findings include:
+Deterministic diagnostics describe structural facts. Architectural conclusions such as whether a durable contract must evolve remain separate agentic judgments.
 
-- `UNRESOLVED_TARGET` — no trustworthy authority projection exists for a target.
-- `MULTI_AUTHORITY_TASK` — one task spans multiple authority domains; this is a warning rather than automatic invalidity.
-- `STALE_BOUNDARY` — feature or task scope no longer matches the current projection.
-- `AUTHORITY_VIOLATION` — implementation authority is unknown, conflicting, changed, or outside the planned authority set.
-- `SPECDD_DRIFT` — an actual implementation write was unplanned but remains inside an already planned authority domain.
-- `SPECDD_VIOLATION` — the resulting repository fails deterministic SpecDD checks.
-- `SPEC_EVOLUTION_PRESENT` — `.sdd` changes exist; this is informational and does not grant implementation authority.
+| Diagnostic | Meaning |
+| --- | --- |
+| `INVALID_TARGET` | Input cannot identify a valid repository target. |
+| `UNRESOLVED_TARGET` | A valid target has no trustworthy current authority projection. |
+| `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
+| `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership of a target. |
+| `MULTI_AUTHORITY_TASK` | One task spans several authority domains. This is a warning, not automatic invalidity. |
+| `STALE_BOUNDARY` | Active feature or current task scope no longer matches the planned boundary. |
+| `AUTHORITY_VIOLATION` | Implementation authority is unknown, conflicting, changed, or outside the planned authority set. |
+| `EVOLUTION_CLASSIFICATION_CONFLICT` | One task declares both supported evolution classifications. |
+| `EVOLUTION_SPEC_TARGET_REQUIRED` | An evolution task does not identify a `.sdd` target. |
+| `EVOLUTION_SCOPE_MIXED` | One task mixes specification evolution with ordinary implementation writes. |
+| `SPECDD_DRIFT` | An actual implementation write was unplanned but remains inside an already planned authority domain. |
+| `SPECDD_VIOLATION` | The resulting repository fails deterministic SpecDD checks such as `specdd lint`. |
+| `SPEC_EVOLUTION_PRESENT` | `.sdd` changes exist; this is informational and grants no implementation authority. |
+| `CONTROL_STATE_CHANGED` | SpecDD bootstrap control state changed and requires explicit review. |
 
-Architectural findings such as `MISSING_SPEC_EVOLUTION` remain separate from deterministic authority calculations because deciding whether an implementation introduces a durable contract can require architectural judgment.
+`MISSING_SPEC_EVOLUTION` is intentionally different: it is an architectural finding used when implementation introduces a durable system contract that future work must preserve but corresponding deliberate SpecDD evolution is absent.
 
 ## Troubleshooting
 
@@ -196,18 +230,24 @@ If bootstrap reports that the bridge extension, preset, commands, or workflow ov
 
 Check mode intentionally verifies existing generated state rather than materializing missing state.
 
+If `specdd` is unavailable or the installed CLI is not version `1.1.1`, run repository bootstrap rather than bypassing the bridge. Bootstrap installs the pinned CLI and verifies the framework version before bridge checks continue.
+
 If the Codex integration is unavailable or `codex` is not on `PATH`, install the Codex CLI before bootstrap. Pinned Spec Kit `1.0.7` cannot use the `generic` integration as a substitute for registrar-backed bridge commands.
 
 If a Change Boundary reports `UNRESOLVED_TARGET`, first confirm that the intended implementation path is correct and that its governing SpecDD chain provides clear ownership. A target that does not yet exist may remain unresolved during early planning, but implementation requires trustworthy authority.
 
 If a target reports `AMBIGUOUS_AUTHORITY`, resolve the competing ownership claims rather than choosing the nearest spec or inferring ownership from directory names.
 
-If authorization reports stale scope, refresh the boundary before implementation rather than weakening the gate.
+If task validation reports `STALE_BOUNDARY`, refresh context from finalized task paths before authorization.
+
+If authorization reports stale or unknown authority, implementation remains blocked under that snapshot. Refresh before implementation only after the underlying task or specification operation has been corrected; do not refresh inside the authorization gate itself.
 
 ## Project documentation
 
 The durable project design is in [docs/spec.md](docs/spec.md).
 
+Focused Change Boundary lifecycle semantics are in [docs/change-boundary.md](docs/change-boundary.md).
+
 Development-host setup and maintenance procedures are in [docs/development.md](docs/development.md).
 
-Remaining implementation and documentation work is tracked in [docs/TODO.md](docs/TODO.md).
+Remaining implementation work is tracked in [docs/TODO.md](docs/TODO.md).
