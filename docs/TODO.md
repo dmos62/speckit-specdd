@@ -1,6 +1,6 @@
 # Spec Kit × SpecDD Integration Implementation Plan
 
-Status: Planned  
+Status: Planned
 Target: v0.1
 
 Completed phases are removed from this file; remaining phase numbers stay stable so references to the original implementation plan do not drift.
@@ -9,8 +9,8 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 Build the remaining integration in this order:
 
-1. implement the Change Boundary v1 adapter,
-2. expose `speckit.specdd.context`,
+1. expose `speckit.specdd.context` on top of the Change Boundary adapter,
+2. package the context command in the local Spec Kit extension,
 3. implement validation and task-partition guidance,
 4. implement verification from actual changed files,
 5. augment Spec Kit planning, tasks, and convergence,
@@ -24,35 +24,11 @@ The first milestone remains:
 
 context → validate → implement → verify
 
-The pinned SpecDD 1.1.1 resolver contract has been inspected against the two-domain fixture. For both Auth and Users targets, `directories` contains root-to-local resolved context, each resolved spec exposes a repository-relative forward-slash `path`, and section bodies contain the raw `Owns`, `Depends on`, `Forbids`, and other resolved entries needed by the bridge. `rootDirectoryPath` and `targetPath` are host-absolute and platform-specific, so derived bridge state must normalize away those machine-local values. The resolver does not emit a dedicated primary-authority field; the adapter therefore needs a narrow authority derivation from the already-resolved spec chain and `Owns` entries while preserving SpecDD path semantics rather than parsing `.sdd` source independently.
+The pinned SpecDD 1.1.1 resolver contract has been inspected against the two-domain fixture. For both Auth and Users targets, `directories` contains root-to-local resolved context, each resolved spec exposes a repository-relative forward-slash `path`, and section bodies contain the raw `Owns`, `Depends on`, `Forbids`, and other resolved entries needed by the bridge. `rootDirectoryPath` and `targetPath` are host-absolute and platform-specific, so derived bridge state must normalize away those machine-local values. The resolver does not emit a dedicated primary-authority field; the adapter therefore derives primary authority narrowly from the already-resolved spec chain and `Owns` entries while preserving SpecDD path semantics rather than parsing `.sdd` source independently.
 
-Change Boundary v1 now uses JSON Schema Draft 2020-12 at `integration/specdd/schemas/change-boundary.schema.json`. Normalized repository paths are non-empty, repository-relative, forward-slash paths with no absolute prefixes, backslashes, duplicate separators, trailing slash, or `.`/`..` path segments. Resolved spec and authority paths end in `.sdd`. `crossBoundary` is consistent with the number of distinct authority paths: `true` requires at least two and `false` permits at most one. Unresolved entries preserve the original input and may include a normalized path when one exists. Generation metadata records the SpecDD CLI and framework versions but deliberately omits a timestamp so regeneration can remain deterministic. The schema contract is exercised without adding a project dependency by `tests/test_change_boundary_schema.py`; Phase 4 should make generated adapter output conform to this exact shape and perform production schema validation.
+Change Boundary v1 now uses JSON Schema Draft 2020-12 at `integration/specdd/schemas/change-boundary.schema.json`. Normalized repository paths are non-empty, repository-relative, forward-slash paths with no absolute prefixes, backslashes, duplicate separators, trailing slash, or `.`/`..` path segments. Resolved spec and authority paths end in `.sdd`. `crossBoundary` is consistent with the number of distinct authority paths: `true` requires at least two and `false` permits at most one. Unresolved entries preserve the original input and may include a normalized path when one exists. Generation metadata records the SpecDD CLI and framework versions but deliberately omits a timestamp so regeneration can remain deterministic. The schema contract is exercised without adding a project dependency by `tests/test_change_boundary_schema.py`.
 
----
-
-## 4. Phase 4 — Implement the SpecDD adapter
-
-Create `integration/specdd/scripts/boundary.py`.
-
-For the first vertical slice, run the adapter directly as a repository-local Python script. Add Python packaging metadata only if later test or import requirements make package semantics materially useful.
-
-### TODO
-
-- [ ] Discover the repository root.
-- [ ] Normalize repository-relative targets and reject unsupported outside-root paths.
-- [ ] Invoke the real `specdd resolve` command with machine-readable output.
-- [ ] Normalize non-zero exits and malformed JSON into explicit unresolved diagnostics.
-- [ ] Normalize resolved spec paths and determine primary authority where possible.
-- [ ] Derive the distinct authority set and `crossBoundary` flag.
-- [ ] Validate generated output against the Change Boundary schema.
-- [ ] Support stdout JSON and write-to-file modes.
-- [ ] Make ordering stable where practical.
-- [ ] Add unit tests for normalization and integration tests against the real fixture.
-- [ ] Do not implement a `.sdd` parser.
-
-### Exit criteria
-
-Resolving one Auth target and one Users target produces a valid Change Boundary containing both authority domains.
+The Phase 4 adapter is implemented at `integration/specdd/scripts/boundary.py`. It consumes the pinned compact resolver JSON, derives primary authority only from resolved `Owns` entries, validates generated documents against the checked-in schema, emits stable JSON to stdout or atomically to a file, and turns invalid targets, resolver failures, malformed resolver output, and authority ambiguity into explicit unresolved diagnostics. `tests/test_boundary.py` covers normalization, SpecDD glob semantics, authority derivation, schema validation, output modes, and the real two-domain fixture. SpecDD 1.1.1 does not provide a stable version-reporting command for this use, so the adapter reads the installed npm package version and falls back to `npm list --global` while framework version comes from the nearest applicable `.specdd/bootstrap.md`.
 
 ---
 
@@ -296,10 +272,9 @@ Do not implement before v0.1 proves the semantic bridge:
 
 Stop after the first narrow vertical slice:
 
-- [ ] Implement and test `boundary.py`.
-- [ ] Generate one valid `boundary.json`.
-- [ ] Implement minimal `speckit.specdd.context`.
-- [ ] Install the extension locally and run the context command through Spec Kit.
+- [ ] Implement minimal `speckit.specdd.context` around the completed adapter.
+- [ ] Generate and regenerate one valid `boundary.json` through the context command.
+- [ ] Create the local extension manifest, install it, and run the context command through Spec Kit.
 
 Do not start validation, presets, workflow overlays, or bundle packaging before this slice works.
 
@@ -331,8 +306,8 @@ Do not start validation, presets, workflow overlays, or bundle packaging before 
 
 At every implementation decision, preserve this ownership split:
 
-Spec Kit owns the change lifecycle.  
-SpecDD owns persistent system semantics.  
+Spec Kit owns the change lifecycle.
+SpecDD owns persistent system semantics.
 The bridge resolves, projects, validates, and verifies.
 
 The bridge must not become a third competing specification system.

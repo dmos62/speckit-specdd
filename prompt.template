@@ -56,9 +56,7 @@ This monorepo relies on clean separation of concerns between subrepos, documents
 An important pattern is that your response will influence what information you have available in the next request made to you, and you have to "cede control" to the next request (by submitting your changes) so as to get that information you need.
 @endcomment
 
-
-
-
+You must split code and documentation files into small files, so that they don't exceed 250 lines. We need focused, highly orthogonal files.
 
 
 

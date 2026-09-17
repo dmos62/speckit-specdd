@@ -1,8 +1,7 @@
-@# Surface bootstrap health, Change Boundary schema contract tests, fixture lint/resolver smoke checks, patch integrity, and worktree state to the next iteration.
+@# Surface bootstrap health, Change Boundary schema/adapter tests, fixture lint, patch integrity, and worktree state to the next iteration.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
 @cli! bash -c "uv run --no-project python tests/test_change_boundary_schema.py"
+@cli! bash -c "uv run --no-project python tests/test_boundary.py"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
-@cli! bash -c "specdd resolve --root tests/fixtures/specdd-two-domain tests/fixtures/specdd-two-domain/src/auth/service.ts --sections all --format json >/dev/null"
-@cli! bash -c "specdd resolve --root tests/fixtures/specdd-two-domain tests/fixtures/specdd-two-domain/src/users/repository.ts --sections all --format json >/dev/null"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"
