@@ -9,6 +9,7 @@ from boundary_test_support import (
     boundary,
     verification,
 )
+from verification_cli import _specdd_lint
 
 
 @unittest.skipUnless(
@@ -34,7 +35,7 @@ class RealFixtureVerificationTests(unittest.TestCase):
             "stderr": "",
         }
 
-    def test_valid_local_change_verifies(self):
+    def test_scenario_a_valid_local_change_verifies(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
@@ -60,7 +61,7 @@ class RealFixtureVerificationTests(unittest.TestCase):
         self.assertEqual([], result["diagnostics"])
         self.assertFalse(result["summary"]["blocking"])
 
-    def test_feature_correct_but_cross_domain_unauthorized_change_blocks(self):
+    def test_scenario_b_unauthorized_cross_domain_write_blocks(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
@@ -98,7 +99,7 @@ class RealFixtureVerificationTests(unittest.TestCase):
         self.assertEqual(["src/users/repository.ts"], violations[0]["targets"])
         self.assertTrue(result["summary"]["blocking"])
 
-    def test_authority_evolution_requires_a_fresh_boundary(self):
+    def test_scenario_e_authority_evolution_requires_fresh_boundary(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
@@ -181,3 +182,29 @@ class RealFixtureVerificationTests(unittest.TestCase):
         )
         self.assertEqual([], subsequent_operation["diagnostics"])
         self.assertFalse(subsequent_operation["summary"]["blocking"])
+
+    def test_invalid_spec_is_reported_by_real_specdd_lint(self):
+        if not FIXTURE_ROOT.is_dir():
+            self.skipTest("two-domain fixture is not available")
+
+        with tempfile.TemporaryDirectory(dir=FIXTURE_ROOT.parent) as temporary:
+            root = Path(temporary).resolve() / "specdd-two-domain"
+            shutil.copytree(FIXTURE_ROOT, root)
+            users_spec = root / "src" / "users" / "users.sdd"
+            users_spec.write_text(
+                "Spec: Users\n\nUnknown:\n  invalid\n",
+                encoding="utf-8",
+            )
+
+            result = _specdd_lint(
+                root,
+                "specdd",
+            )
+
+        self.assertNotEqual(
+            0,
+            result["exitCode"],
+        )
+        self.assertTrue(
+            result["stdout"] or result["stderr"]
+        )

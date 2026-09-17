@@ -17,7 +17,7 @@ from boundary_test_support import (
     "SpecDD CLI is required for the fixture integration test",
 )
 class RealFixtureIntegrationTests(unittest.TestCase):
-    def run_fixture(self):
+    def run_fixture(self, *targets):
         return subprocess.run(
             [
                 sys.executable,
@@ -26,8 +26,7 @@ class RealFixtureIntegrationTests(unittest.TestCase):
                 str(FIXTURE_ROOT),
                 "--feature",
                 "two-domain-fixture",
-                "src/users/repository.ts",
-                "src/auth/service.ts",
+                *targets,
             ],
             cwd=REPO_ROOT,
             check=False,
@@ -41,8 +40,12 @@ class RealFixtureIntegrationTests(unittest.TestCase):
                 "two-domain fixture is not available"
             )
 
-        result = self.run_fixture()
-        rerun = self.run_fixture()
+        targets = (
+            "src/users/repository.ts",
+            "src/auth/service.ts",
+        )
+        result = self.run_fixture(*targets)
+        rerun = self.run_fixture(*targets)
 
         self.assertEqual(
             0,
@@ -106,4 +109,62 @@ class RealFixtureIntegrationTests(unittest.TestCase):
         self.assertIn(
             "1.5",
             rendered,
+        )
+
+    def test_missing_target_is_preserved_as_unresolved(self):
+        if not FIXTURE_ROOT.is_dir():
+            self.skipTest(
+                "two-domain fixture is not available"
+            )
+
+        result = self.run_fixture(
+            "src/auth/missing.ts"
+        )
+        self.assertEqual(
+            0,
+            result.returncode,
+            result.stderr,
+        )
+
+        payload = json.loads(
+            result.stdout
+        )
+        self.assertEqual(
+            [],
+            payload["targets"],
+        )
+        self.assertEqual(
+            [],
+            payload["authorities"],
+        )
+        self.assertEqual(
+            "UNRESOLVED_TARGET",
+            payload["unresolved"][0]["code"],
+        )
+        self.assertEqual(
+            "src/auth/missing.ts",
+            payload["unresolved"][0]["normalizedPath"],
+        )
+
+    def test_real_resolver_failure_is_normalized(self):
+        if not FIXTURE_ROOT.is_dir():
+            self.skipTest(
+                "two-domain fixture is not available"
+            )
+
+        target = boundary.normalize_target(
+            FIXTURE_ROOT,
+            "src/auth/missing.ts",
+        )
+        specs, error = boundary.resolve_target(
+            FIXTURE_ROOT,
+            target,
+            "specdd",
+        )
+
+        self.assertIsNone(specs)
+        self.assertIsNotNone(error)
+        self.assertRegex(
+            error,
+            r"^SpecDD resolve exited with status [1-9][0-9]*",
         )

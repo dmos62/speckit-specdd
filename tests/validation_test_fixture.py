@@ -30,7 +30,7 @@ class RealFixtureValidationTests(unittest.TestCase):
             specdd_framework_version="1.5",
         )
 
-    def test_authority_local_tasks_validate_independently(self):
+    def test_scenario_a_authority_local_tasks_validate_independently(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest(
                 "two-domain fixture is not available"
@@ -65,7 +65,7 @@ class RealFixtureValidationTests(unittest.TestCase):
             result["diagnostics"],
         )
 
-    def test_combined_cross_domain_task_is_exposed_without_rejection(self):
+    def test_scenario_c_cross_domain_feature_remains_representable(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest(
                 "two-domain fixture is not available"
@@ -107,7 +107,7 @@ class RealFixtureValidationTests(unittest.TestCase):
             result["summary"]["blocking"]
         )
 
-    def test_durable_auth_to_users_contract_is_explicit_spec_evolution(self):
+    def test_scenario_d_durable_contract_is_explicit_spec_evolution(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest(
                 "two-domain fixture is not available"

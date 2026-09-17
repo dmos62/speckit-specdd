@@ -1,4 +1,4 @@
-@# Surface bootstrap health, workflow state for Phase 12, full tests, fixture lint, patch integrity, and worktree state.
+@# Surface bootstrap health, installed workflow state, full tests, fixture lint, patch integrity, and worktree state.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
 @cli! bash -c "specify workflow info speckit"
 @cli! bash -c "specify workflow resolve speckit"
