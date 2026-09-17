@@ -1,0 +1,28 @@
+Spec: Change Boundary Guide
+
+Purpose:
+  Document feature-scoped Change Boundary semantics, lifecycle-specific target discovery, regeneration, unresolved handling, staleness, and disposable derived-state behavior.
+
+Owns:
+  ./change-boundary.md
+
+References:
+  ../README.sdd
+  ./development.sdd
+  ../integration/specdd/commands/context.sdd
+  ../integration/specdd/commands/validate.sdd
+  ../integration/specdd/commands/authorize.sdd
+  ../integration/specdd/commands/verify.sdd
+  ../integration/specdd/scripts/workflow_gate.sdd
+
+Must:
+  The guide explains how target discovery becomes more precise from planning through task generation.
+  The guide explains deterministic regeneration from canonical Spec Kit artifacts and fresh SpecDD resolver output without copying persistent SpecDD constraints.
+  The guide distinguishes advisory unresolved planning context from unresolved implementation authority that cannot grant permission.
+  The guide explains when a Change Boundary is refreshed and when the existing boundary must remain unchanged as the operation authority snapshot.
+  The guide explains stale-boundary conditions and the required refresh points.
+  The guide presents `boundary.json` as disposable derived state that can be deleted and rebuilt from canonical sources.
+  Installation and development-host maintenance remain delegated to the README and development guide rather than duplicated here.
+
+Done when:
+  A maintainer can determine when a Change Boundary is created, refreshed, preserved as a snapshot, rejected as stale, and safely regenerated.

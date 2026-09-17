@@ -37,13 +37,14 @@ Pinned Spec Kit `1.0.7` supports project workflow overlays with `id`, `extends`,
 
 Phase 14 development-host installation and rematerialization are documented in `docs/development.md`, including the supported Codex integration, the pinned `generic` registration limitation, and supported extension, preset, and workflow-overlay commands.
 
-The user-facing root README is now governed by `README.sdd`. This operation establishes its SpecDD ownership only; create `README.md` in a subsequent operation after taking a fresh authority snapshot.
+The user-facing root `README.md` is now governed by `README.sdd` and documents the responsibility split, bootstrap path, generated-state boundary, normal authority-aware lifecycle, specification-evolution invariant, cross-domain model, and common troubleshooting. Keep maintenance-heavy development-host detail in `docs/development.md` rather than expanding the README.
+
+Focused Change Boundary documentation now has a dedicated governing contract at `docs/change-boundary.sdd`. That specification establishes ownership for the intended `docs/change-boundary.md`, but the new ownership cannot authorize creation of the document in the same authority operation. Create the guide in a subsequent operation after re-resolving the repository authority state.
 
 ## 14. Phase 14 — Documentation
 
 ### TODO
 
-- [ ] Write the project README after the first vertical slice works.
 - [ ] Document Change Boundary semantics and regeneration.
 - [ ] Document bridge command usage and diagnostics.
 - [ ] Document task-partition guidance and why Spec Kit tasks are not synchronized with SpecDD tasks.
@@ -71,12 +72,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Create the user-facing root README first. `README.sdd` now owns `README.md`; resolve a fresh authority snapshot before creating it.
+Create `docs/change-boundary.md` under its now-established `docs/change-boundary.sdd` authority.
 
-- [ ] Explain the Spec Kit change-lifecycle versus SpecDD persistent-system split before command details.
-- [ ] Document bootstrap, the Codex integration requirement, extension/preset installation, and workflow-overlay materialization from canonical source.
-- [ ] Document Change Boundary regeneration, command usage, diagnostics, and the authority-snapshot invariant using one cross-domain example.
-- [ ] Keep development-host details in `docs/development.md`; keep the README focused on installation, concepts, and normal usage.
+The focused guide should explain lifecycle-specific target discovery, deterministic regeneration, unresolved-target handling, staleness, and why `boundary.json` remains disposable derived state. Cross-link the user-facing README and development guide where useful without duplicating installation or maintenance procedures.
+
+After the guide is verified, remove the completed Change Boundary documentation task from Phase 14 rather than retaining a checked-off item.
 
 ## 20. Definition of done for v0.1
 
