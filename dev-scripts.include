@@ -1,0 +1,2 @@
+@# Example command (commented out), normal commands start with @cli!, note, `bash -c` wrapping necessary.
+@#cli! bash -c "pnpm check"
