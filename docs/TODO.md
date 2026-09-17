@@ -9,12 +9,11 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 Build the remaining integration in this order:
 
-1. implement validation and task-partition guidance,
-2. implement verification from actual changed files,
-3. augment Spec Kit planning, tasks, and convergence,
-4. add deliberate spec-evolution handling,
-5. add hooks and then a workflow overlay,
-6. harden tests, documentation, and compatibility.
+1. implement verification from actual changed files,
+2. augment Spec Kit planning, tasks, and convergence,
+3. add deliberate spec-evolution handling,
+4. add hooks and then a workflow overlay,
+5. harden tests, documentation, and compatibility.
 
 Do not begin bundle packaging, automatic `.sdd` editing, or workflow automation before the manual vertical slice works.
 
@@ -28,29 +27,13 @@ The adapter at `integration/specdd/scripts/boundary.py` consumes compact resolve
 
 The context command source at `integration/specdd/commands/context.md` resolves the active feature through Spec Kit state, prefers explicit user targets, otherwise discovers exact targets from `tasks.md` before `plan.md`, and delegates normalization, resolver, ownership, schema validation, and atomic replacement to the adapter. Intended-but-missing paths remain unresolved diagnostics. If no target is named, stale derived boundary state is removed. The command reports authorities, cross-boundary status, and unresolved diagnostics by code.
 
-The extension manifest at `integration/specdd/extension.yml` is authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and only `speckit.specdd.context`.
+The extension manifest at `integration/specdd/extension.yml` is authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and the context and validation bridge commands.
 
-Local development installation has been validated against Spec Kit `1.0.7`. The generic integration registers `speckit.specdd.context` from the extension manifest and removes the generated command during uninstall. The lifecycle smoke treats `.specify/extensions/.registry` as generated Spec Kit bookkeeping: it rejects semantic registry changes, tolerates Spec Kit's whitespace-only rewrite, restores the tracked bytes after the check, and verifies that install/uninstall leaves no generated extension or command state behind.
+Local development installation has been validated against Spec Kit `1.0.7`. The generic integration registers bridge commands from the extension manifest and removes generated commands during uninstall. The lifecycle smoke treats `.specify/extensions/.registry` as generated Spec Kit bookkeeping: it rejects semantic registry changes, tolerates Spec Kit's whitespace-only rewrite, restores tracked bytes after the check, and verifies that install/uninstall leaves no generated extension or command state behind.
 
-## 7. Phase 7 — Implement validation and task partition guidance
+Deterministic validation is implemented by `integration/specdd/scripts/validation.py`. It reads the validated Change Boundary plus exact paths from Spec Kit `tasks.md`, preserves task order, IDs, and user-story labels, and classifies task write sets as `NO_WRITE_TARGETS`, `SPEC_ONLY`, `NORMAL`, `CROSS_BOUNDARY`, or `UNRESOLVED`. Its stable diagnostics are `UNRESOLVED_TARGET`, `MULTI_AUTHORITY_TASK`, `STALE_BOUNDARY`, and `AUTHORITY_VIOLATION`, with `info`, `warning`, `error`, and `blocking` severity semantics. Multi-authority work is advisory rather than automatically invalid; unknown or conflicting authority blocks at the implementation stage. The validator does not parse `.sdd`, rewrite tasks, or alter authority.
 
-Initial deterministic diagnostics: `UNRESOLVED_TARGET`, `MULTI_AUTHORITY_TASK`, `AUTHORITY_VIOLATION`, `STALE_BOUNDARY`.
-
-Agentic classifications: `IMPLEMENTATION_CONFLICT`, `SPEC_EVOLUTION_REQUIRED`, `AUTHORITY_EVOLUTION_REQUIRED`.
-
-### TODO
-- [ ] Define diagnostic structure and severity levels: info, warning, error, blocking.
-- [ ] Detect tasks whose write targets map to zero, one, or multiple primary authorities.
-- [ ] Block unknown/conflicting write authority during implementation.
-- [ ] Detect obviously stale boundary data.
-- [ ] Preserve feature/user-story grouping while recommending authority-local task decomposition.
-- [ ] Preserve Spec Kit task ordering and IDs.
-- [ ] Accept legitimate contract work that spans authorities rather than blindly rejecting it.
-- [ ] Never change durable SpecDD authority merely to make a task valid.
-- [ ] Distinguish implementation conflict, spec evolution, and authority evolution.
-- [ ] Add fixture coverage for every diagnostic/classification.
-
-Exit criteria: validation handles local valid work, accidental cross-authority mutation, legitimate multi-domain work, spec evolution, and authority evolution without synchronizing tasks into `.sdd`.
+The validation command at `integration/specdd/commands/validate.md` keeps architectural judgment outside deterministic mechanics. It uses multi-authority groups for decomposition guidance while preserving feature and user-story cohesion, and distinguishes `IMPLEMENTATION_CONFLICT`, `SPEC_EVOLUTION_REQUIRED`, and `AUTHORITY_EVOLUTION_REQUIRED` when reasoning about intent. Authority evolution must end the current authority context and be followed by fresh Change Boundary resolution before implementation.
 
 ## 8. Phase 8 — Implement `speckit.specdd.verify`
 
@@ -166,13 +149,13 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Start Phase 7 with the deterministic validation model:
-- [ ] Define a compact diagnostic data structure and severity semantics.
-- [ ] Reuse Change Boundary target/authority projection rather than parsing `.sdd`.
-- [ ] Add fixture-backed cases for zero, one, and multiple authorities before adding agentic classifications.
-- [ ] Add `speckit.specdd.validate` to the extension manifest only after its command contract exists.
+Start Phase 8 with actual-change verification:
+- [ ] Define the changed-path collection boundary around Git without treating generated integration state as product writes.
+- [ ] Reuse Change Boundary and validation projection instead of parsing `.sdd`.
+- [ ] Add fixture-backed verification for a valid local change and an unauthorized cross-domain change.
+- [ ] Add `speckit.specdd.verify` to the extension manifest only after its command contract exists.
 
-Do not start presets, hooks, workflow overlays, or bundle packaging before manual validation works.
+Do not start presets, hooks, workflow overlays, or bundle packaging before manual verification works.
 
 ## 20. Definition of done for v0.1
 
@@ -181,16 +164,16 @@ Do not start presets, hooks, workflow overlays, or bundle packaging before manua
 - [x] The bridge installs locally as a Spec Kit extension.
 - [x] The bridge uses the real SpecDD resolver.
 - [x] `speckit.specdd.context` generates a valid, rebuildable Change Boundary through its adapter.
-- [ ] `speckit.specdd.validate` recognizes authority and system-evolution issues.
+- [x] `speckit.specdd.validate` recognizes authority and system-evolution issues.
 - [ ] `speckit.specdd.verify` checks actual implementation scope.
 - [ ] The preset supplies SpecDD context during planning and task generation.
 - [ ] Feature user stories may span multiple SpecDD domains while implementation tasks remain authority-local where practical.
 - [ ] Spec Kit tasks remain the canonical feature execution tasks.
 - [ ] SpecDD remains the canonical persistent system model.
 - [ ] Unauthorized cross-domain mutation is detected.
-- [ ] Legitimate cross-domain work is representable.
-- [ ] Spec evolution is distinct from implementation conflict.
-- [ ] Authority evolution requires re-resolution before new rights can be used.
+- [x] Legitimate cross-domain work is representable.
+- [x] Spec evolution is distinct from implementation conflict.
+- [x] Authority evolution requires re-resolution before new rights can be used.
 - [ ] Required semantic acceptance tests pass.
 - [ ] A clean clone reproduces the development setup from documentation.
 

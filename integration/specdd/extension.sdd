@@ -8,10 +8,11 @@ Owns:
 
 References:
   ./commands/context.sdd
+  ./commands/validate.sdd
 
 Must:
   Command declarations correspond to bridge command contracts that exist under `./commands/`.
   Compatibility remains aligned with Spec Kit `1.0.7` and SpecDD CLI `1.1.1` until the project compatibility pins change.
 
 Done when:
-  Spec Kit can discover the declared context command after local extension installation.
+  Spec Kit can discover the declared context and validation commands after local extension installation.

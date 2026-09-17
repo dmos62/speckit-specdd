@@ -24,6 +24,9 @@ provides:
     - name: speckit.specdd.context
       file: commands/context.md
       description: "Build or refresh the active feature's derived SpecDD Change Boundary."
+    - name: speckit.specdd.validate
+      file: commands/validate.md
+      description: "Validate Spec Kit task write scope against the current SpecDD Change Boundary."
 
 tags:
   - specdd

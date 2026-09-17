@@ -1,0 +1,31 @@
+Spec: SpecDD Validate Command
+
+Purpose:
+  Validate Spec Kit task write scope against the current derived Change Boundary and surface authority-aligned implementation guidance.
+
+Owns:
+  ./validate.md
+
+References:
+  ./context.sdd
+
+Must:
+  Deterministic validation delegates task-path and authority calculations to the bridge validation script.
+  Validation preserves Spec Kit task order, task IDs, and user-story grouping.
+  Multi-authority tasks are reported without automatically treating legitimate cross-domain contract work as invalid.
+  Unknown or conflicting write authority blocks implementation-stage validation.
+  Agentic reasoning distinguishes `IMPLEMENTATION_CONFLICT`, `SPEC_EVOLUTION_REQUIRED`, and `AUTHORITY_EVOLUTION_REQUIRED` when deterministic findings require architectural interpretation.
+  Authority-local decomposition guidance does not rewrite `tasks.md` automatically.
+
+Must not:
+  Edit `.sdd` files.
+  Relax durable SpecDD authority to make a task valid.
+  Synchronize Spec Kit tasks with SpecDD `Tasks:` entries.
+
+Depends on:
+  ../scripts/validation.py
+
+Done when:
+  One-authority fixture tasks validate without cross-boundary findings.
+  A multi-authority fixture task preserves its feature and user-story context while exposing authority-local target groups.
+  Implementation-stage validation blocks unresolved or conflicting authority.
