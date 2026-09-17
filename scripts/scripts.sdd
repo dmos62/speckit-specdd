@@ -20,6 +20,7 @@ Must:
   The local bridge extension and preset are installed from canonical repository source before verification.
   The structural SpecDD workflow overlay is installed through supported Spec Kit workflow-overlay commands.
   Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, workflow-overlay resolution, and `specdd lint` without changing repository state.
+  Missing required host executables report dependency-specific remediation before bootstrap mutates repository state.
 
 Must not:
   Patch generated Spec Kit commands, installed extension state, installed preset state, workflow-overlay state, or SpecDD framework files directly.

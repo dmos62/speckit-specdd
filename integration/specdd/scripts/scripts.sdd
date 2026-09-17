@@ -35,6 +35,7 @@ References:
 
 Must:
   SpecDD resolution comes from the installed SpecDD CLI.
+  Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Validation consumes Change Boundary projection and exact task paths without parsing `.sdd` source.

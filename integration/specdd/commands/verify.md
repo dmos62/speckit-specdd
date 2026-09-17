@@ -17,6 +17,13 @@ durable specification evolution.
 
 This command reports state only. It does not edit implementation files, Spec Kit artifacts, or `.sdd` files.
 
+## External dependency failures
+
+If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
+when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
+`bash scripts/bootstrap.sh --check`, and do not convert tool absence into lint, drift, stale-boundary, or authority
+diagnostics.
+
 ## Execution
 
 1. From the repository root, run:

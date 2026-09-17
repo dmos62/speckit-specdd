@@ -15,20 +15,28 @@ def _run(
     root: Path,
     runner: RunCommand,
 ) -> subprocess.CompletedProcess[str]:
-    return runner(
-        args,
-        cwd=str(root),
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        return runner(
+            args,
+            cwd=str(root),
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        command = args[0] if args else "<unknown>"
+        raise BoundaryError(
+            f"External command could not be executed: {command}: {exc}"
+        ) from exc
 
 
 def _locate_executable(executable: str) -> str:
     located = shutil.which(executable)
     if located is None:
         raise BoundaryError(
-            f"SpecDD CLI executable was not found: {executable}"
+            "Required SpecDD CLI executable was not found: "
+            f"{executable}. Run `bash scripts/bootstrap.sh` to install "
+            "the pinned SpecDD CLI, or restore it to PATH before retrying."
         )
     return located
 
@@ -110,37 +118,45 @@ def specdd_cli_version(
             return version
 
     npm = shutil.which("npm")
-    if npm:
-        result = _run(
-            [
-                npm,
-                "list",
-                "--global",
-                "specdd",
-                "--depth=0",
-                "--json",
-            ],
-            root,
-            runner,
+    if npm is None:
+        raise BoundaryError(
+            "SpecDD CLI is present, but its installed version could not "
+            "be verified because npm was not found. Install Node.js/npm "
+            "and run `bash scripts/bootstrap.sh --check`."
         )
-        if result.returncode == 0:
-            try:
-                payload = json.loads(result.stdout)
-                version = payload["dependencies"]["specdd"][
-                    "version"
-                ]
-            except (
-                json.JSONDecodeError,
-                KeyError,
-                TypeError,
-            ):
-                version = None
 
-            if isinstance(version, str) and version:
-                return version
+    result = _run(
+        [
+            npm,
+            "list",
+            "--global",
+            "specdd",
+            "--depth=0",
+            "--json",
+        ],
+        root,
+        runner,
+    )
+    if result.returncode == 0:
+        try:
+            payload = json.loads(result.stdout)
+            version = payload["dependencies"]["specdd"][
+                "version"
+            ]
+        except (
+            json.JSONDecodeError,
+            KeyError,
+            TypeError,
+        ):
+            version = None
+
+        if isinstance(version, str) and version:
+            return version
 
     raise BoundaryError(
-        "Could not determine the installed SpecDD CLI version"
+        "SpecDD CLI is present, but its installed version could not be "
+        "verified from package metadata or npm global package state. "
+        "Run `bash scripts/bootstrap.sh --check` to repair the pinned toolchain."
     )
 
 

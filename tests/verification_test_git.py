@@ -174,3 +174,26 @@ class VerificationGitTests(unittest.TestCase):
             "DELETED",
             deleted[0].status,
         )
+
+    def test_missing_git_is_explicit_infrastructure_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(
+                temporary
+            ).resolve()
+
+            def missing_git(*args, **kwargs):
+                raise FileNotFoundError("git")
+
+            with self.assertRaisesRegex(
+                verification.VerificationError,
+                "Required Git executable was not found",
+            ) as raised:
+                verification.collect_git_changes(
+                    root,
+                    runner=missing_git,
+                )
+
+        self.assertIn(
+            "bash scripts/bootstrap.sh --check",
+            str(raised.exception),
+        )

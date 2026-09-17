@@ -17,6 +17,13 @@ responsibility where the deterministic result cannot decide intent.
 
 This command never rewrites tasks, edits `.sdd` files, or relaxes SpecDD authority.
 
+## External dependency failures
+
+If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, or `uv` when
+reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
+`bash scripts/bootstrap.sh --check`, and do not convert tool absence into unresolved-target, stale-boundary, or authority
+diagnostics.
+
 ## Execution
 
 1. From the repository root, run:
@@ -136,4 +143,4 @@ Keep deterministic findings distinct from architectural interpretation.
 - Never rewrite Spec Kit tasks automatically.
 - Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries.
 - Never infer authority from task wording, directory names, or proximity.
-- Never relax SpecDD ownership or write authority to make validation pass.
+- Never relax SpecDD ownership or write authority to make a task valid.

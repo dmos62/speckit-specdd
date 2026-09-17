@@ -75,6 +75,77 @@ class WorkflowSourceTests(unittest.TestCase):
                 content,
             )
 
+    def test_overlay_reports_missing_uv_before_gate_execution(self):
+        content = WORKFLOW_OVERLAY_PATH.read_text(
+            encoding="utf-8"
+        )
+
+        self.assertEqual(
+            4,
+            content.count(
+                "required command not found: uv"
+            ),
+        )
+        self.assertEqual(
+            4,
+            content.count("exit 2"),
+        )
+        self.assertIn(
+            "bash scripts/bootstrap.sh --check",
+            content,
+        )
+
+    def test_bootstrap_has_actionable_dependency_failures(self):
+        content = BOOTSTRAP_PATH.read_text(
+            encoding="utf-8"
+        )
+
+        for marker in (
+            'require_command git "install Git',
+            'require_command node "install Node.js',
+            'require_command npm "install npm',
+            'require_command uv "install uv',
+            'require_command codex "install the Codex CLI',
+            "Spec Kit CLI 'specify' is not installed",
+            "SpecDD CLI 'specdd' is not installed",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(
+                    marker,
+                    content,
+                )
+
+    def test_bridge_commands_classify_missing_tools_as_infrastructure(self):
+        command_root = (
+            BOOTSTRAP_PATH.parents[1]
+            / "integration"
+            / "specdd"
+            / "commands"
+        )
+
+        for command in (
+            "context.md",
+            "validate.md",
+            "authorize.md",
+            "verify.md",
+        ):
+            with self.subTest(command=command):
+                content = (
+                    command_root / command
+                ).read_text(encoding="utf-8")
+                self.assertIn(
+                    "## External dependency failures",
+                    content,
+                )
+                self.assertIn(
+                    "infrastructure failure",
+                    content,
+                )
+                self.assertIn(
+                    "bash scripts/bootstrap.sh --check",
+                    content,
+                )
+
     def test_bootstrap_installs_overlay_through_spec_kit(self):
         content = BOOTSTRAP_PATH.read_text(
             encoding="utf-8"

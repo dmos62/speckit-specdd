@@ -14,6 +14,12 @@ Run the bridge validator at implementation strictness before implementation begi
 
 This command is the lifecycle gate used by the mandatory `before_implement` hook.
 
+## External dependency failures
+
+If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, or `uv` when
+reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
+`bash scripts/bootstrap.sh --check`, and do not convert tool absence into stale-boundary or authority diagnostics.
+
 ## Execution
 
 1. From the repository root, run:

@@ -16,6 +16,12 @@ Change Boundary adapter. This command creates derived state only. It does not ed
 or relax authority. Deliberate `.sdd` evolution is tracked separately and never becomes an implementation boundary
 target.
 
+## External dependency failures
+
+If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
+when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
+`bash scripts/bootstrap.sh --check`, and do not convert tool absence into unresolved-target or authority diagnostics.
+
 ## Execution
 
 1. From the repository root, run:

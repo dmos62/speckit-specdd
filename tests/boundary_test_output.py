@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from boundary_test_support import (
     REPO_ROOT,
@@ -208,6 +209,24 @@ class BoundaryOutputTests(unittest.TestCase):
                 "1.1.1",
                 "1.5",
             ),
+        )
+
+    def test_missing_specdd_cli_is_explicit_infrastructure_failure(self):
+        with mock.patch(
+            "boundary_runtime.shutil.which",
+            return_value=None,
+        ):
+            with self.assertRaisesRegex(
+                boundary.BoundaryError,
+                "Required SpecDD CLI executable was not found",
+            ) as raised:
+                boundary._locate_executable(
+                    "specdd-missing"
+                )
+
+        self.assertIn(
+            "bash scripts/bootstrap.sh",
+            str(raised.exception),
         )
 
     def test_context_command_excludes_spec_evolution_targets(self):

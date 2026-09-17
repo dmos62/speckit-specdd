@@ -39,6 +39,7 @@ References:
 Must:
   Missing targets remain represented as unresolved diagnostics with `UNRESOLVED_TARGET`.
   Adapter tests preserve coverage for path normalization, authority derivation, schema validation, output modes, and exclusion of `.sdd` evolution targets from command-level Change Boundary discovery.
+  Tests distinguish missing external executables from resolver, lint, and authority diagnostics.
   The real two-domain fixture produces deterministic cross-boundary output when the SpecDD CLI is available.
   Validation tests cover zero, one, and multiple task authorities.
   Multi-authority task findings preserve task order and user-story identity without automatically blocking legitimate cross-domain work.

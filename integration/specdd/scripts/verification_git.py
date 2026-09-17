@@ -44,7 +44,12 @@ def _run_git(
         )
     except FileNotFoundError as exc:
         raise VerificationError(
-            "Git executable was not found"
+            "Required Git executable was not found. Install Git and run "
+            "`bash scripts/bootstrap.sh --check` before verification."
+        ) from exc
+    except OSError as exc:
+        raise VerificationError(
+            f"Git could not be executed for change discovery: {exc}"
         ) from exc
 
 

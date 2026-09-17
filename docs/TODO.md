@@ -15,6 +15,8 @@ Change Boundary v1 is defined by `integration/specdd/schemas/change-boundary.sch
 
 The bridge commands provide context generation, task validation, implementation authorization, and actual-change verification. Deliberate `.sdd` evolution remains separate from implementation authority and the authority-snapshot invariant remains enforced.
 
+External dependency hardening now keeps infrastructure failures distinct from authority diagnostics. Bootstrap reports missing Git, Node.js, npm, uv, Codex, Spec Kit, and SpecDD with dependency-specific remediation; structural workflow steps fail with status `2` when uv is absent; adapter and verification entry points report missing SpecDD or Git as infrastructure errors. Resolver failures and malformed resolver output remain `RESOLUTION_FAILED`, nonzero `specdd lint` remains `SPECDD_VIOLATION`, deterministic gate findings use status `1`, and bridge setup/runtime failures use status `2`.
+
 Phase 9 preset composition is implemented at `integration/specdd-preset/`. The pinned Spec Kit `1.0.7` preset contract stores command overrides in `provides.templates` with `type: "command"` and supports append composition.
 
 Pinned Spec Kit `1.0.7` deliberately excludes the `generic` integration from command registration. The supported local strategy is the registrar-backed `codex` integration, which materializes Spec Kit and extension commands under `.agents/skills`. Repository bootstrap selects or switches to Codex through supported Spec Kit commands and installs the local bridge extension and preset from canonical source.
@@ -47,7 +49,6 @@ Compatibility assertions now guard the exact Spec Kit, SpecDD CLI, and SpecDD fr
 
 ### TODO
 
-- [ ] Make external dependency errors explicit.
 - [ ] Verify supported operating-system path handling.
 - [ ] Make generated state deterministic enough for tests.
 - [ ] Confirm the default policy for `boundary.json` is generated/uncommitted state unless review evidence proves otherwise.
@@ -61,11 +62,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Make external dependency failures explicit without adding fallback behavior that bypasses the pinned toolchain.
+Verify supported operating-system path handling without broadening compatibility claims beyond direct evidence.
 
-Start from the existing bootstrap prerequisite failures and adapter errors. Check the direct command, structural workflow-gate, resolver, lint, Git, Spec Kit, uv, npm, Node.js, and Codex failure paths for actionable messages and stable nonzero status. Keep tool absence distinct from invalid resolver output or authority diagnostics.
+Start from `boundary_paths.py`, Git porcelain handling, active-feature path normalization, and the Windows 10 evidence host. Exercise repository-relative separators, drive-qualified absolute paths, paths containing spaces and wildcard characters, and host-specific rejection of foreign absolute paths. Keep SpecDD resolver output normalization deterministic and do not infer support for untested operating systems from path-library behavior alone.
 
-Use the compatibility evidence emitted by `bash scripts/bootstrap.sh --check` when evaluating any environment-specific failure. Do not broaden operating-system, Python, Node, Spec Kit, SpecDD CLI, or framework claims unless the relevant checks and acceptance scenarios have actually run in that environment.
+Use the compatibility evidence emitted by `bash scripts/bootstrap.sh --check` when evaluating environment-specific behavior. Record only operating-system and path forms that the repository checks and acceptance scenarios have actually exercised.
 
 ## 20. Definition of done for v0.1
 

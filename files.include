@@ -6,6 +6,7 @@
 @glob **/*.json
 @glob **/*.yml
 @glob **/*.sh
+@glob **/*.ps1
 
 @globexclude node_modules/**
 @globexclude pnpm-lock.yaml
@@ -26,6 +27,9 @@
 @# Generated Spec Kit agent command registrations
 @globexclude .specify-agent/commands/**
 @globexclude .agents/skills/speckit-*/**
+
+@# Generated upstream Spec Kit helper scripts
+@globexclude .specify/scripts/**
 
 @# Generated Spec Kit workflow state; canonical overlay source is integration/specdd/workflow-overlay.yml
 @globexclude .specify/workflows/speckit/**
