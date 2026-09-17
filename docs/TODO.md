@@ -15,6 +15,8 @@ Phase 15 path handling is hardened around concrete repository paths without broa
 
 Change Boundary v1 is defined by `integration/specdd/schemas/change-boundary.schema.json`. The adapter uses the real SpecDD resolver, derives authority only from resolved `Owns` entries, keeps derived state deterministic, and normalizes invalid targets, resolver failures, malformed output, and ownership ambiguity into structured unresolved diagnostics.
 
+Phase 15 deterministic-output hardening keeps bridge-owned data stable without treating generated Spec Kit materializations as canonical source. Change Boundary generation already sorts its path- and authority-derived collections and carries no timestamp. Validation and verification JSON serialization now sorts mapping keys, embedded SpecDD command diagnostics normalize repository-root paths and line endings, and workflow context summaries report repository-relative boundary paths instead of host-specific absolute paths. Installed preset composition, extension hook bookkeeping, and workflow-overlay materialization remain tested semantically because pinned Spec Kit may legitimately reserialize generated content.
+
 The bridge commands provide context generation, task validation, implementation authorization, and actual-change verification. Deliberate `.sdd` evolution remains separate from implementation authority and the authority-snapshot invariant remains enforced.
 
 External dependency hardening keeps infrastructure failures distinct from authority diagnostics. Bootstrap reports missing Git, Node.js, npm, uv, Codex, Spec Kit, and SpecDD with dependency-specific remediation; structural workflow steps fail with status `2` when uv is absent; adapter and verification entry points report missing SpecDD or Git as infrastructure errors. Resolver failures and malformed resolver output remain `RESOLUTION_FAILED`, nonzero `specdd lint` remains `SPECDD_VIOLATION`, deterministic gate findings use status `1`, and bridge setup/runtime failures use status `2`.
@@ -51,7 +53,6 @@ Compatibility assertions guard the exact Spec Kit, SpecDD CLI, and SpecDD framew
 
 ### TODO
 
-- [ ] Make generated state deterministic enough for tests.
 - [ ] Confirm the default policy for `boundary.json` is generated/uncommitted state unless review evidence proves otherwise.
 - [ ] Confirm uninstall leaves no patched upstream files.
 - [ ] Re-run all acceptance scenarios from a clean clone.
@@ -63,11 +64,13 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Make generated state deterministic enough for tests without turning generated Spec Kit state into canonical source.
+Confirm the default `boundary.json` tracking policy as generated/uncommitted state without changing SpecDD authority semantics.
 
-Start by inventorying bridge-owned derived outputs and the current test comparison strategy: Change Boundary JSON, validation/verification JSON, installed preset composition smoke state, extension hook bookkeeping, and workflow-overlay materialization. Preserve semantic comparisons where Spec Kit legitimately reserializes upstream content, and require byte-stable output only for bridge-owned artifacts whose canonical inputs are identical.
+Start by checking whether any feature Change Boundary is tracked and which ignore rule, if any, covers `specs/<feature>/.specdd/boundary.json`. Treat the boundary as disposable cache unless repository review evidence requires a committed artifact. Keep the canonical inputs as Spec Kit feature artifacts plus the current SpecDD hierarchy; do not introduce a second persistent source of truth.
 
-Look specifically for timestamps, environment-dependent absolute paths, unordered collections, temporary paths, or host-specific serializer output that leaks into asserted bridge state. Prefer normalizing bridge-owned data at generation boundaries rather than post-processing generated upstream files. Record any unavoidable upstream nondeterminism as semantic test normalization rather than patching `.specify/` or `.agents/skills/` outputs.
+If the repository already ignores feature boundaries, add or tighten tests/documentation only where the policy is not yet explicit enough for a clean clone. If the policy is not represented and changing a non-spec ignore/configuration file would exceed current SpecDD write authority, stop and surface the ownership gap rather than editing it implicitly.
+
+Keep generated Spec Kit extension, preset, workflow, and agent-command state outside this policy decision; their source/generated separation is already documented independently.
 
 ## 20. Definition of done for v0.1
 

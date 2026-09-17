@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -28,6 +29,29 @@ def _run(
         raise BoundaryError(
             f"External command could not be executed: {command}: {exc}"
         ) from exc
+
+
+def normalize_command_output(
+    root: Path,
+    value: str,
+) -> str:
+    text = value.replace("\r\n", "\n").replace("\r", "\n")
+    resolved_root = root.resolve(strict=False)
+    native_root = str(resolved_root).rstrip("\\/")
+    posix_root = resolved_root.as_posix().rstrip("/")
+    replacements = {
+        native_root + "\\": "./",
+        native_root + "/": "./",
+        posix_root + "/": "./",
+        native_root: ".",
+        posix_root: ".",
+    }
+    for source in sorted(replacements, key=len, reverse=True):
+        if source:
+            text = text.replace(source, replacements[source])
+    if os.name == "nt":
+        text = text.replace("\\", "/")
+    return text.strip()
 
 
 def _locate_executable(executable: str) -> str:

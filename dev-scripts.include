@@ -1,4 +1,4 @@
-@# Surface bootstrap health, installed workflow state, full tests, fixture lint, patch integrity, and worktree state.
+@# Surface bootstrap health, installed workflow state, full tests, fixture lint, patch integrity, worktree state, and the next hardening check.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
 @cli! bash -c "specify workflow info speckit"
 @cli! bash -c "specify workflow resolve speckit"
@@ -7,3 +7,4 @@
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"
+@cli! bash -c "printf '%s\n' '--- Change Boundary tracking policy ---'; git check-ignore -v --no-index specs/_specdd_boundary_probe_/.specdd/boundary.json || true; printf '%s\n' '--- Tracked Change Boundaries ---'; git ls-files 'specs/*/.specdd/boundary.json'"

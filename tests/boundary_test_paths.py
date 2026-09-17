@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from boundary_runtime import normalize_command_output
 from boundary_test_support import boundary
 
 
@@ -97,6 +98,19 @@ class BoundaryNormalizationTests(unittest.TestCase):
                     foreign,
                     spec=True,
                 )
+
+    def test_normalizes_command_output_root_and_line_endings(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            output = (
+                f"failed at {root.as_posix()}/src/auth/auth.sdd\r\n"
+                "with detail\r"
+            )
+
+            self.assertEqual(
+                "failed at ./src/auth/auth.sdd\nwith detail",
+                normalize_command_output(root, output),
+            )
 
     @unittest.skipUnless(
         os.name == "nt",

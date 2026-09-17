@@ -11,7 +11,11 @@ from boundary_paths import (
     _resolve_specdd_path,
     normalize_resolver_path,
 )
-from boundary_runtime import _locate_executable, _run
+from boundary_runtime import (
+    _locate_executable,
+    _run,
+    normalize_command_output,
+)
 from boundary_types import BoundaryError, RunCommand, Target
 
 
@@ -176,11 +180,11 @@ def resolve_target(
         ) from exc
 
     if result.returncode != 0:
+        output = result.stderr or result.stdout or ""
         detail = " ".join(
-            (
-                result.stderr
-                or result.stdout
-                or ""
+            normalize_command_output(
+                root,
+                output,
             ).split()
         )
         reason = (

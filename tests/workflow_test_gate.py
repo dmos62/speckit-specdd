@@ -9,6 +9,8 @@ from boundary_test_support import (
     verification,
     workflow_gate,
 )
+from validation_cli import _serialize as serialize_validation
+from verification_cli import _serialize as serialize_verification
 
 
 def result(
@@ -87,6 +89,18 @@ class WorkflowGateExitTests(unittest.TestCase):
             ),
         )
 
+    def test_bridge_json_serializers_ignore_mapping_insertion_order(self):
+        first = {"zeta": 1, "alpha": {"zeta": 2, "alpha": 3}}
+        second = {"alpha": {"alpha": 3, "zeta": 2}, "zeta": 1}
+
+        for serializer in (
+            serialize_validation,
+            serialize_verification,
+        ):
+            with self.subTest(serializer=serializer.__module__):
+                self.assertEqual(serializer(first), serializer(second))
+                self.assertTrue(serializer(first).endswith("\n"))
+
 
 class WorkflowFeaturePathTests(unittest.TestCase):
     def test_active_feature_normalizes_relative_backslash_path_with_spaces(self):
@@ -105,6 +119,29 @@ class WorkflowFeaturePathTests(unittest.TestCase):
             self.assertEqual("001 login", feature)
             self.assertEqual(feature_dir, resolved)
             self.assertEqual("specs/001 login", relative)
+
+    def test_boundary_summary_uses_repository_relative_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            boundary_path = root / "specs" / "001-login" / ".specdd" / "boundary.json"
+            value = {
+                "targets": [],
+                "authorities": [],
+                "crossBoundary": False,
+                "unresolved": [],
+            }
+
+            summary = workflow_gate._boundary_summary(
+                root,
+                "001-login",
+                boundary_path,
+                value,
+            )
+
+            self.assertEqual(
+                "specs/001-login/.specdd/boundary.json",
+                summary["boundary"],
+            )
 
     @unittest.skipUnless(
         os.name == "nt",
