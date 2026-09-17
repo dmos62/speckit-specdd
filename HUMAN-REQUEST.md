@@ -1,27 +1,39 @@
 # Human request
 
-The current iteration is blocked before a safe code edit can be produced.
+The current regression is understood, but the code edit is blocked by SpecDD write authority.
 
-The reported regression is localized: `tests/test_boundary.py::BoundaryOutputTests.test_missing_target_is_preserved_as_unresolved` reaches `build_change_boundary()`, but the generated `unresolved[0]` object lacks the schema-required `code` property. The likely fix is to make the missing-target diagnostic use the same structured unresolved-diagnostic construction as the adapter's other failure cases.
+The failing test is:
 
-The repository worktree itself is not available to this agent, and the prompt does not include the current contents of the files needed to make that edit safely. SpecDD also requires the applicable owning spec and modification authority to be resolved before changing non-`.sdd` artifacts.
+    tests/test_boundary.py::BoundaryOutputTests.test_missing_target_is_preserved_as_unresolved
 
-Please make the worktree available to the next programming iteration, or provide the following current files together with the applicable project `.sdd` specs:
+The checked-in Change Boundary schema requires every unresolved target to contain:
+
+- `input`
+- `code`
+- `message`
+
+The adapter currently models unresolved diagnostics as only `input`, `reason`, and optional `path`, and `_unresolved_record()` maps those fields dynamically from the schema. As a result, the missing-target branch reaches schema validation without the required `code` property.
+
+The likely implementation direction is to make unresolved diagnostics explicitly structured, including a diagnostic code such as `UNRESOLVED_TARGET`, and serialize the existing schema fields without weakening the schema. Other failure branches should use the appropriate existing schema codes:
+
+- `INVALID_TARGET`
+- `UNRESOLVED_TARGET`
+- `RESOLUTION_FAILED`
+- `AMBIGUOUS_AUTHORITY`
+
+However, the supplied SpecDD authority currently does not permit modifying the relevant non-`.sdd` files. `speckit-specdd.sdd` owns repository-wide bridge architecture conceptually, but its path authority does not cover:
 
     integration/specdd/scripts/boundary.py
     integration/specdd/schemas/change-boundary.schema.json
     tests/test_boundary.py
     tests/test_change_boundary_schema.py
-    speckit-specdd.sdd
-    any directory-level or same-basename .sdd specs governing those paths
 
-If collecting them manually, the following bash commands provide the necessary context:
+SpecDD requires non-spec changes to be covered by the pre-operation `Owns` or `Can modify` authority snapshot.
+
+For the next programming iteration, please provide any existing `.sdd` specs that grant modification authority over those paths, or explicitly authorize creating/updating the appropriate governing `.sdd` specs and making the corresponding code/test changes in the same operation.
+
+The following command will show the current spec inventory:
 
     find . -name '*.sdd' -print | sort
-    cat speckit-specdd.sdd 2>/dev/null || true
-    cat integration/specdd/scripts/boundary.py
-    cat integration/specdd/schemas/change-boundary.schema.json
-    cat tests/test_boundary.py
-    cat tests/test_change_boundary_schema.py
 
-Do not change the schema merely to hide the failure unless its contract shows that `code` is intentionally optional. The current evidence instead points to the adapter omitting a required diagnostic field for the missing-target branch.
+Do not weaken the schema to make the failing test pass. The current schema contract clearly makes `code` required.
