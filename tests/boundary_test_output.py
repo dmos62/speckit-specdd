@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -209,6 +210,50 @@ class BoundaryOutputTests(unittest.TestCase):
                 "1.1.1",
                 "1.5",
             ),
+        )
+
+    def test_feature_boundary_is_ignored_and_untracked(self):
+        probe = (
+            "specs/_specdd_boundary_probe_/"
+            ".specdd/boundary.json"
+        )
+        ignored = subprocess.run(
+            [
+                "git",
+                "check-ignore",
+                "--no-index",
+                probe,
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            0,
+            ignored.returncode,
+            ignored.stderr,
+        )
+
+        tracked = subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "specs/*/.specdd/boundary.json",
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            0,
+            tracked.returncode,
+            tracked.stderr,
+        )
+        self.assertEqual(
+            "",
+            tracked.stdout.strip(),
         )
 
     def test_missing_specdd_cli_is_explicit_infrastructure_failure(self):

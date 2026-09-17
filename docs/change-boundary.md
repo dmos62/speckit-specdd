@@ -33,6 +33,18 @@ Change Boundary v1 records:
 
 It deliberately does not copy persistent `Must`, `Must not`, `Owns`, `Can modify`, or dependency rules from `.sdd` files.
 
+## Tracking policy
+
+Feature Change Boundaries are generated, uncommitted state by default.
+
+The repository ignore policy covers:
+
+    specs/*/.specdd/boundary.json
+
+No feature boundary is a canonical review artifact or persistent source of truth. A clean clone is expected to reconstruct the boundary from current Spec Kit feature artifacts and the current SpecDD hierarchy rather than receive a committed copy.
+
+If a future workflow deliberately requires committed boundary evidence, treat that as an explicit repository-policy change and review the lifecycle and source-of-truth implications before changing the ignore policy.
+
 ## Canonical inputs
 
 A boundary is reconstructed from canonical project state:

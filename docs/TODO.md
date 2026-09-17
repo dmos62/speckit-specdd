@@ -15,6 +15,8 @@ Phase 15 path handling is hardened around concrete repository paths without broa
 
 Change Boundary v1 is defined by `integration/specdd/schemas/change-boundary.schema.json`. The adapter uses the real SpecDD resolver, derives authority only from resolved `Owns` entries, keeps derived state deterministic, and normalizes invalid targets, resolver failures, malformed output, and ownership ambiguity into structured unresolved diagnostics.
 
+The default feature Change Boundary tracking policy is confirmed for v0.1. Repository ignore policy covers `specs/*/.specdd/boundary.json`, no feature Change Boundary is currently tracked, and regression coverage verifies that a representative feature boundary is ignored and that no feature boundary is present in the Git index. `boundary.json` therefore remains generated, uncommitted, disposable cache state reconstructed from Spec Kit feature artifacts and the current SpecDD hierarchy; no ignore-file change is required.
+
 Phase 15 deterministic-output hardening keeps bridge-owned data stable without treating generated Spec Kit materializations as canonical source. Change Boundary generation already sorts its path- and authority-derived collections and carries no timestamp. Validation and verification JSON serialization now sorts mapping keys, embedded SpecDD command diagnostics normalize repository-root paths and line endings, and workflow context summaries report repository-relative boundary paths instead of host-specific absolute paths. Installed preset composition, extension hook bookkeeping, and workflow-overlay materialization remain tested semantically because pinned Spec Kit may legitimately reserialize generated content.
 
 The bridge commands provide context generation, task validation, implementation authorization, and actual-change verification. Deliberate `.sdd` evolution remains separate from implementation authority and the authority-snapshot invariant remains enforced.
@@ -26,6 +28,8 @@ Phase 9 preset composition is implemented at `integration/specdd-preset/`. The p
 Pinned Spec Kit `1.0.7` deliberately excludes the `generic` integration from command registration. The supported local strategy is the registrar-backed `codex` integration, which materializes Spec Kit and extension commands under `.agents/skills`. Repository bootstrap selects or switches to Codex through supported Spec Kit commands and installs the local bridge extension and preset from canonical source.
 
 The isolated Codex preset smoke compares semantic upstream skill bodies after preset removal. Spec Kit `1.0.7` may reserialize YAML frontmatter and add a registrar-generated `# Speckit ... Skill` heading while restoring a core skill; those serializer-only differences are ignored while the original command body and absence of the SpecDD augmentation remain required.
+
+Uninstall cleanliness is confirmed through the isolated Codex installation smoke. The test removes the bridge preset, extension, and workflow overlay through supported Spec Kit commands; verifies the composed upstream command bodies are restored semantically; verifies bridge command skills are removed; verifies bridge hook registrations are absent; and verifies the workflow overlay is no longer installed. The supported uninstall path therefore leaves no bridge patch in the upstream command surfaces that the integration composes.
 
 The extension retains mandatory lifecycle hooks for agent-facing context, validation, authorization, and verification when commands are used directly. Hook dispatch remains agent-mediated and is not the structural enforcement boundary.
 
@@ -45,7 +49,7 @@ Phase 14 development-host installation and rematerialization are documented in `
 
 The user-facing root `README.md` is governed by `README.sdd` and documents the responsibility split, bootstrap path, generated-state boundary, normal authority-aware lifecycle, specification-evolution invariant, cross-domain model, command usage, lifecycle-specific inputs and outputs, deterministic diagnostics, constitution-versus-root-SpecDD responsibilities, and common troubleshooting. Direct command hooks are distinguished from structural workflow enforcement.
 
-Focused Change Boundary documentation is implemented at `docs/change-boundary.md` under `docs/change-boundary.sdd`. The guide documents lifecycle-specific target discovery, deterministic regeneration, unresolved handling, stale-boundary behavior, authority-snapshot preservation, and disposable derived state without duplicating installation or maintenance procedures.
+Focused Change Boundary documentation is implemented at `docs/change-boundary.md` under `docs/change-boundary.sdd`. The guide documents lifecycle-specific target discovery, deterministic regeneration, unresolved handling, stale-boundary behavior, authority-snapshot preservation, disposable derived state, and the generated/uncommitted default tracking policy without duplicating installation or maintenance procedures.
 
 Compatibility assertions guard the exact Spec Kit, SpecDD CLI, and SpecDD framework pins across canonical bootstrap and manifest source. No semantic version range broader than directly exercised versions is treated as tested compatibility.
 
@@ -53,8 +57,6 @@ Compatibility assertions guard the exact Spec Kit, SpecDD CLI, and SpecDD framew
 
 ### TODO
 
-- [ ] Confirm the default policy for `boundary.json` is generated/uncommitted state unless review evidence proves otherwise.
-- [ ] Confirm uninstall leaves no patched upstream files.
 - [ ] Re-run all acceptance scenarios from a clean clone.
 - [ ] Tag v0.1 only after clean-clone reproduction succeeds.
 
@@ -64,13 +66,24 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Confirm the default `boundary.json` tracking policy as generated/uncommitted state without changing SpecDD authority semantics.
+Re-run the v0.1 acceptance evidence from a clean clone of committed repository state.
 
-Start by checking whether any feature Change Boundary is tracked and which ignore rule, if any, covers `specs/<feature>/.specdd/boundary.json`. Treat the boundary as disposable cache unless repository review evidence requires a committed artifact. Keep the canonical inputs as Spec Kit feature artifacts plus the current SpecDD hierarchy; do not introduce a second persistent source of truth.
+The clean clone must start without relying on current generated Spec Kit materializations or feature Change Boundaries. Run the documented bootstrap path so the Codex integration, bridge extension, preset, workflow overlay, and SpecDD framework state are materialized through their supported tools.
 
-If the repository already ignores feature boundaries, add or tighten tests/documentation only where the policy is not yet explicit enough for a clean clone. If the policy is not represented and changing a non-spec ignore/configuration file would exceed current SpecDD write authority, stop and surface the ownership gap rather than editing it implicitly.
+At minimum, reproduce:
 
-Keep generated Spec Kit extension, preset, workflow, and agent-command state outside this policy decision; their source/generated separation is already documented independently.
+    bash scripts/bootstrap.sh
+    bash scripts/bootstrap.sh --check
+    uv run --no-project python -m unittest discover -s tests -p 'test_*.py'
+    specdd lint tests/fixtures/specdd-two-domain
+    git diff --check
+    git status --short
+
+The full test suite contains the fixture acceptance coverage for semantic scenarios A-E. Confirm those tests execute successfully rather than relying only on prior working-tree results.
+
+Review the final clean-clone Git status so generated or ignored state is not mistaken for canonical source. Feature Change Boundaries should remain absent from the Git index and reconstructible from canonical inputs.
+
+Record the exact host and tool versions exercised by the clean-clone run and any expected generated-state differences. Do not tag v0.1 until this reproduction succeeds.
 
 ## 20. Definition of done for v0.1
 
