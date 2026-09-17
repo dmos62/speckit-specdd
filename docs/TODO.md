@@ -39,13 +39,12 @@ Phase 14 development-host installation and rematerialization are documented in `
 
 The user-facing root `README.md` is now governed by `README.sdd` and documents the responsibility split, bootstrap path, generated-state boundary, normal authority-aware lifecycle, specification-evolution invariant, cross-domain model, and common troubleshooting. Keep maintenance-heavy development-host detail in `docs/development.md` rather than expanding the README.
 
-Focused Change Boundary documentation now has a dedicated governing contract at `docs/change-boundary.sdd`. That specification establishes ownership for the intended `docs/change-boundary.md`, but the new ownership cannot authorize creation of the document in the same authority operation. Create the guide in a subsequent operation after re-resolving the repository authority state.
+Focused Change Boundary documentation is implemented at `docs/change-boundary.md` under `docs/change-boundary.sdd`. The guide documents lifecycle-specific target discovery, deterministic regeneration, unresolved handling, stale-boundary behavior, authority-snapshot preservation, and disposable derived state without duplicating installation or maintenance procedures.
 
 ## 14. Phase 14 — Documentation
 
 ### TODO
 
-- [ ] Document Change Boundary semantics and regeneration.
 - [ ] Document bridge command usage and diagnostics.
 - [ ] Document task-partition guidance and why Spec Kit tasks are not synchronized with SpecDD tasks.
 - [ ] Document constitution versus root SpecDD responsibilities.
@@ -72,11 +71,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Create `docs/change-boundary.md` under its now-established `docs/change-boundary.sdd` authority.
+Document bridge command usage and diagnostics.
 
-The focused guide should explain lifecycle-specific target discovery, deterministic regeneration, unresolved-target handling, staleness, and why `boundary.json` remains disposable derived state. Cross-link the user-facing README and development guide where useful without duplicating installation or maintenance procedures.
+Keep the documentation focused on the four bridge commands, lifecycle-specific inputs and outputs, deterministic diagnostic meanings, and the distinction between direct command hooks and structural workflow gates. Avoid repeating Change Boundary semantics already covered by `docs/change-boundary.md` or development-host procedures from `docs/development.md`.
 
-After the guide is verified, remove the completed Change Boundary documentation task from Phase 14 rather than retaining a checked-off item.
+If a new focused documentation file is needed, establish its governing `.sdd` contract as a specification operation first. Create the owned non-spec document only in a subsequent authority operation after re-resolving repository authority.
 
 ## 20. Definition of done for v0.1
 
