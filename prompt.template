@@ -1,26 +1,15 @@
-@filegroup
-@glob **/*.md
-@glob **/*.ts
-@glob **/*.sdd
-@glob **/*.py
-@glob **/*.json
-@glob **/*.sh
-@globexclude node_modules/**
-@globexclude pnpm-lock.yaml
-@globexclude dist/**
-@globexclude .specdd/bootstrap.local.md
-@globexclude .specify/extensions/specdd/**
-@globexclude .specify/extensions/.cache/**
-@endfilegroup
+
+
+
+@include files.include
+
+Edit `files.include` to change which files/folders are made available to the next programming iteration: adjust this as needed to change focus of your work. `@glob packages/core/**`: one per line inside the `@filegroup`, and you leverage the `@globexclude` declarations to get rid of unnecessary files. The `@#` pattern (as in `@#glob [...]`) is a comment and is used to comment-out/disable directives. Note, each `@glob` pattern must match something, otherwise there's an exception; however, `@globexclude` can be used profilactically, they don't need to match.
+@file files.include
+
+General `files.include` policy: we want to include the maximum of files that can be useful (now or later): that is preferable to being selective, because currently all important files can fit inside the LLM agent's context. However, we still want to exclude generated artifacts and files that will not be useful to an implementing agent.
+
 
 @comment
-
-NOTE, above markdown files are always included in the context. DO NOT include them via `*.include` files. Subrepo-specific SPEC.md files are not included by default: you can include those via `*.include`.
-
-@include subrepos-to-include.include
-
-Edit `subrepos-to-include.include` to change which subrepos are made available to the next programming iteration: adjust this as needed to change focus of your work. IMPORTANT: Do your best to only include the sub-repos needed currently: the LLM agent's context is limited: if you attempt to include too many, the LLM agent will fail, and a human-operator will have to step in. Note, you have to be careful about excluding unnecessary files via `@globexclude`, otherwise you might explode the LLM context; you actually include subrepos by pulling in the relevant files with glob patterns: e.g. `@glob packages/core/**`: one per line inside the `@filegroup`, and you leverage the `@globexclude` declarations to get rid of unnecessary files. The `@#` pattern (as in `@#glob [...]`) is a comment and is used to comment-out/disable directives. Note, each `@glob` pattern must match something, otherwise there's an exception; however, `@globexclude` can be used profilactically, they don't need to match.
-@file subrepos-to-include.include
 
 
 Reference writing: for each subrepo, when it's implemented and ready to be used by other upstream subrepos (i.e. this doesn't apply to subrepos that don't have upstream subrepos, like those in `examples/`), write a focused reference whose audience will be subrepos importing this one as a direct dependency: a top-level file in the subrepo called `external-reference.md`. Its purpose is to let downstream consumers know everything needed to know in order to use it: this is so that an LLM agent (or any implementor of the downstream consumer) can simply look at this reference, instead of having to browse the code. Importantly, `external-reference.md` documents should be orthogonal between subrepos: we'll often have multiple in context, and information repeated would be noise and wasted tokens. Always keep these references up-to-date.
