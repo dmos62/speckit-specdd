@@ -1,46 +1,48 @@
 # Spec Kit × SpecDD Integration Implementation Plan
 
-Status: Planned
+Status: Release-ready
 Target: v0.1
 
 Completed phases are removed from this file; remaining phase numbers stay stable so references to the original implementation plan do not drift.
 
 ## 1. Current baseline
 
-The v0.1 semantic bridge is implemented. Current working-tree evidence from 2026-09-17 passes repository bootstrap check, all 88 tests, the real two-domain fixture lint, `git diff --check`, and the tracked-file ignore-policy check.
+The v0.1 semantic bridge is implemented and its release acceptance gate has passed.
 
-Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. The exercised development host is Windows 10 `10.0.19045` on AMD64 with Node.js `v22.14.0` and Python `3.12.11`.
+Clean-clone acceptance succeeded from committed source:
 
-The remaining release gate is reproduction from a clean clone of committed repository state.
+    0db92087e4ab743078f631a99a58b4e8676dba2c
 
-The first automated clean-clone run used source commit `05b4cd5231b608df19d9320615bf0f7c5b47e4ea`. Bootstrap, bootstrap check, all 88 tests, fixture lint, and `git diff --check` completed successfully. The run failed only at the final raw worktree-cleanliness assertion because supported development-mode Spec Kit installation rematerialized generated state under `.agents/skills/`, `.specify/extensions/`, `.specify/presets/`, and `.specify/workflows/overlays/`.
+The exercised host and tool evidence was:
 
-Those paths are generated installation state rather than canonical bridge source. The clean-clone gate now reports their post-bootstrap status for evidence but evaluates worktree cleanliness after excluding the repository's known generated Spec Kit and local SpecDD state. Unexpected canonical-source changes and tracked-file ignore-policy violations remain failing conditions.
+- Windows 10 `10.0.19045` on AMD64.
+- Node.js `v22.14.0`.
+- Python `3.12.11`.
+- Spec Kit `1.0.7`.
+- SpecDD CLI `1.1.1`.
+- SpecDD framework `1.5`.
 
-`dev-scripts.include` exercises the gate automatically. The clean-clone check:
+The clean clone successfully completed:
 
-- clones committed `HEAD` into a temporary repository with `git clone --no-local`;
-- prints the exact source commit;
-- runs `bash scripts/bootstrap.sh`;
-- reruns `bash scripts/bootstrap.sh --check`;
-- runs the full unittest suite;
-- runs the real SpecDD fixture lint;
-- runs `git diff --check`;
-- reports generated installation-state changes separately;
-- requires no unexpected canonical-source changes after generated installation paths are excluded;
-- requires that no tracked files are matched by repository ignore rules;
-- removes the temporary clone afterward.
+- repository bootstrap;
+- bootstrap check mode;
+- all 88 tests;
+- real two-domain fixture lint;
+- `git diff --check`;
+- canonical-source cleanliness validation;
+- tracked-file ignore-policy validation.
 
-Bootstrap output supplies the exact Node.js, Python, Spec Kit, platform, architecture, and SpecDD version evidence for that run.
+Supported development-mode installation rematerialized generated state under `.agents/skills/` and `.specify/`, including extension and preset registry state and the installed workflow overlay. Those changes remained outside canonical bridge source, and no unexpected canonical-source changes were present.
 
-Do not mark clean-clone reproduction complete until a subsequent programming iteration reports `clean-clone acceptance: PASS`.
+Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. Other operating systems, Python versions, and adjacent Spec Kit or SpecDD versions remain unverified until exercised directly.
+
+The remaining v0.1 action is the release tag.
 
 ## 15. Phase 15 — v0.1 hardening
 
 ### TODO
 
-- [ ] Re-run clean-clone acceptance with canonical-source cleanliness filtering. On the first `clean-clone acceptance: PASS`, record the exercised commit and exact host/tool evidence in the current baseline, confirm generated installation state remained outside canonical bridge source, then delete this item.
-- [ ] Tag v0.1 only after clean-clone reproduction succeeds.
+- [ ] Tag v0.1 from the accepted release state.
 
 ## 18. Deferred work
 
@@ -48,22 +50,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Review the automated clean-clone acceptance output.
+The clean-clone release gate is complete.
 
-If it reports `clean-clone acceptance: PASS`:
+Before tagging v0.1, confirm the intended release commit still contains the accepted state and that no newer canonical-source changes require the acceptance gate to be rerun.
 
-- record the exercised commit and exact host/tool versions in the current baseline;
-- delete the completed clean-clone TODO item;
-- confirm generated installation state remained non-canonical and canonical source stayed clean;
-- proceed to the v0.1 tagging decision.
-
-If it fails, use the reported canonical-source status to identify the remaining source change. Do not treat supported generated Spec Kit rematerialization as canonical drift, do not hand-edit generated state, and do not tag v0.1.
-
-## 20. Definition of done for v0.1
-
-- [ ] Spec Kit core remains unmodified.
-- [ ] SpecDD core remains unmodified.
-- [ ] A clean clone reproduces the documented development setup and acceptance checks.
+After the tag is created, delete the remaining Phase 15 task. With no remaining implementation work, this TODO should then be empty.
 
 ## 21. Core implementation constraint
 
