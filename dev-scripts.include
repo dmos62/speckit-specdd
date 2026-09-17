@@ -1,6 +1,7 @@
-@# Surface bootstrap health, the complete Change Boundary Python suite, fixture lint, patch integrity, and worktree state to the next iteration.
+@# Surface bootstrap health, the complete Change Boundary Python suite, context regeneration smoke, fixture lint, patch integrity, and worktree state to the next iteration.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
+@cli! bash -c "tmp_dir=\$(mktemp -d); trap 'rm -rf \"\$tmp_dir\"' EXIT; uv run --no-project python integration/specdd/scripts/boundary.py --root tests/fixtures/specdd-two-domain --feature context-smoke --output \"\$tmp_dir/first.json\" src/auth/service.ts src/users/repository.ts; uv run --no-project python integration/specdd/scripts/boundary.py --root tests/fixtures/specdd-two-domain --feature context-smoke --output \"\$tmp_dir/second.json\" src/auth/service.ts src/users/repository.ts; cmp \"\$tmp_dir/first.json\" \"\$tmp_dir/second.json\"; printf '%s\n' 'context smoke: deterministic boundary regeneration OK'"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"
