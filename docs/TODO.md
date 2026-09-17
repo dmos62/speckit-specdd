@@ -9,16 +9,14 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 Build the remaining integration in this order:
 
-1. establish a minimal two-domain SpecDD fixture,
-2. inspect real machine-readable SpecDD resolution,
-3. define and implement Change Boundary v1,
-4. expose `speckit.specdd.context`,
-5. implement validation and task-partition guidance,
-6. implement verification from actual changed files,
-7. augment Spec Kit planning, tasks, and convergence,
-8. add deliberate spec-evolution handling,
-9. add hooks and then a workflow overlay,
-10. harden tests, documentation, and compatibility.
+1. define and implement Change Boundary v1,
+2. expose `speckit.specdd.context`,
+3. implement validation and task-partition guidance,
+4. implement verification from actual changed files,
+5. augment Spec Kit planning, tasks, and convergence,
+6. add deliberate spec-evolution handling,
+7. add hooks and then a workflow overlay,
+8. harden tests, documentation, and compatibility.
 
 Do not begin bundle packaging, automatic `.sdd` editing, or workflow automation before the manual vertical slice works.
 
@@ -26,25 +24,7 @@ The first milestone remains:
 
 context → validate → implement → verify
 
----
-
-## 2. Phase 2 — Verify the minimal SpecDD fixture
-
-The fixture now lives under `tests/fixtures/specdd-two-domain/` with a basename-matched root spec, independent Auth and Users directory specs, an Auth-owned service, and Users-owned contract and repository files.
-
-Auth depends on the Users-facing identity lookup contract while `../users/repository.ts` remains forbidden and outside Auth write authority. This gives later bridge tests local valid work, accidental cross-domain writes, and legitimate multi-domain target sets without inventing a third authority model.
-
-`dev-scripts.include` now surfaces fixture lint plus compact machine-readable resolution for both an Auth target and a Users target. Use those real outputs to establish adapter normalization assumptions rather than guessing the SpecDD CLI result shape.
-
-### TODO
-
-- [ ] Confirm `specdd lint` passes with the fixture included.
-- [ ] Inspect the Auth and Users machine-readable resolver output.
-- [ ] Record only resolver information that is missing before adding bridge-side compensation.
-
-### Exit criteria
-
-The fixture supports valid local writes, invalid cross-domain writes, and legitimate multi-domain feature work, and the resolver output needed by the adapter is understood.
+The pinned SpecDD 1.1.1 resolver contract has been inspected against the two-domain fixture. For both Auth and Users targets, `directories` contains root-to-local resolved context, each resolved spec exposes a repository-relative forward-slash `path`, and section bodies contain the raw `Owns`, `Depends on`, `Forbids`, and other resolved entries needed by the bridge. `rootDirectoryPath` and `targetPath` are host-absolute and platform-specific, so derived bridge state must normalize away those machine-local values. The resolver does not emit a dedicated primary-authority field; the adapter therefore needs a narrow authority derivation from the already-resolved spec chain and `Owns` entries while preserving SpecDD path semantics rather than parsing `.sdd` source independently.
 
 ---
 
@@ -333,8 +313,7 @@ Do not implement before v0.1 proves the semantic bridge:
 
 Stop after the first narrow vertical slice:
 
-- [ ] Inspect real JSON from `specdd resolve` for both domains.
-- [ ] Finalize Change Boundary v1 from actual resolver output.
+- [ ] Finalize Change Boundary v1 from the recorded resolver contract.
 - [ ] Implement and test `boundary.py`.
 - [ ] Generate one valid `boundary.json`.
 - [ ] Implement minimal `speckit.specdd.context`.
