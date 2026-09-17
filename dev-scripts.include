@@ -1,4 +1,4 @@
-@# Surface bootstrap health, installed workflow state, full tests, fixture lint, patch integrity, worktree state, and clean-clone readiness.
+@# Surface bootstrap health, installed workflow state, full tests, fixture lint, patch integrity, worktree state, and clean-clone acceptance.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
 @cli! bash -c "specify workflow info speckit"
 @cli! bash -c "specify workflow resolve speckit"
@@ -8,3 +8,4 @@
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"
 @cli! bash -c "printf '%s\n' '--- Tracked files matched by ignore rules ---'; git ls-files -ci --exclude-standard"
+@cli! bash -c 'set -euo pipefail; tmp_dir="$(mktemp -d)"; trap "rm -rf -- \"$tmp_dir\"" EXIT; git clone --quiet --no-local . "$tmp_dir/repo"; cd "$tmp_dir/repo"; printf "%s\n" "--- Clean-clone source ---"; git rev-parse HEAD; bash scripts/bootstrap.sh; bash scripts/bootstrap.sh --check; uv run --no-project python -m unittest discover -s tests -p "test_*.py"; specdd lint tests/fixtures/specdd-two-domain; git diff --check; status="$(git status --short)"; if [[ -n "$status" ]]; then printf "%s\n" "$status" >&2; exit 1; fi; ignored="$(git ls-files -ci --exclude-standard)"; if [[ -n "$ignored" ]]; then printf "%s\n" "$ignored" >&2; exit 1; fi; printf "%s\n" "clean-clone acceptance: PASS"'
