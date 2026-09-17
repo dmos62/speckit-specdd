@@ -23,6 +23,8 @@ The local extension manifest at `integration/specdd/extension.yml` exposes those
 
 Phase 9 preset composition is implemented at `integration/specdd-preset/`. The pinned Spec Kit `1.0.7` preset contract stores command overrides in `provides.templates` with `type: "command"` and supports `append` composition. The bridge preset uses that strategy so upstream `speckit.plan`, `speckit.tasks`, and `speckit.converge` behavior remains intact rather than being copied.
 
+Pinned Spec Kit `1.0.7` resolves those append layers into installed preset `.composed` command artifacts. It deliberately excludes the `generic` integration from agent command registration, however, so preset composition is not materialized into `.specify-agent/commands`. Extension command registration has the same generic-integration limitation. The installation smoke now verifies resolver composition separately from generic command materialization instead of treating unchanged generic command files as a composition failure.
+
 The preset:
 
 - requires the local SpecDD bridge extension `0.1.0`,
@@ -34,38 +36,47 @@ The preset:
 
 Phase 10 deliberate spec-evolution handling is implemented without adding another source of truth. Evolution tasks use ordinary task-text prefixes `SPEC_EVOLUTION_REQUIRED:` and `AUTHORITY_EVOLUTION_REQUIRED:`; validation projects those classifications into machine-readable output, requires `.sdd`-only evolution scope, and records whether a fresh Change Boundary is required and whether the prior authority context ends. Change Boundary discovery excludes `.sdd` evolution targets, and task generation places a separate context-refresh task between deliberate evolution and dependent implementation. The validation command surfaces proposed `.sdd` deltas only as advisory output and never applies them. Fixture verification covers the authority-snapshot invariant: authority changed by a specification operation remains unusable under the old boundary and becomes usable only in a subsequent operation after fresh resolution.
 
-Preset tests cover source contracts plus an isolated local Spec Kit initialization that installs the extension and preset, verifies composed commands, removes the preset, and confirms core commands are restored. The command runner decodes subprocess output as UTF-8 so the smoke remains stable on Windows hosts that otherwise default to a legacy code page.
+Preset tests cover source contracts plus isolated local Spec Kit initialization that installs the extension and preset, verifies resolver-composed command content, confirms generic command files remain unchanged under the pinned release, removes the preset, and confirms core generic commands remain intact. The command runner decodes subprocess output as UTF-8 so the smoke remains stable on Windows hosts that otherwise default to a legacy code page.
 
 ## 11. Phase 11 — Add lifecycle hooks
 
-Only start after context, validate, verify, preset composition, and deliberate spec-evolution handling work manually.
+Pinned Spec Kit `1.0.7` exposes the required planning, task, implementation, and convergence hook events through `.specify/extensions.yml`, but mandatory hook execution is delegated to the active agent rather than enforced by the engine.
+
+The current repository is initialized with the `generic` integration. In pinned Spec Kit `1.0.7`, `generic` is deliberately excluded from extension and preset command registration. Registering lifecycle hooks that invoke `speckit.specdd.*` now would therefore create hooks whose bridge commands normal generic usage cannot invoke.
+
+Resolve the active-integration strategy before adding lifecycle hooks. Do not register dead hooks merely to satisfy the manifest.
 
 ### TODO
-- [ ] Verify supported hook names and failure semantics in the pinned Spec Kit release.
-- [ ] Add post-plan context refresh if reliable.
+
+- [ ] Decide and authorize a registrar-backed active integration for local bootstrap, or define another supported path that makes extension commands invokable without patching generated `.specify-agent/commands`.
+- [ ] Re-run extension and preset installation smoke tests with the selected supported invocation path.
+- [ ] Add reliable post-plan context refresh.
 - [ ] Add post-tasks validation.
 - [ ] Add a pre-implementation blocking authority gate.
 - [ ] Add post-implementation verification.
 - [ ] Evaluate convergence hooks separately.
-- [ ] Ensure mandatory failures cannot be silently ignored.
-- [ ] Move critical gates to workflow steps if hook semantics are insufficient.
+- [ ] Keep critical enforcement in workflow structure when hook dispatch alone cannot guarantee failure propagation.
 
-Exit criteria: normal Spec Kit usage invokes bridge gates at required lifecycle transitions.
+Exit criteria: normal supported integration usage can invoke every registered bridge gate, and mandatory authority failures cannot be silently bypassed because of unavailable commands or agent-only dispatch.
 
 ## 12. Phase 12 — Add workflow overlay
 
+Workflow structure is expected to carry critical deterministic gates when Phase 11 confirms that agent-dispatched hooks alone are insufficient.
+
 ### TODO
+
 - [ ] Verify overlay syntax against the pinned Spec Kit release.
 - [ ] Add deterministic context, validation, pre-implementation authority, and verification steps.
 - [ ] Test step ordering and failure propagation.
 - [ ] Avoid duplicating equivalent hook behavior.
 - [ ] Document the final responsibility split between hooks and overlay steps.
 
-Exit criteria: critical authority gates are structural rather than dependent only on prompt memory.
+Exit criteria: critical authority gates are structural rather than dependent only on prompt memory or hook-dispatch compliance.
 
 ## 13. Phase 13 — Complete the test matrix
 
 ### TODO
+
 - [ ] Expand real-CLI integration coverage for unresolved paths, invalid specs, multiple domains, and CLI failures.
 - [ ] Automate semantic scenarios A-E from `docs/spec.md`; reuse existing fixture coverage for local, cross-domain, unauthorized-write, explicit spec-evolution, and authority re-resolution behavior rather than duplicating it.
 - [ ] Add a regression test for every integration bug found during development.
@@ -75,8 +86,10 @@ Exit criteria: deterministic checks are automated and agentic semantic cases hav
 ## 14. Phase 14 — Documentation
 
 ### TODO
+
 - [ ] Write the project README after the first vertical slice works.
 - [ ] Document installation and local development for both the extension and preset.
+- [ ] Document the supported active integration and the pinned Spec Kit `1.0.7` generic command-registration limitation.
 - [ ] Document Change Boundary semantics and regeneration.
 - [ ] Document bridge command usage and diagnostics.
 - [ ] Document task-partition guidance and why Spec Kit tasks are not synchronized with SpecDD tasks.
@@ -87,6 +100,7 @@ Exit criteria: deterministic checks are automated and agentic semantic cases hav
 ## 15. Phase 15 — v0.1 hardening
 
 ### TODO
+
 - [ ] Pin tested Spec Kit and SpecDD compatibility ranges from actual test evidence.
 - [ ] Add compatibility assertions where useful.
 - [ ] Make external dependency errors explicit.
@@ -103,25 +117,27 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Start Phase 11 with lifecycle hooks:
+Resolve the pinned Spec Kit `1.0.7` generic command-registration gap before adding lifecycle hooks:
 
-- [ ] Inspect the pinned Spec Kit `1.0.7` hook contract and identify supported lifecycle names and blocking semantics.
-- [ ] Prefer deterministic post-plan and post-tasks bridge gates only where hook failures propagate reliably.
-- [ ] Keep pre-implementation authority validation blocking; fall back to workflow structure if hooks can be ignored.
-- [ ] Keep hook behavior thin and delegate context, validation, and verification mechanics to the existing bridge commands.
+- [ ] Select a supported invocation strategy in which installed `speckit.specdd.*` commands are actually available to the active agent.
+- [ ] If that requires changing repository bootstrap behavior, first identify or create the authoritative SpecDD ownership contract for the affected bootstrap artifact before editing it.
+- [ ] Extend the isolated installation smoke to prove bridge command availability and preset materialization through the selected strategy.
+- [ ] Only then register lifecycle hooks that reference the bridge commands.
+- [ ] Keep pre-implementation authority validation blocking and move critical enforcement to workflow structure where hook dispatch is not engine-enforced.
 
-Do not start workflow overlays or bundle packaging until hook reliability against the pinned release is known.
+Do not start workflow overlays or bundle packaging until bridge command availability and hook behavior against the pinned release are known.
 
 ## 20. Definition of done for v0.1
 
 - [ ] Spec Kit core is unmodified.
 - [ ] SpecDD core is unmodified.
 - [x] The bridge installs locally as a Spec Kit extension.
+- [ ] Installed bridge commands are invokable through the selected supported active integration.
 - [x] The bridge uses the real SpecDD resolver.
 - [x] `speckit.specdd.context` generates a valid, rebuildable Change Boundary through its adapter.
 - [x] `speckit.specdd.validate` recognizes authority and system-evolution issues.
 - [x] `speckit.specdd.verify` checks actual implementation scope.
-- [x] The preset supplies SpecDD context during planning and task generation without copying upstream commands.
+- [ ] The preset supplies SpecDD context during planning and task generation through the selected supported active integration without copying upstream commands.
 - [x] Feature user stories may span multiple SpecDD domains while implementation tasks remain authority-local where practical.
 - [x] Spec Kit tasks remain the canonical feature execution tasks.
 - [x] SpecDD remains the canonical persistent system model.

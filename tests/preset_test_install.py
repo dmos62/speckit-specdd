@@ -20,7 +20,7 @@ from preset_test_support import (
     "Spec Kit, SpecDD, and Git are required for the preset install smoke test",
 )
 class PresetInstallTests(unittest.TestCase):
-    def test_local_install_composes_and_uninstall_restores_core_commands(self):
+    def test_local_install_composes_without_materializing_generic_commands(self):
         version = run_command(
             PRESET_ROOT,
             "specify",
@@ -60,6 +60,28 @@ class PresetInstallTests(unittest.TestCase):
                     "--integration-options=--commands-dir .specify-agent/commands",
                 ),
             )
+
+            expectations = {
+                "speckit.plan.md": (
+                    "## Phases",
+                    "## SpecDD Planning Augmentation",
+                ),
+                "speckit.tasks.md": (
+                    "## Task Generation Rules",
+                    "## SpecDD Task Augmentation",
+                ),
+                "speckit.converge.md": (
+                    "## Convergence Findings",
+                    "## SpecDD Convergence Augmentation",
+                ),
+            }
+            baseline_commands = {
+                filename: (
+                    root / GENERIC_COMMANDS_DIR / filename
+                ).read_text(encoding="utf-8")
+                for filename in expectations
+            }
+
             require_success(
                 self,
                 run_command(
@@ -102,6 +124,20 @@ class PresetInstallTests(unittest.TestCase):
                 installed_extensions["specdd"]["provides"]["commands"],
             )
 
+            for command in (
+                "speckit.specdd.context.md",
+                "speckit.specdd.validate.md",
+                "speckit.specdd.verify.md",
+            ):
+                with self.subTest(generic_extension_command=command):
+                    self.assertFalse(
+                        (
+                            root
+                            / GENERIC_COMMANDS_DIR
+                            / command
+                        ).exists()
+                    )
+
             require_success(
                 self,
                 run_command(
@@ -116,29 +152,40 @@ class PresetInstallTests(unittest.TestCase):
                 ),
             )
 
-            expectations = {
-                "speckit.plan.md": (
-                    "## Phases",
-                    "## SpecDD Planning Augmentation",
-                ),
-                "speckit.tasks.md": (
-                    "## Task Generation Rules",
-                    "## SpecDD Task Augmentation",
-                ),
-                "speckit.converge.md": (
-                    "## Convergence Findings",
-                    "## SpecDD Convergence Augmentation",
-                ),
-            }
+            preset_dir = (
+                root
+                / ".specify"
+                / "presets"
+                / "specdd-bridge"
+            )
+            composed_dir = preset_dir / ".composed"
+
             for filename, markers in expectations.items():
-                with self.subTest(filename=filename):
-                    path = root / GENERIC_COMMANDS_DIR / filename
-                    content = path.read_text(encoding="utf-8")
-                    self.assertIn(markers[0], content)
-                    self.assertIn(markers[1], content)
+                with self.subTest(composed=filename):
+                    composed = (
+                        composed_dir / filename
+                    ).read_text(encoding="utf-8")
+                    self.assertIn(
+                        markers[0],
+                        composed,
+                    )
+                    self.assertIn(
+                        markers[1],
+                        composed,
+                    )
                     self.assertLess(
-                        content.index(markers[0]),
-                        content.index(markers[1]),
+                        composed.index(markers[0]),
+                        composed.index(markers[1]),
+                    )
+
+                    generic = (
+                        root
+                        / GENERIC_COMMANDS_DIR
+                        / filename
+                    ).read_text(encoding="utf-8")
+                    self.assertEqual(
+                        baseline_commands[filename],
+                        generic,
                     )
 
             require_success(
@@ -151,13 +198,21 @@ class PresetInstallTests(unittest.TestCase):
                     "specdd-bridge",
                 ),
             )
-            for filename, markers in expectations.items():
-                with self.subTest(restored=filename):
-                    content = (
-                        root / GENERIC_COMMANDS_DIR / filename
+            self.assertFalse(
+                preset_dir.exists()
+            )
+
+            for filename in expectations:
+                with self.subTest(generic_restored=filename):
+                    generic = (
+                        root
+                        / GENERIC_COMMANDS_DIR
+                        / filename
                     ).read_text(encoding="utf-8")
-                    self.assertIn(markers[0], content)
-                    self.assertNotIn(markers[1], content)
+                    self.assertEqual(
+                        baseline_commands[filename],
+                        generic,
+                    )
 
             require_success(
                 self,
