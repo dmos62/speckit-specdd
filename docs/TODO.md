@@ -3,22 +3,22 @@
 Status: Planned  
 Target: v0.1
 
+Completed phases are removed from this file; remaining phase numbers stay stable so references to the original implementation plan do not drift.
+
 ## 1. Implementation strategy
 
-Build the integration in this order:
+Build the remaining integration in this order:
 
-1. finish the bootstrap gate,
-2. create the integration source layout,
-3. establish a minimal two-domain SpecDD fixture,
-4. inspect real machine-readable SpecDD resolution,
-5. define and implement Change Boundary v1,
-6. expose `speckit.specdd.context`,
-7. implement validation and task-partition guidance,
-8. implement verification from actual changed files,
-9. augment Spec Kit planning, tasks, and convergence,
-10. add deliberate spec-evolution handling,
-11. add hooks and then a workflow overlay,
-12. harden tests, documentation, and compatibility.
+1. establish a minimal two-domain SpecDD fixture,
+2. inspect real machine-readable SpecDD resolution,
+3. define and implement Change Boundary v1,
+4. expose `speckit.specdd.context`,
+5. implement validation and task-partition guidance,
+6. implement verification from actual changed files,
+7. augment Spec Kit planning, tasks, and convergence,
+8. add deliberate spec-evolution handling,
+9. add hooks and then a workflow overlay,
+10. harden tests, documentation, and compatibility.
 
 Do not begin bundle packaging, automatic `.sdd` editing, or workflow automation before the manual vertical slice works.
 
@@ -28,47 +28,7 @@ context → validate → implement → verify
 
 ---
 
-## 2. Phase 0 — Bootstrap gate
-
-Bootstrap automation and compatibility pins live in `scripts/bootstrap.sh` and `docs/development.md`.
-
-Current blocker as of 2026-09-17: `bash scripts/bootstrap.sh --check` exits with `bootstrap: Spec Kit is not initialized; run: bash scripts/bootstrap.sh`. Bootstrap mutates external tool installations and creates upstream-generated state, so it must be completed by the human operator in the actual development checkout using `HUMAN-REQUEST.md`. Do not synthesize the missing generated state or advance to Phase 1 until the resulting check output has been reviewed.
-
-### TODO
-
-- [ ] Run `bash scripts/bootstrap.sh` from the repository root.
-- [ ] Review the generated Spec Kit and SpecDD baseline for unexpected files.
-- [ ] Run `bash scripts/bootstrap.sh --check` successfully.
-- [ ] Commit the clean initialized baseline before integration work begins.
-- [ ] Delete `HUMAN-REQUEST.md` after the bootstrap output has been reviewed.
-
-### Exit criteria
-
-- Spec Kit operates normally with no bridge installed.
-- SpecDD operates normally with no bridge installed.
-- Both tools coexist in one repository.
-- The pinned baseline is reproducible from `docs/development.md`.
-- The initialized baseline is committed and the worktree is clean.
-
----
-
-## 3. Phase 1 — Create the integration source layout
-
-### TODO
-
-- [ ] Create `integration/specdd/commands/`, `scripts/`, `schemas/`, and `tests/`.
-- [ ] Create `integration/specdd-preset/commands/`.
-- [ ] Create `fixtures/minimal-system/`.
-- [ ] Keep integration source separate from `.specify/` installed/generated state.
-- [ ] Decide whether Python packaging metadata is needed for test execution.
-
-### Exit criteria
-
-Integration source, fixtures, documentation, and generated Spec Kit state have clear ownership and separate locations.
-
----
-
-## 4. Phase 2 — Build the minimal SpecDD fixture
+## 2. Phase 2 — Build the minimal SpecDD fixture
 
 ### TODO
 
@@ -87,7 +47,7 @@ The fixture supports valid local writes, invalid cross-domain writes, and legiti
 
 ---
 
-## 5. Phase 3 — Define Change Boundary schema v1
+## 3. Phase 3 — Define Change Boundary schema v1
 
 Create `integration/specdd/schemas/change-boundary.schema.json`.
 
@@ -106,9 +66,11 @@ Create `integration/specdd/schemas/change-boundary.schema.json`.
 
 ---
 
-## 6. Phase 4 — Implement the SpecDD adapter
+## 4. Phase 4 — Implement the SpecDD adapter
 
 Create `integration/specdd/scripts/boundary.py`.
+
+For the first vertical slice, run the adapter directly as a repository-local Python script. Add Python packaging metadata only if later test or import requirements make package semantics materially useful.
 
 ### TODO
 
@@ -130,7 +92,7 @@ Resolving one Auth target and one Users target produces a valid Change Boundary 
 
 ---
 
-## 7. Phase 5 — Implement `speckit.specdd.context`
+## 5. Phase 5 — Implement `speckit.specdd.context`
 
 Create `integration/specdd/commands/context.md`.
 
@@ -152,7 +114,7 @@ A sample feature can generate and regenerate a valid boundary file.
 
 ---
 
-## 8. Phase 6 — Create the Spec Kit extension manifest
+## 6. Phase 6 — Create the Spec Kit extension manifest
 
 Create `integration/specdd/extension.yml`.
 
@@ -172,7 +134,7 @@ The local extension installs without patching Spec Kit core and exposes `speckit
 
 ---
 
-## 9. Phase 7 — Implement validation and task partition guidance
+## 7. Phase 7 — Implement validation and task partition guidance
 
 Initial deterministic diagnostics:
 
@@ -206,7 +168,7 @@ The validator handles local valid work, accidental cross-authority mutation, leg
 
 ---
 
-## 10. Phase 8 — Implement `speckit.specdd.verify`
+## 8. Phase 8 — Implement `speckit.specdd.verify`
 
 Create `integration/specdd/commands/verify.md`.
 
@@ -227,7 +189,7 @@ Verification catches an unauthorized cross-domain change even when feature-level
 
 ---
 
-## 11. Phase 9 — Implement the Spec Kit preset
+## 9. Phase 9 — Implement the Spec Kit preset
 
 Create `integration/specdd-preset/preset.yml` and command wrappers that compose upstream behavior rather than copying complete upstream templates.
 
@@ -247,7 +209,7 @@ SpecDD context improves generated plans and tasks before post-generation validat
 
 ---
 
-## 12. Phase 10 — Add deliberate spec-evolution handling
+## 10. Phase 10 — Add deliberate spec-evolution handling
 
 ### TODO
 
@@ -266,7 +228,7 @@ The integration supports legitimate architecture evolution without allowing an o
 
 ---
 
-## 13. Phase 11 — Add lifecycle hooks
+## 11. Phase 11 — Add lifecycle hooks
 
 Only start after context, validate, and verify work manually.
 
@@ -287,7 +249,7 @@ Normal Spec Kit usage invokes bridge gates at the required lifecycle transitions
 
 ---
 
-## 14. Phase 12 — Add workflow overlay
+## 12. Phase 12 — Add workflow overlay
 
 ### TODO
 
@@ -303,7 +265,7 @@ Critical authority gates are structurally represented rather than depending only
 
 ---
 
-## 15. Phase 13 — Complete the test matrix
+## 13. Phase 13 — Complete the test matrix
 
 ### TODO
 
@@ -319,7 +281,7 @@ Deterministic checks are automated and agentic semantic cases have repeatable ac
 
 ---
 
-## 16. Phase 14 — Documentation
+## 14. Phase 14 — Documentation
 
 ### TODO
 
@@ -334,7 +296,7 @@ Deterministic checks are automated and agentic semantic cases have repeatable ac
 
 ---
 
-## 17. Phase 15 — v0.1 hardening
+## 15. Phase 15 — v0.1 hardening
 
 ### TODO
 
@@ -368,7 +330,7 @@ Do not implement before v0.1 proves the semantic bridge:
 
 ## 19. Next coding session
 
-After the bootstrap gate is complete, stop after the first narrow vertical slice:
+Stop after the first narrow vertical slice:
 
 - [ ] Create the Auth/Users fixture.
 - [ ] Inspect real JSON from `specdd resolve` for both domains.

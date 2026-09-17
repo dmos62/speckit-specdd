@@ -1,4 +1,4 @@
-@# Surface non-mutating toolchain, bootstrap, and worktree state to the next iteration.
-@cli! bash -c "node --version && npm --version && uv --version"
+@# Surface non-mutating bootstrap, patch-integrity, and worktree state to the next iteration.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
+@cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"

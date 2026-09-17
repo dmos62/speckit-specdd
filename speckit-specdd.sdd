@@ -1,39 +1,34 @@
-Spec: Spec Kit SpecDD Integration Lab
+Spec: Spec Kit × SpecDD Integration Lab
 
-Platform: Spec Kit/SpecDD/Node.js/Python/Shell
+Platform: Node.js 22+/Spec Kit 1.0.7/SpecDD 1.5
 
 Purpose:
-  Integrate the Spec Kit change lifecycle with SpecDD persistent system contracts through a thin derived bridge while preserving each system as the authority for its own model.
+  Provide a local integration lab for a thin bridge that projects SpecDD system authority into the Spec Kit change lifecycle without forking, merging, or duplicating either system.
 
 Structure:
-  ./integration: Bridge extension and preset source governed by local specs
-  ./fixtures: Integration-test systems governed by local specs
-  ./docs: Project design and development documentation
-  ./scripts: Bootstrap and repository maintenance automation
+  ./integration: Bridge extension and Spec Kit preset source
+  ./fixtures: Integration-test systems used to exercise authority behavior
+  ./docs: Project specification, implementation plan, and development guidance
+  ./scripts: Repository bootstrap tooling
 
 Owns:
-  ./docs/spec.md
-  ./docs/TODO.md
-  ./docs/development.md
-  ./scripts/bootstrap.sh
+  Repository-wide bridge architecture and source/generated-state separation.
   ./dev-scripts.include
-  ./HUMAN-REQUEST.md
-  ./DEBUGGING.md
+  ./docs/TODO.md
+  ./integration/**/.gitkeep
+  ./fixtures/**/.gitkeep
+  ./HUMAN-REQUEST*.md
 
 References:
   ./docs/spec.md
   ./docs/development.md
 
 Must:
-  Spec Kit remains the canonical change lifecycle and feature-task system.
-  SpecDD remains the canonical persistent system specification and authority model.
-  Bridge mechanics delegate SpecDD resolution to the installed SpecDD tooling rather than independently interpreting SpecDD semantics.
-  Derived integration state remains reconstructible from authoritative Spec Kit artifacts and SpecDD specifications.
-  Bridge source remains separate from generated Spec Kit state.
-  Authority changes take effect for implementation only after the changed SpecDD state is resolved in a new authority context.
+  Spec Kit remains authoritative for the change lifecycle and SpecDD remains authoritative for persistent system semantics.
+  Bridge-derived state remains reconstructible from canonical Spec Kit and SpecDD artifacts.
+  Integration source remains separate from generated or installed upstream state.
+  Compatibility pins stay at Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5` until a deliberate compatibility task changes them.
 
 Must not:
-  Patch or fork upstream Spec Kit or SpecDD core to provide bridge behavior.
-  Maintain a copied SpecDD constraint set in Spec Kit feature artifacts or derived bridge state.
-  Synchronize Spec Kit feature tasks with SpecDD `Tasks` entries.
-  Automatically edit `.sdd` files or relax SpecDD authority as bridge behavior.
+  Patch files under `.specify/`, `.specify-agent/`, or `.specdd/` to implement bridge behavior.
+  Maintain a second persistent copy of SpecDD constraints in Spec Kit feature artifacts.
