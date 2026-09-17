@@ -19,6 +19,9 @@ _STORY_RE = re.compile(
 _INLINE_CODE_RE = re.compile(
     r"`([^`\r\n]+)`"
 )
+_URL_RE = re.compile(
+    r"\b[A-Za-z][A-Za-z0-9+.-]*://[^\s`]+"
+)
 _SLASH_PATH_RE = re.compile(
     r"(?P<path>"
     r"(?:\.{1,2}[\\/]|[\\/])?"
@@ -53,16 +56,18 @@ def _clean_token(value: str) -> str:
     ).rstrip(".")
 
 
+def _without_urls(text: str) -> str:
+    return _URL_RE.sub(
+        lambda match: " " * len(match.group(0)),
+        text,
+    )
+
+
 def _raw_targets(text: str) -> list[str]:
     values: list[str] = []
+    path_text = _without_urls(text)
 
-    for match in _SLASH_PATH_RE.finditer(text):
-        prefix = text[
-            max(0, match.start() - 12) : match.start()
-        ]
-        if "://" in prefix:
-            continue
-
+    for match in _SLASH_PATH_RE.finditer(path_text):
         value = _clean_token(
             match.group("path")
         )
@@ -72,6 +77,8 @@ def _raw_targets(text: str) -> list[str]:
     for value in _INLINE_CODE_RE.findall(text):
         token = _clean_token(value)
         if not token:
+            continue
+        if _URL_RE.fullmatch(token):
             continue
         if "/" in token or "\\" in token:
             continue

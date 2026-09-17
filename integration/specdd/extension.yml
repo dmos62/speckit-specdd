@@ -27,6 +27,9 @@ provides:
     - name: speckit.specdd.validate
       file: commands/validate.md
       description: "Validate Spec Kit task write scope against the current SpecDD Change Boundary."
+    - name: speckit.specdd.verify
+      file: commands/verify.md
+      description: "Verify actual implementation changes against the planned SpecDD authority snapshot."
 
 tags:
   - specdd

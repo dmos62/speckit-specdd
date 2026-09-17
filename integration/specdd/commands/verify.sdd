@@ -1,0 +1,32 @@
+Spec: SpecDD Verify Command
+
+Purpose:
+  Verify actual implementation changes against the operation's planned SpecDD authority snapshot and the freshly resolved resulting system state.
+
+Owns:
+  ./verify.md
+
+References:
+  ./context.sdd
+  ./validate.sdd
+
+Must:
+  Actual implementation paths come from Git rather than planned task wording.
+  Active Spec Kit feature artifacts and unrelated generated integration state remain outside implementation authority checks.
+  Existing actual implementation targets are freshly resolved through the bridge adapter before comparison with the planned Change Boundary.
+  Unknown, conflicting, or newly introduced write authority blocks verification.
+  Changed `.sdd` files are reported separately and do not grant authority to the current operation.
+  SpecDD drift remains distinct from feature correctness findings.
+  Verification includes the repository `specdd lint` result.
+
+Must not:
+  Edit `.sdd` files.
+  Treat a changed specification as retroactive authority for implementation in the same operation.
+  Reimplement SpecDD resolver semantics.
+
+Depends on:
+  ../scripts/verification.py
+
+Done when:
+  A valid local fixture change verifies without authority findings.
+  An unauthorized cross-domain fixture change is blocking even when the requested feature behavior could otherwise be complete.

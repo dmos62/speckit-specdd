@@ -3,7 +3,7 @@ Spec: Change Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard Change Boundary schema projection, resolver integration, validation diagnostics, and deterministic output.
+  Guard Change Boundary schema projection, resolver integration, validation diagnostics, actual-change verification, and deterministic output.
 
 Owns:
   ./test_boundary.py
@@ -17,6 +17,10 @@ Owns:
   ./validation_test_tasks.py
   ./validation_test_engine.py
   ./validation_test_fixture.py
+  ./test_verification.py
+  ./verification_test_git.py
+  ./verification_test_engine.py
+  ./verification_test_fixture.py
 
 References:
   /integration/specdd/scripts/scripts.sdd
@@ -30,3 +34,6 @@ Must:
   Validation tests cover zero, one, and multiple task authorities.
   Multi-authority task findings preserve task order and user-story identity without automatically blocking legitimate cross-domain work.
   Implementation-stage validation blocks unknown or conflicting authority.
+  Git verification tests separate implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.
+  Verification blocks an actual authority domain that was absent from the planned Change Boundary.
+  A changed `.sdd` file does not authorize a newly introduced implementation authority in the same verification operation.

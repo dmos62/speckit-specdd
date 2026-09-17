@@ -4,6 +4,7 @@
 @glob **/*.sdd
 @glob **/*.py
 @glob **/*.json
+@glob **/*.yml
 @glob **/*.sh
 
 @globexclude node_modules/**

@@ -9,15 +9,14 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 Build the remaining integration in this order:
 
-1. implement verification from actual changed files,
-2. augment Spec Kit planning, tasks, and convergence,
-3. add deliberate spec-evolution handling,
-4. add hooks and then a workflow overlay,
-5. harden tests, documentation, and compatibility.
+1. augment Spec Kit planning, tasks, and convergence,
+2. add deliberate spec-evolution handling,
+3. add hooks and then a workflow overlay,
+4. harden tests, documentation, and compatibility.
 
 Do not begin bundle packaging, automatic `.sdd` editing, or workflow automation before the manual vertical slice works.
 
-The first milestone remains: context → validate → implement → verify.
+The manual context → validate → implement → verify vertical slice is now present.
 
 The pinned SpecDD 1.1.1 resolver contract has been inspected against the two-domain fixture. `directories` contains root-to-local resolved context, resolved specs expose repository-relative forward-slash `path` values, and section bodies contain the raw resolved entries needed by the bridge. Host-absolute `rootDirectoryPath` and `targetPath` values must not enter derived state. Because the resolver has no dedicated primary-authority field, the adapter derives authority narrowly from resolved `Owns` entries without parsing `.sdd` independently.
 
@@ -27,29 +26,17 @@ The adapter at `integration/specdd/scripts/boundary.py` consumes compact resolve
 
 The context command source at `integration/specdd/commands/context.md` resolves the active feature through Spec Kit state, prefers explicit user targets, otherwise discovers exact targets from `tasks.md` before `plan.md`, and delegates normalization, resolver, ownership, schema validation, and atomic replacement to the adapter. Intended-but-missing paths remain unresolved diagnostics. If no target is named, stale derived boundary state is removed. The command reports authorities, cross-boundary status, and unresolved diagnostics by code.
 
-The extension manifest at `integration/specdd/extension.yml` is authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and the context and validation bridge commands.
+The extension manifest at `integration/specdd/extension.yml` is authored under `integration/specdd/extension.sdd`. It declares extension version `0.1.0`, exact Spec Kit `1.0.7` compatibility, required SpecDD CLI `1.1.1`, and the context, validation, and verification bridge commands.
 
-Local development installation has been validated against Spec Kit `1.0.7`. The generic integration registers bridge commands from the extension manifest and removes generated commands during uninstall. The lifecycle smoke treats `.specify/extensions/.registry` as generated Spec Kit bookkeeping: it rejects semantic registry changes, tolerates Spec Kit's whitespace-only rewrite, restores tracked bytes after the check, and verifies that install/uninstall leaves no generated extension or command state behind.
+Local development installation is validated against Spec Kit `1.0.7`. The generic integration registers bridge commands from the extension manifest and removes generated commands during uninstall. The lifecycle smoke treats `.specify/extensions/.registry` as generated Spec Kit bookkeeping: it rejects semantic registry changes, tolerates Spec Kit's whitespace-only rewrite, restores tracked bytes after the check, and verifies that install/uninstall leaves no generated extension or command state behind.
 
 Deterministic validation is implemented by `integration/specdd/scripts/validation.py`. It reads the validated Change Boundary plus exact paths from Spec Kit `tasks.md`, preserves task order, IDs, and user-story labels, and classifies task write sets as `NO_WRITE_TARGETS`, `SPEC_ONLY`, `NORMAL`, `CROSS_BOUNDARY`, or `UNRESOLVED`. Its stable diagnostics are `UNRESOLVED_TARGET`, `MULTI_AUTHORITY_TASK`, `STALE_BOUNDARY`, and `AUTHORITY_VIOLATION`, with `info`, `warning`, `error`, and `blocking` severity semantics. Multi-authority work is advisory rather than automatically invalid; unknown or conflicting authority blocks at the implementation stage. The validator does not parse `.sdd`, rewrite tasks, or alter authority.
 
 The validation command at `integration/specdd/commands/validate.md` keeps architectural judgment outside deterministic mechanics. It uses multi-authority groups for decomposition guidance while preserving feature and user-story cohesion, and distinguishes `IMPLEMENTATION_CONFLICT`, `SPEC_EVOLUTION_REQUIRED`, and `AUTHORITY_EVOLUTION_REQUIRED` when reasoning about intent. Authority evolution must end the current authority context and be followed by fresh Change Boundary resolution before implementation.
 
-## 8. Phase 8 — Implement `speckit.specdd.verify`
+Actual-change verification is implemented by `integration/specdd/scripts/verification.py`. It reads Git porcelain state with rename detection disabled so source and destination mutations remain distinct, excludes the active Spec Kit feature directory plus generated `.specify/` and `.specify-agent/` state from implementation authority checks, and reports changed `.sdd` and root `.specdd/` control files separately. Existing implementation writes receive fresh Change Boundary resolution; deleted writes are checked against the planned authority snapshot because they no longer exist for resolver input. A new or changed authority is a blocking `AUTHORITY_VIOLATION`, while an unplanned path inside an already planned authority is `SPECDD_DRIFT`. Changed `.sdd` files never self-authorize the current operation. Verification also records `specdd lint` and blocks on lint failure.
 
-Create `integration/specdd/commands/verify.md`.
-
-### TODO
-- [ ] Determine actual changed files from Git.
-- [ ] Exclude unrelated generated files from authority checks.
-- [ ] Re-resolve SpecDD context for actual changed targets.
-- [ ] Compare actual domains with the planned Change Boundary.
-- [ ] Detect newly affected domains, invalid writes, stale scope, and unresolved authority.
-- [ ] Run or request `specdd lint` as appropriate.
-- [ ] Report SpecDD drift and likely missing durable spec evolution separately from feature gaps.
-- [ ] Add verification tests, including a feature-correct but authority-invalid implementation.
-
-Exit criteria: verification catches an unauthorized cross-domain change even when feature behavior appears complete.
+The verification command at `integration/specdd/commands/verify.md` preserves the planned boundary as the authority snapshot, delegates Git and resolver mechanics to the verification script, and keeps deterministic authority findings separate from feature convergence and agentic `MISSING_SPEC_EVOLUTION` reasoning. Fixture tests cover a valid local change and a feature-correct but unauthorized Users-domain mutation under an Auth-only planned boundary.
 
 ## 9. Phase 9 — Implement the Spec Kit preset
 
@@ -149,13 +136,13 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Start Phase 8 with actual-change verification:
-- [ ] Define the changed-path collection boundary around Git without treating generated integration state as product writes.
-- [ ] Reuse Change Boundary and validation projection instead of parsing `.sdd`.
-- [ ] Add fixture-backed verification for a valid local change and an unauthorized cross-domain change.
-- [ ] Add `speckit.specdd.verify` to the extension manifest only after its command contract exists.
+Start Phase 9 with the Spec Kit preset:
+- [ ] Inspect the pinned Spec Kit `1.0.7` preset composition contract rather than guessing its syntax.
+- [ ] Add the smallest planning wrapper that supplies current SpecDD context without copying upstream planning templates.
+- [ ] Preserve user-story grouping while making authority-local implementation work visible during task generation.
+- [ ] Add preset installation and cross-domain behavior tests before lifecycle hooks.
 
-Do not start presets, hooks, workflow overlays, or bundle packaging before manual verification works.
+Do not start hooks, workflow overlays, or bundle packaging before preset composition works against the pinned release.
 
 ## 20. Definition of done for v0.1
 
@@ -165,12 +152,12 @@ Do not start presets, hooks, workflow overlays, or bundle packaging before manua
 - [x] The bridge uses the real SpecDD resolver.
 - [x] `speckit.specdd.context` generates a valid, rebuildable Change Boundary through its adapter.
 - [x] `speckit.specdd.validate` recognizes authority and system-evolution issues.
-- [ ] `speckit.specdd.verify` checks actual implementation scope.
+- [x] `speckit.specdd.verify` checks actual implementation scope.
 - [ ] The preset supplies SpecDD context during planning and task generation.
 - [ ] Feature user stories may span multiple SpecDD domains while implementation tasks remain authority-local where practical.
 - [ ] Spec Kit tasks remain the canonical feature execution tasks.
 - [ ] SpecDD remains the canonical persistent system model.
-- [ ] Unauthorized cross-domain mutation is detected.
+- [x] Unauthorized cross-domain mutation is detected.
 - [x] Legitimate cross-domain work is representable.
 - [x] Spec evolution is distinct from implementation conflict.
 - [x] Authority evolution requires re-resolution before new rights can be used.

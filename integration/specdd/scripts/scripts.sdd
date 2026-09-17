@@ -3,7 +3,7 @@ Spec: Change Boundary Scripts
 Platform: Python/SpecDD CLI
 
 Purpose:
-  Build deterministic Change Boundary and validation state from SpecDD resolver output without reimplementing SpecDD semantics.
+  Build deterministic Change Boundary, validation, and actual-change verification state from SpecDD resolver output without reimplementing SpecDD semantics.
 
 Owns:
   ./boundary.py
@@ -21,6 +21,11 @@ Owns:
   ./validation_engine.py
   ./validation_tasks.py
   ./validation_types.py
+  ./verification.py
+  ./verification_cli.py
+  ./verification_engine.py
+  ./verification_git.py
+  ./verification_types.py
 
 References:
   ../schemas/change-boundary.schema.json
@@ -33,6 +38,10 @@ Must:
   Validation preserves task order, task IDs, and user-story labels in its analysis output.
   Validation distinguishes zero-authority, single-authority, and multi-authority task write sets.
   Unknown or conflicting authority blocks validation at the implementation stage.
+  Verification derives actual implementation writes from Git and fresh SpecDD resolution.
+  Generated Spec Kit state and active feature artifacts remain outside actual implementation authority checks.
+  Verification compares actual authorities with the planned Change Boundary and blocks unknown, conflicting, or newly introduced authority.
+  Changed `.sdd` files remain separate from ordinary implementation writes and do not grant authority to the current verification operation.
 
 Must not:
   Parse `.sdd` source as a replacement for SpecDD resolver semantics.

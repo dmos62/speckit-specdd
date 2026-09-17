@@ -17,6 +17,13 @@ VALIDATION_SCRIPT_PATH = (
     / "scripts"
     / "validation.py"
 )
+VERIFICATION_SCRIPT_PATH = (
+    REPO_ROOT
+    / "integration"
+    / "specdd"
+    / "scripts"
+    / "verification.py"
+)
 FIXTURE_ROOT = (
     REPO_ROOT
     / "tests"
@@ -48,4 +55,8 @@ boundary = _load_module(
 validation = _load_module(
     "specdd_validation",
     VALIDATION_SCRIPT_PATH,
+)
+verification = _load_module(
+    "specdd_verification",
+    VERIFICATION_SCRIPT_PATH,
 )
