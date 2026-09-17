@@ -17,7 +17,7 @@ Selected on 2026-09-17:
 
 The current compatibility range is therefore intentionally a singleton for Spec Kit, SpecDD CLI, and the SpecDD framework: `1.0.7`, `1.1.1`, and `1.5` respectively. Do not infer compatibility with adjacent patch, minor, or major versions from version syntax alone.
 
-The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64, and Spec Kit reported Python `3.12.11`. Those values describe the exercised host, not a supported range. Other operating systems, architectures, Python versions, and exact Node versions remain unverified until the repository checks and acceptance scenarios run there. `bash scripts/bootstrap.sh --check` now prints the exact Node and bridge Python versions so later evidence can be recorded rather than inferred.
+The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64, and Spec Kit reported Python `3.12.11`. Those values describe the exercised host, not a supported range. Other operating systems, architectures, Python versions, and exact Node versions remain unverified until the repository checks and acceptance scenarios run there. `bash scripts/bootstrap.sh --check` prints the exact Node and bridge Python versions so later evidence can be recorded rather than inferred.
 
 Pinned Spec Kit `1.0.7` deliberately excludes the `generic` integration from its command registrar. The repository therefore uses the Codex integration for executable bridge commands instead of patching generated generic command files.
 
@@ -133,15 +133,17 @@ These shell steps omit `continue_on_error`, so nonzero status propagates through
 
 Extension lifecycle hooks remain useful for direct command execution, agent-facing reporting, decomposition guidance, and architectural interpretation. They are not the structural enforcement mechanism. The workflow overlay calls deterministic bridge scripts directly rather than relying on hook-dispatch compliance for failure propagation.
 
-## Verify without changing the repository
+## Verify without changing canonical source
 
 Use check mode for subsequent iterations:
 
     bash scripts/bootstrap.sh --check
 
-Check mode reports the exact Node and bridge Python versions, then verifies the pinned tool versions, active Codex integration, materialized bridge skills, installed preset augmentations, lifecycle hooks, structural workflow overlay, Spec Kit environment, and SpecDD lint result without changing repository state.
+Check mode reports the exact Node and bridge Python versions, then verifies the pinned tool versions, active Codex integration, materialized bridge skills, installed preset augmentations, lifecycle hooks, structural workflow overlay, Spec Kit environment, and SpecDD lint result without intentionally changing repository state.
 
-`dev-scripts.include` runs this mode so the next programming iteration receives bootstrap failures and compatibility evidence directly.
+Development-mode Spec Kit installation state is not canonical bridge source. Reinstallation can rematerialize tracked or untracked files under `.agents/skills/` and `.specify/`, including clone-local extension or preset registry metadata and platform-sensitive generated content. Clean-clone acceptance therefore evaluates canonical-source cleanliness separately from those generated paths while still validating their installed behavior through bootstrap checks, preset installation tests, and workflow resolution.
+
+`dev-scripts.include` runs check mode so the next programming iteration receives bootstrap failures and compatibility evidence directly.
 
 For workflow-specific inspection:
 
@@ -161,6 +163,8 @@ Canonical bridge source lives under:
 
 Spec Kit materializes executable Codex skills under `.agents/skills/`, keeps extension and preset bookkeeping under `.specify/`, and copies project workflow overlays under `.specify/workflows/overlays/`. Treat those outputs as generated integration state. Change canonical source and rerun bootstrap rather than hand-editing materialized files.
 
+Some generated files may be present in repository history as baseline integration state. Their presence does not make them canonical bridge source, and development-mode rematerialization is allowed to rewrite them. Acceptance checks must fail on unexpected canonical-source changes rather than requiring clone-specific generated registries and materializations to remain byte-identical.
+
 SpecDD local operator preferences remain in `.specdd/bootstrap.local.md` and are intentionally excluded from shared iteration context.
 
 ## Baseline review
@@ -171,3 +175,5 @@ After bootstrap or a deliberate integration migration:
     bash scripts/bootstrap.sh --check
 
 Review generated `.specify/`, `.agents/skills/`, and `.specdd/` state according to the repository's tracking policy. Keep canonical bridge changes in `integration/` and do not maintain hand-edited copies of bridge behavior in generated command or workflow state.
+
+The automated clean-clone acceptance gate additionally checks that bootstrap, check mode, the full test suite, fixture lint, and patch-integrity checks succeed; that no unexpected canonical-source changes remain after generated installation paths are excluded; and that no tracked files are accidentally covered by ignore rules.

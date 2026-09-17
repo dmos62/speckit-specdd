@@ -36,8 +36,9 @@
 @globexclude .specify/workflows/overlays/**
 @globexclude .specify/workflows/runs/**
 
-@# Generated Spec Kit templates and initialization bookkeeping
+@# Generated Spec Kit templates, placeholder governance state, and initialization bookkeeping
 @globexclude .specify/templates/**
+@globexclude .specify/memory/constitution.md
 @globexclude .specify/init-options.json
 @globexclude .specify/integration.json
 

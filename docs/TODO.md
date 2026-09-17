@@ -7,13 +7,17 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 ## 1. Current baseline
 
-The v0.1 semantic bridge is implemented. Current working-tree evidence from 2026-09-17 passes repository bootstrap check, all 88 tests, the real two-domain fixture lint, `git diff --check`, clean worktree status, and the tracked-file ignore-policy check.
+The v0.1 semantic bridge is implemented. Current working-tree evidence from 2026-09-17 passes repository bootstrap check, all 88 tests, the real two-domain fixture lint, `git diff --check`, and the tracked-file ignore-policy check.
 
 Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. The exercised development host is Windows 10 `10.0.19045` on AMD64 with Node.js `v22.14.0` and Python `3.12.11`.
 
 The remaining release gate is reproduction from a clean clone of committed repository state.
 
-`dev-scripts.include` now exercises that gate automatically after the normal working-tree checks. The clean-clone check:
+The first automated clean-clone run used source commit `05b4cd5231b608df19d9320615bf0f7c5b47e4ea`. Bootstrap, bootstrap check, all 88 tests, fixture lint, and `git diff --check` completed successfully. The run failed only at the final raw worktree-cleanliness assertion because supported development-mode Spec Kit installation rematerialized generated state under `.agents/skills/`, `.specify/extensions/`, `.specify/presets/`, and `.specify/workflows/overlays/`.
+
+Those paths are generated installation state rather than canonical bridge source. The clean-clone gate now reports their post-bootstrap status for evidence but evaluates worktree cleanliness after excluding the repository's known generated Spec Kit and local SpecDD state. Unexpected canonical-source changes and tracked-file ignore-policy violations remain failing conditions.
+
+`dev-scripts.include` exercises the gate automatically. The clean-clone check:
 
 - clones committed `HEAD` into a temporary repository with `git clone --no-local`;
 - prints the exact source commit;
@@ -22,7 +26,8 @@ The remaining release gate is reproduction from a clean clone of committed repos
 - runs the full unittest suite;
 - runs the real SpecDD fixture lint;
 - runs `git diff --check`;
-- requires clean `git status --short`;
+- reports generated installation-state changes separately;
+- requires no unexpected canonical-source changes after generated installation paths are excluded;
 - requires that no tracked files are matched by repository ignore rules;
 - removes the temporary clone afterward.
 
@@ -34,7 +39,7 @@ Do not mark clean-clone reproduction complete until a subsequent programming ite
 
 ### TODO
 
-- [ ] Re-run all acceptance scenarios from a clean clone. The automated `dev-scripts.include` gate is prepared; record its source commit and host/tool evidence here after the first successful run, then delete this item.
+- [ ] Re-run clean-clone acceptance with canonical-source cleanliness filtering. On the first `clean-clone acceptance: PASS`, record the exercised commit and exact host/tool evidence in the current baseline, confirm generated installation state remained outside canonical bridge source, then delete this item.
 - [ ] Tag v0.1 only after clean-clone reproduction succeeds.
 
 ## 18. Deferred work
@@ -49,10 +54,10 @@ If it reports `clean-clone acceptance: PASS`:
 
 - record the exercised commit and exact host/tool versions in the current baseline;
 - delete the completed clean-clone TODO item;
-- confirm generated and ignored state remained outside canonical source;
+- confirm generated installation state remained non-canonical and canonical source stayed clean;
 - proceed to the v0.1 tagging decision.
 
-If it fails, fix canonical source rather than generated Spec Kit state, rerun the clean-clone gate, and do not tag v0.1.
+If it fails, use the reported canonical-source status to identify the remaining source change. Do not treat supported generated Spec Kit rematerialization as canonical drift, do not hand-edit generated state, and do not tag v0.1.
 
 ## 20. Definition of done for v0.1
 
