@@ -9,7 +9,7 @@ Completed phases are removed from this file; remaining phase numbers stay stable
 
 The manual context → validate → implement → verify vertical slice is present.
 
-Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. Do not silently advance these pins during v0.1.
+Compatibility remains pinned to Node.js 22+, Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5`. Direct compatibility evidence is intentionally narrower than the prerequisite syntax: Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and framework `1.5` are the only tested tool versions currently claimed. The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64 and Spec Kit reported Python `3.12.11`; other operating systems, Python versions, and adjacent tool versions remain unverified. Bootstrap check output now records the exact Node and bridge Python versions for future evidence.
 
 Change Boundary v1 is defined by `integration/specdd/schemas/change-boundary.schema.json`. The adapter uses the real SpecDD resolver, derives authority only from resolved `Owns` entries, keeps derived state deterministic, and normalizes invalid targets, resolver failures, malformed output, and ownership ambiguity into structured unresolved diagnostics.
 
@@ -41,12 +41,12 @@ The user-facing root `README.md` is governed by `README.sdd` and documents the r
 
 Focused Change Boundary documentation is implemented at `docs/change-boundary.md` under `docs/change-boundary.sdd`. The guide documents lifecycle-specific target discovery, deterministic regeneration, unresolved handling, stale-boundary behavior, authority-snapshot preservation, and disposable derived state without duplicating installation or maintenance procedures.
 
+Compatibility assertions now guard the exact Spec Kit, SpecDD CLI, and SpecDD framework pins across canonical bootstrap and manifest source. No semantic version range broader than directly exercised versions is treated as tested compatibility.
+
 ## 15. Phase 15 — v0.1 hardening
 
 ### TODO
 
-- [ ] Pin tested Spec Kit and SpecDD compatibility ranges from actual test evidence.
-- [ ] Add compatibility assertions where useful.
 - [ ] Make external dependency errors explicit.
 - [ ] Verify supported operating-system path handling.
 - [ ] Make generated state deterministic enough for tests.
@@ -61,11 +61,11 @@ Do not implement before v0.1 proves the semantic bridge: bundle/public registry 
 
 ## 19. Next coding session
 
-Pin the tested compatibility range from actual repository evidence.
+Make external dependency failures explicit without adding fallback behavior that bypasses the pinned toolchain.
 
-Start from the existing exact v0.1 pins and the currently passing bootstrap, installation smoke, resolver fixture, workflow, and acceptance tests. Do not broaden compatibility claims beyond versions that have direct test evidence. Keep compatibility checks in canonical source rather than generated Spec Kit state.
+Start from the existing bootstrap prerequisite failures and adapter errors. Check the direct command, structural workflow-gate, resolver, lint, Git, Spec Kit, uv, npm, Node.js, and Codex failure paths for actionable messages and stable nonzero status. Keep tool absence distinct from invalid resolver output or authority diagnostics.
 
-If broader Spec Kit, SpecDD CLI, framework, Node.js, Python, or operating-system compatibility needs additional evidence, record the unsupported or unverified range explicitly rather than inferring it from version syntax.
+Use the compatibility evidence emitted by `bash scripts/bootstrap.sh --check` when evaluating any environment-specific failure. Do not broaden operating-system, Python, Node, Spec Kit, SpecDD CLI, or framework claims unless the relevant checks and acceptance scenarios have actually run in that environment.
 
 ## 20. Definition of done for v0.1
 

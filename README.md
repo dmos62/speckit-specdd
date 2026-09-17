@@ -35,19 +35,19 @@ A rule belongs in the layer matching its meaning. The bridge does not copy const
 
 ## Compatibility
 
-The v0.1 development baseline is intentionally pinned:
+The v0.1 development baseline keeps externally versioned semantics exact where direct repository test evidence exists.
 
-| Component | Version |
-| --- | --- |
-| Node.js | 22.x or newer |
-| Spec Kit | 1.0.7 |
-| Spec Kit integration | `codex` |
-| SpecDD CLI | 1.1.1 |
-| SpecDD framework | 1.5 |
+| Component | v0.1 requirement | Compatibility evidence |
+| --- | --- | --- |
+| Node.js | 22+ | Runtime prerequisite; exact tested Node version is surfaced by bootstrap checks and is not generalized into a wider tested range. |
+| Spec Kit | `1.0.7` | Tested only at `1.0.7`; other Spec Kit versions are unverified. |
+| Spec Kit integration | `codex` | Tested registrar-backed integration for pinned Spec Kit `1.0.7`. |
+| SpecDD CLI | `1.1.1` | Tested only at `1.1.1`; other CLI versions are unverified. |
+| SpecDD framework | `1.5` | Tested only at `1.5`; other framework versions are unverified. |
 
-Pinned Spec Kit `1.0.7` does not register the bridge commands through the `generic` integration. This repository therefore uses the registrar-backed `codex` integration.
+The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64, and Spec Kit reported Python `3.12.11`. Those observations are test evidence, not compatibility ranges; other operating systems and Python versions remain unverified until exercised directly.
 
-Do not silently advance these versions during v0.1 work.
+Pinned Spec Kit `1.0.7` does not register the bridge commands through the `generic` integration, so this repository uses the registrar-backed `codex` integration. Do not silently broaden these claims or advance the external tool versions during v0.1 work.
 
 ## Install
 
@@ -244,10 +244,4 @@ If authorization reports stale or unknown authority, implementation remains bloc
 
 ## Project documentation
 
-The durable project design is in [docs/spec.md](docs/spec.md).
-
-Focused Change Boundary lifecycle semantics are in [docs/change-boundary.md](docs/change-boundary.md).
-
-Development-host setup and maintenance procedures are in [docs/development.md](docs/development.md).
-
-Remaining implementation work is tracked in [docs/TODO.md](docs/TODO.md).
+The durable project design is in [docs/spec.md](docs/spec.md), focused Change Boundary lifecycle semantics are in [docs/change-boundary.md](docs/change-boundary.md), development-host setup and maintenance procedures are in [docs/development.md](docs/development.md), and remaining implementation work is tracked in [docs/TODO.md](docs/TODO.md).

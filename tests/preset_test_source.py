@@ -43,6 +43,50 @@ class PresetSourceTests(unittest.TestCase):
                 manifest,
             )
 
+    def test_external_compatibility_claims_match_direct_evidence(self):
+        extension = (
+            EXTENSION_ROOT / "extension.yml"
+        ).read_text(encoding="utf-8")
+        preset = (
+            PRESET_ROOT / "preset.yml"
+        ).read_text(encoding="utf-8")
+        bootstrap = BOOTSTRAP_PATH.read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            'speckit_version: "==1.0.7"',
+            extension,
+        )
+        self.assertIn(
+            'version: "==1.1.1"',
+            extension,
+        )
+        self.assertIn(
+            'speckit_version: "==1.0.7"',
+            preset,
+        )
+        self.assertIn(
+            'readonly SPECKIT_VERSION="1.0.7"',
+            bootstrap,
+        )
+        self.assertIn(
+            'readonly SPECDD_CLI_VERSION="1.1.1"',
+            bootstrap,
+        )
+        self.assertIn(
+            'readonly SPECDD_FRAMEWORK_VERSION="1.5"',
+            bootstrap,
+        )
+        self.assertIn(
+            "node --version",
+            bootstrap,
+        )
+        self.assertIn(
+            "uv run --no-project python --version",
+            bootstrap,
+        )
+
     def test_extension_declares_blocking_lifecycle_hooks(self):
         manifest = (
             EXTENSION_ROOT / "extension.yml"

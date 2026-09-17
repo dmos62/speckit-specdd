@@ -166,6 +166,13 @@ check_initialized_state() {
 
 run_checks() {
   check_prerequisites
+
+  printf '%s\n' '--- Runtime versions ---'
+  printf '%s' 'Node.js: '
+  node --version
+  printf '%s' 'Python: '
+  uv run --no-project python --version
+
   check_initialized_state
 
   printf '%s\n' '--- Spec Kit version ---'

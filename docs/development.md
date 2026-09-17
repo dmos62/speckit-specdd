@@ -6,14 +6,18 @@ This repository is an integration lab for Spec Kit and SpecDD. Keep upstream-gen
 
 Selected on 2026-09-17:
 
-| Component | Pin | Reason |
+| Component | v0.1 requirement | Direct evidence |
 | --- | --- | --- |
-| Node.js | 22.x or newer | SpecDD CLI requires Node.js 22+; `.nvmrc` selects the minimum supported major. |
-| uv | installed on the development host | Required for the supported Spec Kit installation path. |
-| Spec Kit | 1.0.7 | Current stable release selected for v0.1 development. |
-| Spec Kit integration | `codex` | Registrar-backed integration used to materialize extension and preset commands under `.agents/skills`. |
-| SpecDD CLI | 1.1.1 | Current stable CLI release selected for v0.1 development. |
-| SpecDD framework | 1.5 | Current framework release selected for authority semantics and bootstrap behavior. |
+| Node.js | 22+ | Runtime prerequisite from SpecDD; bootstrap now reports the exact Node version used by each check run instead of treating every later major as tested. |
+| uv | installed on the development host | Required by the supported Spec Kit and bridge command paths; no uv version range is currently claimed. |
+| Spec Kit | `1.0.7` | Bootstrap, extension install, preset composition, workflow overlay, and full tests pass at this exact version. |
+| Spec Kit integration | `codex` | Registrar-backed integration exercised by installation smoke tests and repository bootstrap. |
+| SpecDD CLI | `1.1.1` | Resolver fixtures, validation/verification flows, lint, bootstrap, and install smoke tests pass at this exact version. |
+| SpecDD framework | `1.5` | Repository and fixture specs lint cleanly at this exact framework version. |
+
+The current compatibility range is therefore intentionally a singleton for Spec Kit, SpecDD CLI, and the SpecDD framework: `1.0.7`, `1.1.1`, and `1.5` respectively. Do not infer compatibility with adjacent patch, minor, or major versions from version syntax alone.
+
+The 2026-09-17 evidence host was Windows 10 `10.0.19045` on AMD64, and Spec Kit reported Python `3.12.11`. Those values describe the exercised host, not a supported range. Other operating systems, architectures, Python versions, and exact Node versions remain unverified until the repository checks and acceptance scenarios run there. `bash scripts/bootstrap.sh --check` now prints the exact Node and bridge Python versions so later evidence can be recorded rather than inferred.
 
 Pinned Spec Kit `1.0.7` deliberately excludes the `generic` integration from its command registrar. The repository therefore uses the Codex integration for executable bridge commands instead of patching generated generic command files.
 
@@ -122,9 +126,9 @@ Use check mode for subsequent iterations:
 
     bash scripts/bootstrap.sh --check
 
-Check mode verifies the pinned tool versions, active Codex integration, materialized bridge skills, installed preset augmentations, lifecycle hooks, structural workflow overlay, Spec Kit environment, and SpecDD lint result without changing repository state.
+Check mode reports the exact Node and bridge Python versions, then verifies the pinned tool versions, active Codex integration, materialized bridge skills, installed preset augmentations, lifecycle hooks, structural workflow overlay, Spec Kit environment, and SpecDD lint result without changing repository state.
 
-`dev-scripts.include` runs this mode so the next programming iteration receives bootstrap failures directly.
+`dev-scripts.include` runs this mode so the next programming iteration receives bootstrap failures and compatibility evidence directly.
 
 For workflow-specific inspection:
 
