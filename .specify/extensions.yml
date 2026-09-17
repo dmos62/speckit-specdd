@@ -1,4 +1,42 @@
-installed: []
+installed:
+- specdd
 settings:
   auto_execute_hooks: true
-hooks: {}
+hooks:
+  after_plan:
+  - extension: specdd
+    command: speckit.specdd.context
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.specdd.context?
+    description: Refresh the feature Change Boundary after planning.
+    condition: null
+  after_tasks:
+  - extension: specdd
+    command: speckit.specdd.validate
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.specdd.validate?
+    description: Validate final task write scope against current SpecDD authority.
+    condition: null
+  before_implement:
+  - extension: specdd
+    command: speckit.specdd.authorize
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.specdd.authorize?
+    description: Block implementation when current task scope lacks trustworthy authority.
+    condition: null
+  after_implement:
+  - extension: specdd
+    command: speckit.specdd.verify
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.specdd.verify?
+    description: Verify actual implementation writes against the planned authority
+      snapshot.
+    condition: null

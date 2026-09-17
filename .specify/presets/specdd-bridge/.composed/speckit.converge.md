@@ -1,6 +1,15 @@
 ---
-description: Assess the current codebase against the feature's spec, plan, and tasks, then append any remaining unbuilt work as new tasks to tasks.md so implement can complete it.
+description: Assess the current codebase against the feature's spec, plan, and tasks,
+  then append any remaining unbuilt work as new tasks to tasks.md so implement can
+  complete it.
+scripts:
+  sh: scripts/bash/check-prerequisites.sh --json --require-spec --require-tasks --include-tasks
+  ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireSpec -RequireTasks
+    -IncludeTasks
+  py: scripts/python/check_prerequisites.py --json --require-spec --require-tasks
+    --include-tasks
 ---
+
 
 ## User Input
 
@@ -58,8 +67,8 @@ source of intent** (with the constitution as governing constraints), assess the 
 state of the code, determine which requirements, acceptance criteria, plan decisions, and
 existing tasks are unmet, incomplete, or only partially satisfied, and **append each piece
 of remaining work as a new, traceable task** at the bottom of `tasks.md` so that
-`/speckit.implement` can complete it. This command MUST run only after
-`/speckit.implement` has run on the current `tasks.md`, and after `/speckit.tasks` has produced a complete `tasks.md`.
+`__SPECKIT_COMMAND_IMPLEMENT__` can complete it. This command MUST run only after
+`__SPECKIT_COMMAND_IMPLEMENT__` has run on the current `tasks.md`, and after `__SPECKIT_COMMAND_TASKS__` has produced a complete `tasks.md`.
 
 This is **not** a diff tool and does **not** track changes. It assesses the present state
 of the code relative to the feature's artifacts — no git, no branch comparison, no history.
@@ -73,12 +82,12 @@ of the code relative to the feature's artifacts — no git, no branch comparison
 - rewrite, renumber, reorder, or delete any existing task (including tasks from a prior
   Convergence phase);
 - modify, create, or delete any application code — completing the appended tasks is the
-  job of `/speckit.implement`.
+  job of `__SPECKIT_COMMAND_IMPLEMENT__`.
 
 When the codebase already satisfies everything, the command MUST leave `tasks.md`
 **byte-for-byte unchanged** (no empty Convergence header) and report a clean result.
 
-**Constitution Authority**: The project constitution (`.specify/memory/constitution.md`) is
+**Constitution Authority**: The project constitution (`/memory/constitution.md`) is
 **non-negotiable**. Code that violates a MUST principle is the highest-severity finding and
 produces a corresponding remediation task. If the constitution is an unfilled template,
 skip constitution checks gracefully rather than failing.
@@ -87,15 +96,15 @@ skip constitution checks gracefully rather than failing.
 
 ### 1. Initialize Convergence Context
 
-Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks` once from repo root and parse JSON for FEATURE_DIR and AVAILABLE_DOCS. Derive absolute paths:
+Run `{SCRIPT}` once from repo root and parse JSON for FEATURE_DIR and AVAILABLE_DOCS. Derive absolute paths:
 
 - SPEC = FEATURE_DIR/spec.md
 - PLAN = FEATURE_DIR/plan.md
 - TASKS = FEATURE_DIR/tasks.md
-- CONSTITUTION = `.specify/memory/constitution.md` (if present)
+- CONSTITUTION = `/memory/constitution.md` (if present)
 If `spec.md`, `plan.md`, or `tasks.md` is missing, STOP with a clear, actionable message naming the
-prerequisite command to run (`/speckit.specify` for a missing spec, `/speckit.plan` for a missing plan,
-`/speckit.tasks` for missing tasks). Do not produce partial output.
+prerequisite command to run (`__SPECKIT_COMMAND_SPECIFY__` for a missing spec, `__SPECKIT_COMMAND_PLAN__` for a missing plan,
+`__SPECKIT_COMMAND_TASKS__` for missing tasks). Do not produce partial output.
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 ### 2. Load Artifacts (Progressive Disclosure)
@@ -224,7 +233,7 @@ Append to the **end** of `tasks.md`, per the append contract:
 ### 8. Provide Next Actions (Handoff)
 
 - On `tasks_appended`: state how many tasks were appended under which phase, and recommend
-  running `/speckit.implement` to complete them; note that a follow-up converge
+  running `__SPECKIT_COMMAND_IMPLEMENT__` to complete them; note that a follow-up converge
   run will find fewer or no remaining items.
 - On `converged`: recommend proceeding to review / opening a PR. No further implement pass
   is needed for this feature's specified scope.
@@ -267,3 +276,20 @@ After producing the result, check if `.specify/extensions.yml` exists in the pro
     After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
 
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
+
+
+## SpecDD Convergence Augmentation
+
+Apply these requirements in addition to the upstream convergence pass. Preserve the upstream append-only `tasks.md` contract and its feature-gap analysis.
+
+1. Before deciding that the feature is converged, invoke `speckit.specdd.verify` through the active agent command mechanism. Use the existing planned Change Boundary; do not regenerate it first.
+2. Keep deterministic SpecDD findings separate from upstream feature and constitution findings. Report a compact SpecDD subsection with the verification result and affected paths.
+3. Recognize these system/authority diagnostic classes during convergence:
+   - `SPECDD_VIOLATION`: the resulting SpecDD state fails deterministic checks such as `specdd lint`;
+   - `SPECDD_DRIFT`: implementation scope is outside the planned target set while remaining inside an already planned authority domain;
+   - `AUTHORITY_VIOLATION`: actual writes have unknown, conflicting, changed, or newly introduced authority and cannot be accepted under the planned snapshot;
+   - `MISSING_SPEC_EVOLUTION`: agentic finding that the implementation introduces a durable system contract future work must preserve but deliberate SpecDD evolution is absent.
+4. Do not derive `MISSING_SPEC_EVOLUTION` merely from an unplanned file, a cross-boundary task, or the presence of changed `.sdd` files. Use the durable-contract promotion test from the project specification.
+5. When a SpecDD finding requires remaining work, append a normal convergence task using the upstream task format and a source reference such as `SpecDD:AUTHORITY_VIOLATION`. Keep feature intent intact; recommend implementation correction before spec evolution unless the behavior genuinely requires durable contract evolution.
+6. A blocking `SPECDD_VIOLATION` or `AUTHORITY_VIOLATION` prevents a clean converged result even when feature behavior is otherwise complete. Do not relax authority as the remediation.
+7. Changed `.sdd` files in the same operation never retroactively authorize implementation writes. Authority-changing evolution must complete separately, followed by a fresh Change Boundary before subsequent implementation.

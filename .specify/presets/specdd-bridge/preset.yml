@@ -1,0 +1,40 @@
+schema_version: "1.0"
+
+preset:
+  id: "specdd-bridge"
+  name: "SpecDD Bridge Workflow"
+  version: "0.1.0"
+  description: "Augment Spec Kit planning, tasks, and convergence with current SpecDD authority context."
+  author: "SpecDD contributors"
+  repository: "https://github.com/specdd/specdd"
+  license: "Apache-2.0"
+
+requires:
+  speckit_version: "==1.0.7"
+  extensions:
+    - id: specdd
+      version: "==0.1.0"
+      required: true
+
+provides:
+  templates:
+    - type: "command"
+      name: "speckit.plan"
+      file: "commands/plan.md"
+      description: "Add SpecDD Change Boundary context to implementation planning."
+      strategy: "append"
+    - type: "command"
+      name: "speckit.tasks"
+      file: "commands/tasks.md"
+      description: "Generate authority-local implementation tasks while preserving user-story grouping."
+      strategy: "append"
+    - type: "command"
+      name: "speckit.converge"
+      file: "commands/converge.md"
+      description: "Include SpecDD verification findings in convergence without replacing upstream convergence logic."
+      strategy: "append"
+
+tags:
+  - specdd
+  - architecture
+  - workflow

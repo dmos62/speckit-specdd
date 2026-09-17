@@ -1,0 +1,20 @@
+Spec: SpecDD Convergence Augmentation
+
+Purpose:
+  Add SpecDD actual-change verification to `speckit.converge` without replacing upstream feature convergence semantics.
+
+Owns:
+  ./converge.md
+
+References:
+  ../../specdd/commands/verify.sdd
+
+Must:
+  Convergence verifies actual changes against the planned Change Boundary before reporting a clean result.
+  Feature gaps remain distinct from deterministic SpecDD system and authority findings.
+  Convergence recognizes `SPECDD_VIOLATION`, `SPECDD_DRIFT`, `MISSING_SPEC_EVOLUTION`, and `AUTHORITY_VIOLATION`.
+  Blocking SpecDD authority or lint findings prevent a clean converged result.
+  Changed `.sdd` files never retroactively authorize implementation writes from the same operation.
+
+Done when:
+  The composed convergence command retains upstream append-only behavior and includes SpecDD verification findings.

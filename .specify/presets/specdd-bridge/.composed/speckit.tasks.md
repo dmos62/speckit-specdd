@@ -1,15 +1,21 @@
 ---
-description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
+description: Generate an actionable, dependency-ordered tasks.md for the feature based
+  on available design artifacts.
 handoffs:
-  - label: Analyze For Consistency
-    agent: speckit.analyze
-    prompt: Run a project analysis for consistency
-    send: true
-  - label: Implement Project
-    agent: speckit.implement
-    prompt: Start the implementation in phases
-    send: true
+- label: Analyze For Consistency
+  agent: speckit.analyze
+  prompt: Run a project analysis for consistency
+  send: true
+- label: Implement Project
+  agent: speckit.implement
+  prompt: Start the implementation in phases
+  send: true
+scripts:
+  sh: scripts/bash/setup-tasks.sh --json
+  ps: scripts/powershell/setup-tasks.ps1 -Json
+  py: scripts/python/setup_tasks.py --json
 ---
+
 
 ## User Input
 
@@ -56,12 +62,12 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-1. **Setup**: Run `.specify/scripts/powershell/setup-tasks.ps1 -Json` from repo root and parse FEATURE_DIR, TASKS_TEMPLATE_CONTENT, TASKS_TEMPLATE, and AVAILABLE_DOCS list. `FEATURE_DIR` and `TASKS_TEMPLATE` must be absolute paths when provided. `AVAILABLE_DOCS` is a list of document names/relative paths available under `FEATURE_DIR` (for example `research.md` or `contracts/`). For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+1. **Setup**: Run `{SCRIPT}` from repo root and parse FEATURE_DIR, TASKS_TEMPLATE_CONTENT, TASKS_TEMPLATE, and AVAILABLE_DOCS list. `FEATURE_DIR` and `TASKS_TEMPLATE` must be absolute paths when provided. `AVAILABLE_DOCS` is a list of document names/relative paths available under `FEATURE_DIR` (for example `research.md` or `contracts/`). For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **Load design documents**: Read from FEATURE_DIR:
    - **Required**: plan.md (tech stack, libraries, structure), spec.md (user stories with priorities)
    - **Optional**: data-model.md (entities), contracts/ (interface contracts), research.md (decisions), quickstart.md (test scenarios)
-   - **IF EXISTS**: Load `.specify/memory/constitution.md` for project principles and governance constraints
+   - **IF EXISTS**: Load `/memory/constitution.md` for project principles and governance constraints
    - Note: Not all projects have all documents. Generate tasks based on what's available.
 
 3. **Execute task generation workflow**:
@@ -132,7 +138,7 @@ Output path to generated tasks.md and summary:
 - Suggested MVP scope (typically just User Story 1)
 - Format validation: Confirm ALL tasks follow the checklist format (checkbox, ID, labels, file paths)
 
-Context for task generation: $ARGUMENTS
+Context for task generation: {ARGS}
 
 The tasks.md should be immediately executable - each task must be specific enough that an LLM can complete it without additional context.
 
@@ -214,3 +220,36 @@ Every task MUST strictly follow this format:
 - [ ] tasks.md generated with all phases, task IDs, and file paths
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with task count, story breakdown, and MVP scope
+
+
+## SpecDD Task Augmentation
+
+Apply these requirements while generating the upstream `tasks.md`. Preserve the upstream checklist format, execution
+ordering, and independent user-story structure.
+
+1. Refresh the active Change Boundary with `speckit.specdd.context` before finalizing task write sets. Use exact
+   implementation paths from the plan and proposed tasks; unresolved paths are not authority.
+2. Preserve Spec Kit user-story grouping. A single user story may span multiple SpecDD authority domains.
+3. Within each user-story phase, prefer implementation tasks whose non-`.sdd` write set has one primary SpecDD
+   authority. When one proposed task spans authorities and the work is naturally separable, split it into authority-local
+   tasks under the same user story rather than splitting the user story itself.
+4. Keep legitimate cross-domain contract work together when decomposition would make the work less coherent and the
+   current SpecDD authority model already permits every write. Do not treat `CROSS_BOUNDARY` as automatic invalidity.
+5. Separate ordinary implementation from durable system evolution in task wording and sequencing:
+   - normal implementation uses existing contracts and authority;
+   - spec evolution uses the ordinary task-text prefix `SPEC_EVOLUTION_REQUIRED:` and names only the `.sdd` contract or
+     contracts that must change;
+   - authority evolution uses the ordinary task-text prefix `AUTHORITY_EVOLUTION_REQUIRED:` and names only the `.sdd`
+     contract or contracts that change ownership or write permission;
+   - never combine an evolution task's `.sdd` targets with non-`.sdd` implementation writes in the same task;
+   - these prefixes are text inside a normal Spec Kit task description, not additional bracket labels or authority.
+6. After a deliberate spec-evolution task, generate a separate follow-up task that refreshes `speckit.specdd.context`
+   before the first implementation task that depends on the changed specification. An `AUTHORITY_EVOLUTION_REQUIRED:`
+   task ends the prior authority context; newly proposed authority is unusable until that follow-up refresh produces a
+   fresh Change Boundary.
+7. Do not add custom bracket labels that would violate the upstream task checklist format. Keep task IDs, `[P]`, and
+   `[US#]` semantics unchanged.
+8. After generating `tasks.md`, invoke `speckit.specdd.validate` at the `tasks` stage. Correct stale, unresolved, mixed
+   evolution/implementation, or malformed evolution scope before completion. Use `authorityGroups` to improve
+   decomposition where useful, but never rewrite SpecDD authority to make a task valid.
+9. Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries and never parse `.sdd` source to infer ownership.

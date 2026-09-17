@@ -2,18 +2,14 @@
   "version": "1.0.7",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "generic"
+    "codex"
   ],
   "integration_settings": {
-    "generic": {
+    "codex": {
       "script": "ps",
-      "raw_options": "--commands-dir .specify-agent/commands",
-      "parsed_options": {
-        "commands_dir": ".specify-agent/commands"
-      },
-      "invoke_separator": "."
+      "invoke_separator": "-"
     }
   },
-  "integration": "generic",
-  "default_integration": "generic"
+  "integration": "codex",
+  "default_integration": "codex"
 }

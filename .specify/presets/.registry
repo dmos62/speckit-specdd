@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "presets": {
+    "specdd-bridge": {
+      "version": "0.1.0",
+      "source": "local",
+      "manifest_hash": "sha256:119d33a7b9e4df3619c6573cd478e0792eb969ed6e1c19fd81b803de90c0720f",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "codex": [
+          "speckit.plan",
+          "speckit.tasks",
+          "speckit.converge"
+        ]
+      },
+      "registered_skills": {
+        "codex": [
+          "speckit-plan",
+          "speckit-tasks",
+          "speckit-converge"
+        ]
+      },
+      "installed_at": "2026-09-17T16:03:35.975008+00:00"
+    }
+  }
+}
