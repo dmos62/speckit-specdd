@@ -15,21 +15,10 @@ authority, the bridge retains non-existent implementation targets as `UNRESOLVED
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
 
-## P0 — Change Boundary semantic consistency
-
-- [ ] Finish cross-field invariant hardening before trusting a Change Boundary.
-  - Implemented deterministic validation for unique resolved target paths.
-  - Implemented exact agreement between `authorities` and distinct non-null target `primaryAuthority` values.
-  - Implemented `crossBoundary` agreement with the projected authority set.
-  - Implemented rejection when one normalized path appears as both resolved and unresolved.
-  - Implemented validation that a non-null target authority appears in that target's `resolvedSpecs`.
-  - Implemented candidate-authority rules: only `AMBIGUOUS_AUTHORITY` may carry candidates and it requires at least two.
-  - Decision: nullable `primaryAuthority` remains supported by Change Boundary v1 as a conservative unknown-authority
-    representation. The current builder does not intentionally emit it, and implementation-stage consumers continue to
-    treat it as unresolved authority rather than permission.
-  - Remaining: add adapter-level invariant tests separate from JSON Schema shape tests.
-  - Boundary-focused test sources are temporarily included through `files.include` for the next iteration.
-  - Completion: a shape-valid but semantically corrupted boundary cannot influence authorization or verification.
+Change Boundary readers now reject deterministic cross-field inconsistency before boundary state can influence
+authorization or verification. Adapter-level tests separately establish that shape-valid corruption is rejected for
+duplicate resolved targets, authority projection mismatch, owner/spec-chain mismatch, resolved/unresolved overlap, and
+invalid candidate-authority state.
 
 ## P0 — Operation-scoped Git baseline
 
