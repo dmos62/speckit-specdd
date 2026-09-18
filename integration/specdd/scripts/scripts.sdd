@@ -6,6 +6,8 @@ Purpose:
   Build deterministic Change Boundary, validation, authorization, and actual-change verification state from SpecDD resolver output without reimplementing SpecDD semantics.
 
 Structure:
+  ./boundary_schema.py: Change Boundary schema loading and reusable JSON Schema value checks
+  ./boundary_schema_validation.py: Recursive shape validation and deterministic cross-field consistency
   ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
   ./workflow_gate_state.py: Active-feature, boundary-context, and workflow-artifact state helpers
   ./validation_authority.py: Pure task ownership and operation-authority projection
@@ -43,6 +45,7 @@ Must:
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
+  Change Boundary validation rejects cross-field inconsistency before generated or loaded boundary state can influence validation, authorization, or verification.
   Boundary refresh records deterministic SHA-256 identities of normalized resolver-returned governing spec sections for each resolved target without copying rule text.
   Refresh-time context evidence is bound to the exact generated Change Boundary and stored as replaceable current-worktree Git metadata rather than authorization evidence.
   Authorization fresh-resolves boundary targets and blocks when effective SpecDD context fingerprints or resolver generation identity differ from refresh-time evidence.

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import json
-import re
 from typing import Any, Mapping
 
 from boundary_schema import (
     ANNOTATION_SCHEMA_KEYS,
+    _array_errors,
+    _object_errors,
     _resolve_ref,
+    _string_errors,
     _type_matches,
 )
 from boundary_types import BoundaryError
@@ -85,20 +86,23 @@ def _schema_errors(
             for child in rule["oneOf"]
             if isinstance(child, Mapping)
         ]
-        if (
-            sum(
-                not _schema_errors(value, child, schema, path)
-                for child in choices
-            )
-            != 1
-        ):
+        matches = sum(
+            not _schema_errors(value, child, schema, path)
+            for child in choices
+        )
+        if matches != 1:
             errors.append(
                 f"{path}: must match exactly one allowed schema"
             )
 
     if (
         isinstance(rule.get("not"), Mapping)
-        and not _schema_errors(value, rule["not"], schema, path)
+        and not _schema_errors(
+            value,
+            rule["not"],
+            schema,
+            path,
+        )
     ):
         errors.append(f"{path}: matches a forbidden schema")
 
@@ -142,10 +146,26 @@ def _schema_errors(
         return errors
 
     if isinstance(value, Mapping):
-        errors.extend(_object_errors(value, rule, schema, path))
+        errors.extend(
+            _object_errors(
+                value,
+                rule,
+                schema,
+                path,
+                _schema_errors,
+            )
+        )
 
     if isinstance(value, list):
-        errors.extend(_array_errors(value, rule, schema, path))
+        errors.extend(
+            _array_errors(
+                value,
+                rule,
+                schema,
+                path,
+                _schema_errors,
+            )
+        )
 
     if isinstance(value, str):
         errors.extend(_string_errors(value, rule, path))
@@ -153,181 +173,130 @@ def _schema_errors(
     return errors
 
 
-def _object_errors(
+def _semantic_errors(
     value: Mapping[str, Any],
-    rule: Mapping[str, Any],
-    schema: Mapping[str, Any],
-    path: str,
 ) -> list[str]:
     errors: list[str] = []
-    required = rule.get("required", [])
+    targets = value.get("targets")
+    if not isinstance(targets, list):
+        return errors
 
-    if isinstance(required, list):
-        errors.extend(
-            f"{path}: missing required property {key!r}"
-            for key in required
-            if key not in value
-        )
+    paths: set[str] = set()
+    projected_authorities: set[str] = set()
 
-    if (
-        isinstance(rule.get("minProperties"), int)
-        and len(value) < rule["minProperties"]
-    ):
-        errors.append(f"{path}: too few properties")
+    for index, item in enumerate(targets):
+        if not isinstance(item, Mapping):
+            continue
 
-    if (
-        isinstance(rule.get("maxProperties"), int)
-        and len(value) > rule["maxProperties"]
-    ):
-        errors.append(f"{path}: too many properties")
-
-    properties = rule.get("properties", {})
-    properties = properties if isinstance(properties, Mapping) else {}
-
-    pattern_properties = rule.get("patternProperties", {})
-    pattern_properties = (
-        pattern_properties
-        if isinstance(pattern_properties, Mapping)
-        else {}
-    )
-
-    for key, item in value.items():
-        matched = False
-        child = properties.get(key)
-
-        if isinstance(child, Mapping):
-            matched = True
-            errors.extend(
-                _schema_errors(
-                    item,
-                    child,
-                    schema,
-                    f"{path}.{key}",
+        path = item.get("path")
+        if isinstance(path, str):
+            if path in paths:
+                errors.append(
+                    f"$.targets[{index}].path: duplicate target path {path!r}"
                 )
-            )
+            paths.add(path)
 
-        for pattern, pattern_rule in pattern_properties.items():
+        authority = item.get("primaryAuthority")
+        if isinstance(authority, str):
+            projected_authorities.add(authority)
+            resolved_specs = item.get("resolvedSpecs")
             if (
-                isinstance(pattern_rule, Mapping)
-                and re.search(str(pattern), str(key))
+                isinstance(resolved_specs, list)
+                and authority not in resolved_specs
             ):
-                matched = True
-                errors.extend(
-                    _schema_errors(
-                        item,
-                        pattern_rule,
-                        schema,
-                        f"{path}.{key}",
-                    )
+                errors.append(
+                    f"$.targets[{index}].primaryAuthority: {authority!r} "
+                    "is not present in resolvedSpecs"
                 )
 
-        if not matched and rule.get("additionalProperties") is False:
-            errors.append(
-                f"{path}: unexpected property {key!r}"
-            )
-        elif (
-            not matched
-            and isinstance(rule.get("additionalProperties"), Mapping)
-        ):
-            errors.extend(
-                _schema_errors(
-                    item,
-                    rule["additionalProperties"],
-                    schema,
-                    f"{path}.{key}",
-                )
-            )
-
-    return errors
-
-
-def _array_errors(
-    value: list[Any],
-    rule: Mapping[str, Any],
-    schema: Mapping[str, Any],
-    path: str,
-) -> list[str]:
-    errors: list[str] = []
-
+    authorities = value.get("authorities")
     if (
-        isinstance(rule.get("minItems"), int)
-        and len(value) < rule["minItems"]
-    ):
-        errors.append(f"{path}: too few items")
-
-    if (
-        isinstance(rule.get("maxItems"), int)
-        and len(value) > rule["maxItems"]
-    ):
-        errors.append(f"{path}: too many items")
-
-    if rule.get("uniqueItems") is True:
-        encoded = [
-            json.dumps(
-                item,
-                sort_keys=True,
-                separators=(",", ":"),
-            )
-            for item in value
-        ]
-        if len(encoded) != len(set(encoded)):
-            errors.append(f"{path}: items must be unique")
-
-    if isinstance(rule.get("items"), Mapping):
-        for index, item in enumerate(value):
-            errors.extend(
-                _schema_errors(
-                    item,
-                    rule["items"],
-                    schema,
-                    f"{path}[{index}]",
-                )
-            )
-
-    return errors
-
-
-def _string_errors(
-    value: str,
-    rule: Mapping[str, Any],
-    path: str,
-) -> list[str]:
-    errors: list[str] = []
-
-    if (
-        isinstance(rule.get("minLength"), int)
-        and len(value) < rule["minLength"]
-    ):
-        errors.append(f"{path}: string is too short")
-
-    if (
-        isinstance(rule.get("maxLength"), int)
-        and len(value) > rule["maxLength"]
-    ):
-        errors.append(f"{path}: string is too long")
-
-    if (
-        isinstance(rule.get("pattern"), str)
-        and re.search(rule["pattern"], value) is None
+        isinstance(authorities, list)
+        and all(isinstance(item, str) for item in authorities)
+        and set(authorities) != projected_authorities
     ):
         errors.append(
-            f"{path}: string does not match {rule['pattern']!r}"
+            "$.authorities: must equal the distinct non-null target "
+            "primaryAuthority values"
         )
 
+    cross_boundary = value.get("crossBoundary")
+    if (
+        isinstance(cross_boundary, bool)
+        and cross_boundary != (len(projected_authorities) > 1)
+    ):
+        errors.append(
+            "$.crossBoundary: must agree with the projected authority set"
+        )
+
+    unresolved = value.get("unresolved")
+    if not isinstance(unresolved, list):
+        return errors
+
+    for index, item in enumerate(unresolved):
+        if not isinstance(item, Mapping):
+            continue
+
+        path = item.get("normalizedPath")
+        if isinstance(path, str) and path in paths:
+            errors.append(
+                f"$.unresolved[{index}].normalizedPath: {path!r} also "
+                "appears in resolved targets"
+            )
+
+        code = item.get("code")
+        candidates = item.get("candidateAuthorities")
+        candidate_values = (
+            candidates
+            if isinstance(candidates, list)
+            else []
+        )
+
+        if (
+            code == "AMBIGUOUS_AUTHORITY"
+            and len(candidate_values) < 2
+        ):
+            errors.append(
+                f"$.unresolved[{index}].candidateAuthorities: "
+                "AMBIGUOUS_AUTHORITY requires at least two candidates"
+            )
+        elif (
+            code != "AMBIGUOUS_AUTHORITY"
+            and candidate_values
+        ):
+            errors.append(
+                f"$.unresolved[{index}].candidateAuthorities: candidates "
+                "are valid only for AMBIGUOUS_AUTHORITY"
+            )
+
     return errors
+
+
+def _raise_errors(
+    prefix: str,
+    errors: list[str],
+) -> None:
+    detail = "; ".join(errors[:8])
+    if len(errors) > 8:
+        detail += f"; and {len(errors) - 8} more"
+    raise BoundaryError(prefix + detail)
 
 
 def validate_boundary(
     value: Mapping[str, Any],
     schema: Mapping[str, Any],
 ) -> None:
-    """Validate output against the checked-in schema without a runtime dependency."""
-    errors = _schema_errors(value, schema, schema, "$")
-    if errors:
-        detail = "; ".join(errors[:8])
-        if len(errors) > 8:
-            detail += f"; and {len(errors) - 8} more"
-        raise BoundaryError(
-            "Generated Change Boundary does not satisfy its schema: "
-            + detail
+    """Validate Change Boundary shape and deterministic cross-field invariants."""
+    schema_errors = _schema_errors(value, schema, schema, "$")
+    if schema_errors:
+        _raise_errors(
+            "Generated Change Boundary does not satisfy its schema: ",
+            schema_errors,
+        )
+
+    semantic_errors = _semantic_errors(value)
+    if semantic_errors:
+        _raise_errors(
+            "Change Boundary is semantically inconsistent: ",
+            semantic_errors,
         )

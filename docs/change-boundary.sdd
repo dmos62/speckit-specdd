@@ -20,6 +20,8 @@ Must:
   The guide explains deterministic Change Boundary regeneration from canonical Spec Kit artifacts and fresh SpecDD resolver output without copying persistent SpecDD constraints.
   The guide explains refresh-time effective SpecDD context fingerprints as derived Git metadata bound to the exact current boundary rather than persistent specification or authorization state.
   The guide explains that authorization fresh-resolves governing context and rejects ownership-preserving contract, reference, governing-chain, or generation drift as a stale boundary.
+  The guide explains that boundary consumers reject deterministic cross-field inconsistency before boundary state can influence authorization or verification.
+  The guide explains that nullable `primaryAuthority` remains a conservative Change Boundary v1 unknown-authority state, is not normally emitted by boundary generation, and never grants implementation permission.
   The guide distinguishes target ownership recorded in the Change Boundary from task-time non-owning `Can modify` permission resolved for explicit `SPECDD_AUTHORITY:` tasks during validation and authorization.
   The guide distinguishes the refreshable feature Change Boundary from the immutable authorization snapshot recorded after successful authorization.
   The guide distinguishes advisory unresolved planning context from unresolved implementation authority that cannot grant permission.
@@ -29,4 +31,4 @@ Must:
   Installation and development-host maintenance remain delegated to the README and development guide rather than duplicated here.
 
 Done when:
-  A maintainer can determine when a Change Boundary is created or refreshed, how governing-context freshness is proven, how ownership and `Can modify` permission differ, when authorization snapshots the boundary, which state verification uses, and how a new authority context begins after evolution.
+  A maintainer can determine when a Change Boundary is created or refreshed, how governing-context freshness is proven, how semantic consistency is checked, how ownership and `Can modify` permission differ, when authorization snapshots the boundary, which state verification uses, and how a new authority context begins after evolution.

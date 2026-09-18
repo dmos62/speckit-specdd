@@ -47,17 +47,12 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Tests excluded by default, include when needed for next programming iteration.
-@globexclude tests/boundary_test_fixture.py
-@globexclude tests/boundary_test_output.py
-@globexclude tests/boundary_test_paths.py
-@globexclude tests/boundary_test_resolver.py
-@globexclude tests/boundary_test_support.py
+@# Boundary-focused tests are temporarily included for the active P0 semantic-consistency iteration.
+
+@# Other tests remain excluded by default and can be reintroduced when needed.
 @globexclude tests/preset_test_install.py
 @globexclude tests/preset_test_source.py
 @globexclude tests/preset_test_support.py
-@globexclude tests/test_boundary.py
-@globexclude tests/test_change_boundary_schema.py
 @globexclude tests/test_preset.py
 @globexclude tests/test_validation.py
 @globexclude tests/test_verification.py

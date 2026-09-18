@@ -92,6 +92,23 @@ It deliberately does not copy persistent `Must`, `Must not`, `Owns`, `Can modify
 The separate refresh-time context document detects changes to those effective contracts without extending the v1
 boundary schema or duplicating their text.
 
+## Semantic consistency
+
+JSON Schema shape validation is not sufficient before a Change Boundary can influence authorization or verification.
+Boundary readers also validate deterministic relationships between fields.
+
+Resolved target paths must be unique. `authorities` must equal the distinct non-null `primaryAuthority` values projected
+by those targets, and `crossBoundary` must agree with that authority set. When a target has a non-null primary authority,
+that authority must appear in the target's `resolvedSpecs`.
+
+A normalized path cannot appear both as a resolved target and an unresolved target. `candidateAuthorities` is reserved
+for `AMBIGUOUS_AUTHORITY`, where at least two candidate authorities must be present.
+
+Change Boundary v1 retains nullable `primaryAuthority` as a conservative compatibility state. Current boundary
+generation does not intentionally emit a resolved target with a null authority; inability to derive one primary owner is
+normally represented in `unresolved`. If a shape-valid v1 document contains a null primary authority, consumers treat
+that target as unknown authority. The null value never grants implementation permission.
+
 ## Tracking policy
 
 Feature Change Boundaries are generated, uncommitted state:

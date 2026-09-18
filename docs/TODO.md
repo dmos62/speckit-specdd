@@ -17,16 +17,18 @@ pre-creation authority locally.
 
 ## P0 — Change Boundary semantic consistency
 
-- [ ] Validate cross-field invariants before trusting a Change Boundary.
-  - Require unique resolved target paths.
-  - Require `authorities` to equal the distinct non-null target `primaryAuthority` values.
-  - Require `crossBoundary` to agree with that authority set.
-  - Prevent one path from appearing as both resolved and unresolved.
-  - Validate candidate authorities and resolved spec relationships where deterministically knowable.
-  - Decide whether nullable `primaryAuthority` remains a supported v1 representation or is removed.
-  - Keep refresh-time context-evidence validation separate from boundary cross-field validation; it is fingerprint-bound
-    generated metadata rather than part of Change Boundary v1.
-  - Add adapter-level invariant tests separate from JSON Schema shape tests.
+- [ ] Finish cross-field invariant hardening before trusting a Change Boundary.
+  - Implemented deterministic validation for unique resolved target paths.
+  - Implemented exact agreement between `authorities` and distinct non-null target `primaryAuthority` values.
+  - Implemented `crossBoundary` agreement with the projected authority set.
+  - Implemented rejection when one normalized path appears as both resolved and unresolved.
+  - Implemented validation that a non-null target authority appears in that target's `resolvedSpecs`.
+  - Implemented candidate-authority rules: only `AMBIGUOUS_AUTHORITY` may carry candidates and it requires at least two.
+  - Decision: nullable `primaryAuthority` remains supported by Change Boundary v1 as a conservative unknown-authority
+    representation. The current builder does not intentionally emit it, and implementation-stage consumers continue to
+    treat it as unresolved authority rather than permission.
+  - Remaining: add adapter-level invariant tests separate from JSON Schema shape tests.
+  - Boundary-focused test sources are temporarily included through `files.include` for the next iteration.
   - Completion: a shape-valid but semantically corrupted boundary cannot influence authorization or verification.
 
 ## P0 — Operation-scoped Git baseline
