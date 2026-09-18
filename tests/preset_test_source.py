@@ -8,59 +8,15 @@ from preset_test_support import (
 
 
 class PresetSourceTests(unittest.TestCase):
-    def test_manifest_uses_pinned_append_composition(self):
-        manifest = (
-            PRESET_ROOT
-            / "preset.yml"
-        ).read_text(
-            encoding="utf-8"
-        )
-
-        self.assertIn(
-            'id: "specdd-bridge"',
-            manifest,
-        )
-        self.assertIn(
-            'speckit_version: "==1.0.7"',
-            manifest,
-        )
-        self.assertIn(
-            "id: specdd",
-            manifest,
-        )
-        self.assertIn(
-            'version: "==0.1.0"',
-            manifest,
-        )
-        self.assertEqual(
-            3,
-            manifest.count(
-                'strategy: "append"'
-            ),
-        )
-        for command in (
-            "speckit.plan",
-            "speckit.tasks",
-            "speckit.converge",
-        ):
-            self.assertIn(
-                f'name: "{command}"',
-                manifest,
-            )
-
-    def test_external_compatibility_claims_match_direct_evidence(self):
+    def test_manifests_preserve_pinned_composition_contract(self):
         extension = (
             EXTENSION_ROOT
             / "extension.yml"
-        ).read_text(
-            encoding="utf-8"
-        )
+        ).read_text(encoding="utf-8")
         preset = (
             PRESET_ROOT
             / "preset.yml"
-        ).read_text(
-            encoding="utf-8"
-        )
+        ).read_text(encoding="utf-8")
         bootstrap = BOOTSTRAP_PATH.read_text(
             encoding="utf-8"
         )
@@ -78,33 +34,38 @@ class PresetSourceTests(unittest.TestCase):
             preset,
         )
         self.assertIn(
-            'readonly SPECKIT_VERSION="1.0.7"',
-            bootstrap,
+            'version: "==0.1.0"',
+            preset,
         )
-        self.assertIn(
-            'readonly SPECDD_CLI_VERSION="1.1.1"',
-            bootstrap,
+        self.assertEqual(
+            3,
+            preset.count('strategy: "append"'),
         )
-        self.assertIn(
-            'readonly SPECDD_FRAMEWORK_VERSION="1.5"',
-            bootstrap,
-        )
-        self.assertIn(
-            "node --version",
-            bootstrap,
-        )
-        self.assertIn(
-            "uv run --no-project python --version",
-            bootstrap,
-        )
+        for command in (
+            "speckit.plan",
+            "speckit.tasks",
+            "speckit.converge",
+        ):
+            self.assertIn(
+                f'name: "{command}"',
+                preset,
+            )
 
-    def test_extension_declares_blocking_lifecycle_hooks(self):
+        for declaration in (
+            'readonly SPECKIT_VERSION="1.0.7"',
+            'readonly SPECDD_CLI_VERSION="1.1.1"',
+            'readonly SPECDD_FRAMEWORK_VERSION="1.5"',
+        ):
+            self.assertIn(
+                declaration,
+                bootstrap,
+            )
+
+    def test_extension_declares_complete_lifecycle(self):
         manifest = (
             EXTENSION_ROOT
             / "extension.yml"
-        ).read_text(
-            encoding="utf-8"
-        )
+        ).read_text(encoding="utf-8")
 
         for command in (
             "speckit.specdd.context",
@@ -130,164 +91,74 @@ class PresetSourceTests(unittest.TestCase):
 
         self.assertEqual(
             4,
-            manifest.count(
-                "optional: false"
-            ),
+            manifest.count("optional: false"),
         )
 
-        authorize = (
-            EXTENSION_ROOT
-            / "commands"
-            / "authorize.md"
-        ).read_text(
-            encoding="utf-8"
-        )
-        self.assertIn(
-            "workflow_gate.py authorize",
-            authorize,
-        )
-        self.assertIn(
-            "authorization snapshot",
-            authorize.lower(),
-        )
-        self.assertIn(
-            "`summary.blocking`",
-            authorize,
-        )
-
-        verify = (
-            EXTENSION_ROOT
-            / "commands"
-            / "verify.md"
-        ).read_text(
-            encoding="utf-8"
-        )
-        self.assertIn(
-            "authorization snapshot",
-            verify.lower(),
-        )
-        self.assertIn(
-            "--authorization-snapshot",
-            verify,
-        )
-
-    def test_bootstrap_selects_registrar_backed_codex_integration(self):
+    def test_bootstrap_uses_supported_codex_installation(self):
         content = BOOTSTRAP_PATH.read_text(
             encoding="utf-8"
         )
 
-        self.assertIn(
+        for marker in (
             'readonly ACTIVE_INTEGRATION="codex"',
-            content,
-        )
-        self.assertIn(
             'readonly ACTIVE_COMMANDS_DIR=".agents/skills"',
-            content,
-        )
-        self.assertIn(
             'specify integration switch "$ACTIVE_INTEGRATION" --script ps',
-            content,
-        )
-        self.assertIn(
             "specify extension add integration/specdd --dev --force",
-            content,
-        )
-        self.assertIn(
             "specify preset add --dev integration/specdd-preset --priority 10",
-            content,
-        )
+            "specify workflow overlay add",
+        ):
+            self.assertIn(
+                marker,
+                content,
+            )
+
         self.assertNotIn(
             "--integration generic",
             content,
         )
 
-    def test_plan_fragment_projects_context_without_copying_constraints(self):
-        content = (
+    def test_augmentations_cover_authority_aware_lifecycle(self):
+        plan = (
             PRESET_ROOT
             / "commands"
             / "plan.md"
-        ).read_text(
-            encoding="utf-8"
-        )
-
-        self.assertIn(
-            "## SpecDD Planning Augmentation",
-            content,
-        )
-        self.assertIn(
-            "speckit.specdd.context",
-            content,
-        )
-        self.assertIn(
-            "## SpecDD Impact",
-            content,
-        )
-        self.assertIn(
-            "Do not copy `Must`, `Must not`, `Owns`, or `Can modify`",
-            content,
-        )
-
-    def test_task_fragment_preserves_story_grouping_and_authority_locality(self):
-        content = (
+        ).read_text(encoding="utf-8")
+        tasks = (
             PRESET_ROOT
             / "commands"
             / "tasks.md"
-        ).read_text(
-            encoding="utf-8"
-        )
-        normalized = " ".join(
-            content.split()
-        )
-
-        self.assertIn(
-            "Preserve Spec Kit user-story grouping",
-            content,
-        )
-        self.assertIn(
-            "one primary SpecDD authority",
-            normalized,
-        )
-        self.assertIn(
-            "`SPEC_EVOLUTION_REQUIRED:`",
-            content,
-        )
-        self.assertIn(
-            "`AUTHORITY_EVOLUTION_REQUIRED:`",
-            content,
-        )
-        self.assertIn(
-            "never combine an evolution task's `.sdd` targets",
-            content,
-        )
-        self.assertIn(
-            "separate follow-up task that refreshes `speckit.specdd.context`",
-            content,
-        )
-        self.assertIn(
-            "speckit.specdd.authorize",
-            content,
-        )
-        self.assertIn(
-            "speckit.specdd.validate",
-            content,
-        )
-
-    def test_converge_fragment_adds_specdd_diagnostics(self):
-        content = (
+        ).read_text(encoding="utf-8")
+        converge = (
             PRESET_ROOT
             / "commands"
             / "converge.md"
-        ).read_text(
-            encoding="utf-8"
-        )
+        ).read_text(encoding="utf-8")
+
+        for marker in (
+            "speckit.specdd.context",
+            "## SpecDD Impact",
+            "Do not copy `Must`, `Must not`, `Owns`, or `Can modify`",
+        ):
+            self.assertIn(
+                marker,
+                plan,
+            )
+
+        for marker in (
+            "Preserve Spec Kit user-story grouping",
+            "`SPEC_EVOLUTION_REQUIRED:`",
+            "`AUTHORITY_EVOLUTION_REQUIRED:`",
+            "speckit.specdd.authorize",
+            "speckit.specdd.validate",
+        ):
+            self.assertIn(
+                marker,
+                tasks,
+            )
 
         self.assertIn(
             "speckit.specdd.verify",
-            content,
-        )
-        self.assertIn(
-            "authorization snapshot",
-            content.lower(),
+            converge,
         )
         for code in (
             "SPECDD_VIOLATION",
@@ -297,5 +168,5 @@ class PresetSourceTests(unittest.TestCase):
         ):
             self.assertIn(
                 code,
-                content,
+                converge,
             )

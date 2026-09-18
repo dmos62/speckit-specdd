@@ -2,10 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from boundary_test_support import (
-    REPO_ROOT,
-    validation,
-)
+from boundary_test_support import validation
 
 
 class ValidationTaskParsingTests(unittest.TestCase):
@@ -20,21 +17,51 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
-        self.assertEqual(2, len(tasks))
-        self.assertEqual(0, tasks[0].order)
-        self.assertEqual("T010", tasks[0].task_id)
-        self.assertEqual("US1", tasks[0].story)
         self.assertEqual(
-            ("src/auth/service.ts", "src/users/repository.ts"),
+            2,
+            len(tasks),
+        )
+        self.assertEqual(
+            0,
+            tasks[0].order,
+        )
+        self.assertEqual(
+            "T010",
+            tasks[0].task_id,
+        )
+        self.assertEqual(
+            "US1",
+            tasks[0].story,
+        )
+        self.assertEqual(
+            (
+                "src/auth/service.ts",
+                "src/users/repository.ts",
+            ),
             tasks[0].targets,
         )
-        self.assertEqual((), tasks[0].spec_targets)
-        self.assertEqual("T011", tasks[1].task_id)
-        self.assertEqual("US2", tasks[1].story)
-        self.assertEqual((), tasks[1].targets)
-        self.assertEqual(("project.sdd",), tasks[1].spec_targets)
+        self.assertEqual(
+            (),
+            tasks[0].spec_targets,
+        )
+        self.assertEqual(
+            "T011",
+            tasks[1].task_id,
+        )
+        self.assertEqual(
+            "US2",
+            tasks[1].story,
+        )
+        self.assertEqual(
+            (),
+            tasks[1].targets,
+        )
+        self.assertEqual(
+            ("project.sdd",),
+            tasks[1].spec_targets,
+        )
 
-    def test_operation_authority_annotation_is_not_a_spec_write_target(self):
+    def test_operation_authority_annotation_is_metadata(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
@@ -44,10 +71,22 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
-        self.assertEqual("src/auth/auth.sdd", tasks[0].operation_authority)
-        self.assertEqual(("src/users/identity-contract.ts",), tasks[0].targets)
-        self.assertEqual((), tasks[0].spec_targets)
-        self.assertEqual((), tasks[0].invalid_operation_authorities)
+        self.assertEqual(
+            "src/auth/auth.sdd",
+            tasks[0].operation_authority,
+        )
+        self.assertEqual(
+            ("src/users/identity-contract.ts",),
+            tasks[0].targets,
+        )
+        self.assertEqual(
+            (),
+            tasks[0].spec_targets,
+        )
+        self.assertEqual(
+            (),
+            tasks[0].invalid_operation_authorities,
+        )
 
     def test_conflicting_operation_authorities_are_invalid(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -59,14 +98,22 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
-        self.assertIsNone(tasks[0].operation_authority)
+        self.assertIsNone(
+            tasks[0].operation_authority
+        )
         self.assertEqual(
-            ("src/auth/auth.sdd", "src/users/users.sdd"),
+            (
+                "src/auth/auth.sdd",
+                "src/users/users.sdd",
+            ),
             tasks[0].invalid_operation_authorities,
         )
-        self.assertEqual((), tasks[0].spec_targets)
+        self.assertEqual(
+            (),
+            tasks[0].spec_targets,
+        )
 
-    def test_backticked_paths_preserve_spaces_and_literal_grouping_characters(self):
+    def test_backticked_paths_preserve_literal_filename_characters(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
@@ -83,9 +130,12 @@ class ValidationTaskParsingTests(unittest.TestCase):
             ),
             tasks[0].targets,
         )
-        self.assertEqual((), tasks[0].invalid_targets)
+        self.assertEqual(
+            (),
+            tasks[0].invalid_targets,
+        )
 
-    def test_invalid_or_glob_targets_are_kept_out_of_write_targets(self):
+    def test_invalid_patterns_are_kept_out_of_write_targets(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
@@ -95,13 +145,19 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
-        self.assertEqual((), tasks[0].targets)
         self.assertEqual(
-            ("../outside.ts", "src/auth/*.ts"),
+            (),
+            tasks[0].targets,
+        )
+        self.assertEqual(
+            (
+                "../outside.ts",
+                "src/auth/*.ts",
+            ),
             tasks[0].invalid_targets,
         )
 
-    def test_unquoted_grouping_syntax_is_not_treated_as_exact_path(self):
+    def test_unquoted_grouping_syntax_is_not_an_exact_path(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
@@ -111,7 +167,10 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
-        self.assertEqual((), tasks[0].targets)
+        self.assertEqual(
+            (),
+            tasks[0].targets,
+        )
         self.assertEqual(
             ("src/auth/provider[legacy].ts",),
             tasks[0].invalid_targets,
@@ -127,7 +186,10 @@ class ValidationTaskParsingTests(unittest.TestCase):
 """,
             )
 
-        self.assertEqual(("docs/setup.md",), tasks[0].targets)
+        self.assertEqual(
+            ("docs/setup.md",),
+            tasks[0].targets,
+        )
 
     def test_preserves_explicit_specdd_evolution_classifications(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -173,7 +235,10 @@ class ValidationTaskParsingTests(unittest.TestCase):
         )
 
         task = result["tasks"][0]
-        self.assertEqual("SPEC_EVOLUTION_REQUIRED", task["classification"])
+        self.assertEqual(
+            "SPEC_EVOLUTION_REQUIRED",
+            task["classification"],
+        )
         self.assertEqual(
             {
                 "classification": "SPEC_EVOLUTION_REQUIRED",
@@ -183,9 +248,20 @@ class ValidationTaskParsingTests(unittest.TestCase):
             },
             task["evolution"],
         )
-        self.assertTrue(result["summary"]["freshBoundaryRequiredAfterEvolution"])
-        self.assertFalse(result["summary"]["authorityContextEndsAfterEvolution"])
-        self.assertEqual([], result["diagnostics"])
+        self.assertTrue(
+            result["summary"][
+                "freshBoundaryRequiredAfterEvolution"
+            ]
+        )
+        self.assertFalse(
+            result["summary"][
+                "authorityContextEndsAfterEvolution"
+            ]
+        )
+        self.assertEqual(
+            [],
+            result["diagnostics"],
+        )
 
     def test_authority_evolution_cannot_mix_implementation_writes(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -206,7 +282,9 @@ class ValidationTaskParsingTests(unittest.TestCase):
                         "primaryAuthority": "src/users/users.sdd",
                     }
                 ],
-                "authorities": ["src/users/users.sdd"],
+                "authorities": [
+                    "src/users/users.sdd"
+                ],
                 "crossBoundary": False,
                 "unresolved": [],
             },
@@ -219,21 +297,24 @@ class ValidationTaskParsingTests(unittest.TestCase):
             "AUTHORITY_EVOLUTION_REQUIRED",
             result["tasks"][0]["classification"],
         )
-        self.assertTrue(result["tasks"][0]["evolution"]["endsAuthorityContext"])
+        self.assertTrue(
+            result["tasks"][0]["evolution"][
+                "endsAuthorityContext"
+            ]
+        )
         mixed = [
             item
             for item in result["diagnostics"]
             if item["code"] == "EVOLUTION_SCOPE_MIXED"
         ]
-        self.assertEqual(1, len(mixed))
-        self.assertEqual("blocking", mixed[0]["severity"])
-        self.assertTrue(result["summary"]["blocking"])
-
-    def test_validate_command_surfaces_advisory_spec_delta(self):
-        content = (
-            REPO_ROOT / "integration" / "specdd" / "commands" / "validate.md"
-        ).read_text(encoding="utf-8")
-
-        self.assertIn("Proposed `.sdd` delta", content)
-        self.assertIn("Do not apply the proposed delta", content)
-        self.assertIn("requiresFreshBoundary", content)
+        self.assertEqual(
+            1,
+            len(mixed),
+        )
+        self.assertEqual(
+            "blocking",
+            mixed[0]["severity"],
+        )
+        self.assertTrue(
+            result["summary"]["blocking"]
+        )

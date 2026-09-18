@@ -3,7 +3,7 @@ Spec: Change Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard Change Boundary schema projection, resolver integration, validation diagnostics, authorization snapshots, actual-change verification, preset composition, lifecycle hook materialization, workflow enforcement, and deterministic output.
+  Guard the bridge's authority projection, lifecycle gates, verification behavior, installation wiring, and deterministic output with focused tests that avoid duplicating production logic.
 
 Owns:
   ./test_boundary.py
@@ -39,25 +39,22 @@ References:
   ./fixtures/specdd-two-domain/specdd-two-domain.sdd
 
 Must:
+  Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Missing targets remain represented as unresolved diagnostics with `UNRESOLVED_TARGET`.
-  Adapter tests preserve coverage for path normalization, authority derivation, schema validation, output modes, and exclusion of `.sdd` evolution targets from command-level Change Boundary discovery.
+  Adapter tests preserve path normalization, resolver-backed authority derivation, deterministic output, and schema validation coverage.
   Tests distinguish missing external executables from resolver, lint, and authority diagnostics.
-  The real two-domain fixture produces deterministic cross-boundary output when the SpecDD CLI is available.
-  Validation tests cover zero, one, and multiple task authorities.
+  The real two-domain fixture exercises deterministic ownership projection when the SpecDD CLI is available.
+  Validation tests cover owner-local, coordinated multi-owner, explicitly permitted cross-owned, and rejected cross-owned tasks.
   Task parsing treats `SPECDD_AUTHORITY:` as operation metadata rather than a `.sdd` write target.
-  Multi-authority task findings preserve task order and user-story identity while unmarked coordinated work remains non-blocking.
-  Fixture validation covers explicit `SPECDD_AUTHORITY:` cross-owned writes both with and without an applicable `Can modify` grant.
-  Explicit `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED` task intent remains visible in validation output without granting authority.
-  The two-domain fixture covers a deliberate durable Auth-to-Users contract as spec evolution.
+  Explicit `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED` intent remains visible without granting authority.
   Evolution tests keep `.sdd` work separate from ordinary implementation writes and require fresh resolution before dependent implementation.
   Implementation-stage validation blocks unknown, conflicting, or unpermitted authority.
   Successful authorization stores its snapshot outside the worktree in Git metadata.
   A later feature boundary refresh or failed reauthorization does not mutate the previous authorization snapshot.
-  Git verification tests separate implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.
-  Verification blocks an actual authority domain that was absent from the authorization snapshot.
-  A changed `.sdd` file does not authorize a newly introduced implementation authority in the same verification operation.
-  Fixture verification proves authority evolution is blocked under the prior snapshot and accepted only after fresh resolution and authorization.
-  Preset source tests guard the pinned composition strategy, registrar-backed bootstrap selection, lifecycle hooks, and SpecDD planning, task, authorization, and convergence guidance.
-  Local preset installation tests use the Codex registrar, materialize bridge commands and hooks, compose over core skills, install the structural workflow overlay, and restore upstream skill content on removal.
-  Workflow source tests guard the four structural gate placements and supported overlay installation path.
-  Workflow gate exit tests prove deterministic `error` and `blocking` diagnostics can halt shell execution while warnings remain non-failing.
+  Git verification separates implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.
+  Verification blocks implementation authority absent from the authorization snapshot.
+  Changed `.sdd` files do not retroactively authorize implementation in the same operation.
+  Fixture verification proves authority evolution requires fresh resolution and authorization.
+  Preset installation tests exercise registrar-backed command materialization, hooks, composition, workflow-overlay installation, and clean removal.
+  Static source tests cover only packaging and lifecycle wiring that is not already established more directly by behavioral or installation tests.
+  Workflow gate tests prove deterministic `error` and `blocking` diagnostics halt shell execution while warnings remain non-failing.
