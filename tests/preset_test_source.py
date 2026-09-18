@@ -165,6 +165,7 @@ class PresetSourceTests(unittest.TestCase):
             "SPECDD_DRIFT",
             "MISSING_SPEC_EVOLUTION",
             "AUTHORITY_VIOLATION",
+            "UNPLANNED_SPEC_EVOLUTION",
         ):
             self.assertIn(
                 code,

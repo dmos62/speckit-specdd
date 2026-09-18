@@ -1,5 +1,5 @@
 ---
-description: Authorize implementation and preserve an immutable SpecDD authority snapshot.
+description: Authorize implementation and preserve immutable SpecDD operation evidence.
 ---
 
 ## User Input
@@ -11,16 +11,21 @@ You **MUST** consider user input when reporting context, but user input cannot w
 ## Goal
 
 Validate the active feature at implementation strictness before implementation begins. The current Change Boundary is the
-candidate ownership projection. Successful authorization copies that exact validated boundary into an immutable
-operation snapshot stored in worktree Git metadata.
+candidate ownership projection. Successful authorization copies that exact validated boundary into immutable operation
+evidence stored in worktree Git metadata.
+
+Authorization also records a companion specification-evolution plan containing only exact `.sdd` targets selected by
+explicit `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks. This companion record is not part of the
+Change Boundary and grants no implementation authority. Verification uses it only to distinguish deliberately selected
+specification edits from unplanned `.sdd` changes.
 
 Ownership and modification permission are distinct. Unmarked tasks execute under their target owner domains. When task
 text declares one operation authority with the literal `SPECDD_AUTHORITY:` followed by a backticked repository-relative
 `.sdd` path, authorization uses fresh SpecDD resolver output to verify that authority owns or has inherited `Can modify`
 permission for every non-`.sdd` write target. A non-owning grant never replaces the target's `primaryAuthority`.
 
-Later Change Boundary refreshes do not modify the authorization snapshot. Only a later successful authorization starts a
-new implementation operation by replacing the snapshot.
+Later Change Boundary refreshes do not modify the authorization evidence. Only a later successful authorization starts a
+new implementation operation by replacing it.
 
 This command is the lifecycle gate used by the mandatory `before_implement` hook.
 
@@ -61,9 +66,10 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    - validates the existing Change Boundary against `tasks.md` at the `implementation` lifecycle stage;
    - fresh-resolves declared task authority context when `Can modify` permission must be distinguished from ownership;
    - fails on deterministic `error` or `blocking` diagnostics;
-   - does not replace a prior authorization snapshot when validation fails;
-   - after successful validation, atomically copies the validated Change Boundary to the current worktree Git metadata
-     under `specdd/authorization-boundary.json`.
+   - extracts exact `.sdd` targets only from explicit evolution tasks after validation succeeds;
+   - does not replace prior authorization evidence when validation fails;
+   - after successful validation, atomically writes each evidence document to current-worktree Git metadata under
+     `specdd/authorization-boundary.json` and `specdd/authorization-spec-evolution.json`.
 
 5. Interpret the validation result:
    - `AUTHORITY_VIOLATION` is blocking, including a declared task authority that does not own or have `Can modify`
@@ -84,28 +90,30 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
 7. On success:
    - report the planned owner domains;
    - report declared task authority and resulting `operationAuthorities` when present;
-   - report that the immutable authorization snapshot was stored;
+   - report the exact planned specification-evolution targets;
+   - report that both authorization evidence documents were stored;
    - include any non-blocking cross-authority warnings;
-   - treat that snapshot, not subsequent `boundary.json` contents, as the authority evidence for this implementation
-     operation.
+   - treat that evidence, not subsequent `boundary.json` or `tasks.md` contents, as the historical context for this
+     implementation operation.
 
 ## Authority Snapshot Invariant
 
 A later `/speckit.specdd.context` refresh may update the feature Change Boundary for a future operation, but it does not
-change the current authorization snapshot.
+change current authorization evidence. Editing `tasks.md` later also cannot retroactively change which `.sdd` edits were
+selected for the operation.
 
 Specification or authority evolution that dependent implementation must rely on therefore requires:
 
 1. completing the specification operation;
 2. refreshing the Change Boundary;
-3. running authorization again to establish a new operation snapshot;
+3. running authorization again to establish new operation evidence;
 4. only then beginning dependent implementation.
 
 ## Output
 
-Keep the result compact. Report the active feature, planned owner domains, declared and resulting operation authorities
-when present, blocking status, authorization snapshot status, blocking diagnostics, and non-blocking cross-boundary
-warnings.
+Keep the result compact. Report the active feature, planned owner domains, planned `.sdd` evolution targets, declared and
+resulting operation authorities when present, blocking status, authorization evidence status, blocking diagnostics, and
+non-blocking cross-boundary warnings.
 
 ## Constraints
 

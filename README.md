@@ -74,9 +74,7 @@ Do not hand-edit generated integration state. Change canonical source and reinst
 
 Root `.specdd/` framework state is likewise not an implementation surface for the bridge.
 
-## Change Boundary and authorization snapshot
-
-The bridge uses two different derived states.
+## Change Boundary and authorization evidence
 
 A feature Change Boundary is refreshable planning and task context:
 
@@ -96,15 +94,18 @@ Pinned SpecDD CLI `1.1.1` resolves existing targets only. A non-existent intende
 This indicates a current tool limitation, not a SpecDD prohibition on creating the file. Planning may carry that
 uncertainty, but task validation and implementation authorization fail closed until resolver-backed authority exists.
 
-A successful authorization copies the exact validated Change Boundary into immutable operation evidence stored in the
-current worktree Git metadata:
+Successful authorization stores two immutable operation-evidence documents in current-worktree Git metadata:
 
     <git-dir>/specdd/authorization-boundary.json
+    <git-dir>/specdd/authorization-spec-evolution.json
 
-Refreshing the feature Change Boundary does not change the authorization snapshot.
+The first is the exact validated Change Boundary. The second records only exact `.sdd` targets selected by explicit
+`SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks and is fingerprint-bound to the boundary snapshot.
+It is not another authority model and never grants implementation authority.
 
-This distinction prevents specification or context changes during implementation from retroactively changing the
-authority under which that implementation operation is verified.
+Refreshing the feature Change Boundary or later editing `tasks.md` does not change this authorization evidence.
+Verification therefore detects an added, modified, or deleted `.sdd` file as `UNPLANNED_SPEC_EVOLUTION` when it was not
+selected by an explicit evolution task at authorization time.
 
 Detailed lifecycle semantics are in [docs/change-boundary.md](docs/change-boundary.md).
 
@@ -125,15 +126,13 @@ The installed workflow overlay enforces:
       → implement
       → specdd-verify
 
-The stages have distinct responsibilities:
-
 | Stage | Responsibility |
 | --- | --- |
 | context | Refresh current feature scope from concrete non-`.sdd` targets. |
 | validate | Check task ownership and applicable modification permission against current SpecDD state. |
-| authorize | Validate implementation scope and record an immutable authorization snapshot. |
+| authorize | Validate implementation scope and record immutable boundary plus planned `.sdd` evolution evidence. |
 | implement | Change project artifacts only within the authorized operation. |
-| verify | Compare actual Git writes with the authorization snapshot and fresh SpecDD resolution. |
+| verify | Compare actual Git writes with historical authorization evidence and fresh SpecDD resolution. |
 
 Agent lifecycle hooks remain useful for direct command execution and interpretation. Structural workflow shell gates are
 the deterministic failure boundary.
@@ -154,10 +153,10 @@ targets come from `tasks.md`, then `plan.md`.
 also distinguishes target owners from applicable non-owning `Can modify` permission. It does not create authorization.
 
 `/speckit.specdd.authorize` preserves the current boundary, validates it at implementation strictness, and records the
-validated result as the current operation's authorization snapshot.
+validated boundary plus exact explicit specification-evolution targets as current-operation evidence.
 
-`/speckit.specdd.verify` ignores later boundary refreshes as authority evidence. It uses actual Git changes, the
-authorization snapshot, fresh SpecDD resolution for existing implementation targets, and `specdd lint`.
+`/speckit.specdd.verify` ignores later boundary refreshes and task edits as authorization evidence. It uses actual Git
+changes, the authorization evidence, fresh SpecDD resolution for existing implementation targets, and `specdd lint`.
 
 ## Cross-domain work
 
@@ -166,8 +165,8 @@ One feature may legitimately span several SpecDD owner domains.
 The fixture contains independent Auth and Users domains. Auth owns its service, Users owns its identity contract and
 repository, and Auth has explicit `Can modify` permission only for the Users-facing identity contract. An ordinary task
 may coordinate Auth-owned and Users-owned writes and remains a non-blocking multi-authority task. If the task instead
-declares `SPECDD_AUTHORITY:` for Auth, the Users-facing contract is permitted as a cross-owned write while Users
-remains its owner; the Users repository is rejected because Auth has no grant for that internal path.
+declares `SPECDD_AUTHORITY:` for Auth, the Users-facing contract is permitted as a cross-owned write while Users remains
+its owner; the Users repository is rejected because Auth has no grant for that internal path.
 
 A `MULTI_AUTHORITY_TASK` warning therefore describes ownership shape, not permission by itself. A declared operation
 authority makes non-owning permission deterministic through `operationAuthorities` and `modificationPermissions`. The
@@ -175,33 +174,26 @@ bridge must not relax SpecDD authority merely to make a task pass.
 
 ## Specification evolution
 
-Some features require durable system-contract evolution.
+Some features require durable system-contract evolution. The bridge distinguishes ordinary implementation from
+`SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED`.
 
-The bridge distinguishes ordinary implementation from:
-
-- `SPEC_EVOLUTION_REQUIRED`;
-- `AUTHORITY_EVOLUTION_REQUIRED`.
-
-Specification evolution is separate from implementation authority.
-
-When dependent implementation requires an `.sdd` change:
+Specification evolution is separate from implementation authority. When dependent implementation requires an `.sdd`
+change:
 
 1. complete the specification change as its own operation;
 2. end the old authority context when authority itself changed;
 3. refresh `/speckit.specdd.context`;
 4. run `/speckit.specdd.authorize` successfully;
-5. begin dependent implementation under the new authorization snapshot.
+5. begin dependent implementation under the new authorization evidence.
 
 A changed `.sdd` file or refreshed Change Boundary never retroactively authorizes implementation already performed.
 
 ## Diagnostics
 
-Core deterministic diagnostics include:
-
 | Diagnostic | Meaning |
 | --- | --- |
 | `INVALID_TARGET` | Input cannot identify a valid repository target. |
-| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection. For a non-existent target, `INTENDED_TARGET_UNSUPPORTED` identifies the pinned CLI limitation. |
+| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection; `INTENDED_TARGET_UNSUPPORTED` identifies the pinned missing-path resolver limitation. |
 | `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership. |
 | `MULTI_AUTHORITY_TASK` | One task contains targets owned by several authority domains. |
@@ -209,7 +201,8 @@ Core deterministic diagnostics include:
 | `AUTHORITY_VIOLATION` | Proposed or actual implementation has unknown, conflicting, changed, newly introduced, or unpermitted authority. |
 | `SPECDD_DRIFT` | An actual target was not authorized even though its authority domain was authorized. |
 | `SPECDD_VIOLATION` | Resulting repository state fails deterministic SpecDD checks. |
-| `SPEC_EVOLUTION_PRESENT` | `.sdd` changes exist and grant no authority to the current operation. |
+| `SPEC_EVOLUTION_PRESENT` | Changed `.sdd` files were explicitly selected at authorization and grant no implementation authority. |
+| `UNPLANNED_SPEC_EVOLUTION` | Changed `.sdd` files were not selected by explicit evolution tasks preserved at authorization; verification blocks. |
 | `CONTROL_STATE_CHANGED` | SpecDD bootstrap control state changed and requires separate review. |
 
 `MISSING_SPEC_EVOLUTION` remains an architectural finding rather than a path-only deterministic result.
@@ -217,6 +210,6 @@ Core deterministic diagnostics include:
 ## Project documentation
 
 - [docs/spec.md](docs/spec.md): durable project design.
-- [docs/change-boundary.md](docs/change-boundary.md): Change Boundary, modification-permission projection, and authorization-snapshot lifecycle.
+- [docs/change-boundary.md](docs/change-boundary.md): Change Boundary, authorization evidence, and lifecycle semantics.
 - [docs/development.md](docs/development.md): development environment and maintenance.
 - [docs/TODO.md](docs/TODO.md): active implementation work.

@@ -117,17 +117,17 @@ The resolved `speckit` workflow adds four deterministic shell steps:
 - `specdd-context` refreshes advisory feature Change Boundary context after planning.
 - `specdd-task-validation` refreshes the boundary from exact task targets and fails on deterministic error or blocking
   diagnostics.
-- `specdd-authorize` validates the existing boundary without refreshing it. On success it copies the exact validated
-  boundary into the current worktree Git metadata as `specdd/authorization-boundary.json`.
-- `specdd-verify` leaves both current feature context and the authorization snapshot unchanged, resolves actual Git
-  writes freshly, and compares them with the authorization snapshot.
+- `specdd-authorize` validates the existing boundary without refreshing it. On success it stores the exact validated
+  boundary plus the explicit `.sdd` evolution target list in current-worktree Git metadata.
+- `specdd-verify` leaves feature context and authorization evidence unchanged, resolves actual implementation writes
+  freshly, compares them with the authorization boundary, and rejects unplanned `.sdd` changes.
 
-The authorization snapshot is outside the worktree. It is not project source, a permission grant beyond the validated
-boundary, or a substitute for SpecDD.
+The authorization boundary and companion specification-evolution plan are outside the worktree. They are generated
+historical evidence, not project source, and neither grants authority beyond the validated SpecDD context.
 
-A later Change Boundary refresh cannot change authority for an implementation operation already in progress. Dependent
-implementation after deliberate specification evolution requires a new context refresh and a new successful
-authorization.
+A later Change Boundary refresh or task edit cannot change authority or planned specification scope for an implementation
+operation already in progress. Dependent implementation after deliberate specification evolution requires a new context
+refresh and a new successful authorization.
 
 Structural shell steps omit `continue_on_error`, so nonzero status propagates through the workflow engine.
 
@@ -164,8 +164,8 @@ Canonical bridge source lives under:
 Spec Kit materializes installed commands and bookkeeping under `.agents/skills/` and `.specify/`. Treat those outputs as
 generated integration state.
 
-Feature Change Boundaries are generated feature state. Authorization snapshots are generated worktree Git metadata.
-Neither is canonical bridge source.
+Feature Change Boundaries are generated feature state. Authorization boundary snapshots and specification-evolution
+plans are generated worktree Git metadata. None is canonical bridge source.
 
 Some generated files may exist in repository history as baseline integration state. Acceptance checks should validate
 their installed behavior while protecting canonical source from unintended changes.

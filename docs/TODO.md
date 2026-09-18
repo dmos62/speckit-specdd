@@ -1,23 +1,13 @@
 # Implementation TODO
 
-The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authority correctness. The immutable
-authorization-snapshot item is omitted because the current iteration implements it by preserving the successfully
-validated Change Boundary in worktree Git metadata and making verification consume that snapshot.
+The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authority correctness. Completed items are
+removed here: authorization preserves the validated Change Boundary in worktree Git metadata, and it now also preserves
+exact explicit `.sdd` evolution targets so verification blocks unplanned specification edits.
 
 Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. Until the CLI exposes resolver-backed intended-path
 authority, the bridge retains non-existent implementation targets as `UNRESOLVED_TARGET` with an explicit
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
-
-## P0 — Unplanned specification edits
-
-- [ ] Treat changed `.sdd` files as planned evolution targets rather than automatically informational.
-  - Preserve exact `.sdd` targets from explicit evolution tasks outside the implementation Change Boundary.
-  - Compare actual changed specifications with planned evolution targets during verification.
-  - Block or require mandatory review for specification edits that were not deliberately selected.
-  - Preserve the rule that a changed specification never authorizes implementation in the same operation.
-  - Add tests for planned, unplanned, added, modified, and deleted `.sdd` files.
-  - Completion: arbitrary specification changes cannot pass verification merely as `SPEC_EVOLUTION_PRESENT`.
 
 ## P0 — Bootstrap control-file authority
 

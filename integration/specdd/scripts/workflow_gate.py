@@ -27,11 +27,12 @@ from validation_permissions import (  # noqa: E402
     requires_permission_projection,
 )
 from validation_tasks import parse_tasks_file  # noqa: E402
-from validation_types import ValidationError  # noqa: E402
+from validation_types import TaskRecord, ValidationError  # noqa: E402
 from verification_cli import main as verification_main  # noqa: E402
 from verification_git import (  # noqa: E402
     authorization_snapshot_path,
-    write_authorization_snapshot,
+    authorization_spec_plan_path,
+    write_authorization_evidence,
 )
 from verification_types import VerificationError  # noqa: E402
 from workflow_gate_state import (  # noqa: E402,F401
@@ -43,7 +44,6 @@ from workflow_gate_state import (  # noqa: E402,F401
     _refresh_boundary,
     _require_file,
     _task_targets,
-    _unique,
 )
 
 
@@ -63,6 +63,17 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Repository root; defaults to repository discovery",
     )
     return parser.parse_args(argv)
+
+
+def _planned_spec_evolution_targets(tasks: Sequence[TaskRecord]) -> tuple[str, ...]:
+    return tuple(
+        dict.fromkeys(
+            target
+            for task in tasks
+            if len(task.evolution_markers) == 1
+            for target in task.spec_targets
+        )
+    )
 
 
 def _authorize(
@@ -90,10 +101,19 @@ def _authorize(
         print(json.dumps(result, indent=2, sort_keys=True))
         return status
 
-    snapshot = write_authorization_snapshot(root, boundary)
+    spec_targets = _planned_spec_evolution_targets(tasks)
+    snapshot, spec_plan = write_authorization_evidence(
+        root,
+        boundary,
+        spec_targets,
+    )
     result["authorizationSnapshot"] = {
         "path": str(snapshot),
         "stored": True,
+        "plannedSpecEvolution": {
+            "path": str(spec_plan),
+            "targets": list(spec_targets),
+        },
     }
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
@@ -159,7 +179,9 @@ def run_stage(root: Path, stage: str) -> int:
         return _authorize(root, feature, boundary_path, task_path)
 
     snapshot_path = authorization_snapshot_path(root)
+    spec_plan_path = authorization_spec_plan_path(root)
     _require_file(snapshot_path, "Authorization snapshot")
+    _require_file(spec_plan_path, "Authorization specification plan")
     return verification_main(
         [
             "--root",

@@ -8,18 +8,9 @@ from boundary_test_support import verification
 
 
 class VerificationGitTests(unittest.TestCase):
-    def git(
-        self,
-        root,
-        *args,
-    ):
+    def git(self, root, *args):
         return subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                *args,
-            ],
+            ["git", "-C", str(root), *args],
             check=True,
             capture_output=True,
             text=True,
@@ -27,27 +18,10 @@ class VerificationGitTests(unittest.TestCase):
 
     def initialize_repository(self):
         temporary = tempfile.TemporaryDirectory()
-        root = Path(
-            temporary.name
-        ).resolve()
-
-        self.git(
-            root,
-            "init",
-        )
-        self.git(
-            root,
-            "config",
-            "user.name",
-            "SpecDD Test",
-        )
-        self.git(
-            root,
-            "config",
-            "user.email",
-            "specdd@example.test",
-        )
-
+        root = Path(temporary.name).resolve()
+        self.git(root, "init")
+        self.git(root, "config", "user.name", "SpecDD Test")
+        self.git(root, "config", "user.email", "specdd@example.test")
         files = {
             "src/auth/service.ts": "export const value = 1;\n",
             ".specify/generated.json": "{}\n",
@@ -56,229 +30,132 @@ class VerificationGitTests(unittest.TestCase):
         }
         for relative, content in files.items():
             path = root / relative
-            path.parent.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
-            path.write_text(
-                content,
-                encoding="utf-8",
-            )
-
-        self.git(
-            root,
-            "add",
-            ".",
-        )
-        self.git(
-            root,
-            "-c",
-            "commit.gpgsign=false",
-            "commit",
-            "-m",
-            "baseline",
-        )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        self.git(root, "add", ".")
+        self.git(root, "-c", "commit.gpgsign=false", "commit", "-m", "baseline")
         return temporary, root
 
     def test_separates_actual_writes_from_nonimplementation_state(self):
         temporary, root = self.initialize_repository()
         with temporary:
             (root / "src/auth/service.ts").write_text(
-                "export const value = 2;\n",
-                encoding="utf-8",
+                "export const value = 2;\n", encoding="utf-8"
             )
             (root / ".specify/generated.json").write_text(
-                '{"changed": true}\n',
-                encoding="utf-8",
+                '{"changed": true}\n', encoding="utf-8"
             )
             (root / "specs/001-login/spec.md").write_text(
-                "# Changed feature\n",
-                encoding="utf-8",
+                "# Changed feature\n", encoding="utf-8"
             )
-
             new_write = root / "src/users/repository.ts"
-            new_write.parent.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
-            new_write.write_text(
-                "export const repository = true;\n",
-                encoding="utf-8",
-            )
-
-            new_spec = root / "src/auth/auth.sdd"
-            new_spec.write_text(
-                "Spec: Auth\n",
-                encoding="utf-8",
-            )
-
+            new_write.parent.mkdir(parents=True, exist_ok=True)
+            new_write.write_text("export const repository = true;\n", encoding="utf-8")
+            (root / "src/auth/auth.sdd").write_text("Spec: Auth\n", encoding="utf-8")
             changes = verification.collect_git_changes(
-                root,
-                feature_dir="specs/001-login",
+                root, feature_dir="specs/001-login"
             )
-
         self.assertEqual(
-            [
-                "src/auth/service.ts",
-                "src/users/repository.ts",
-            ],
-            [
-                item.path
-                for item in changes.writes
-            ],
+            ["src/auth/service.ts", "src/users/repository.ts"],
+            [item.path for item in changes.writes],
         )
-        self.assertEqual(
-            ["src/auth/auth.sdd"],
-            [
-                item.path
-                for item in changes.specs
-            ],
-        )
+        self.assertEqual(["src/auth/auth.sdd"], [item.path for item in changes.specs])
         self.assertEqual(
             ["specs/001-login/spec.md"],
-            [
-                item.path
-                for item in changes.feature_artifacts
-            ],
+            [item.path for item in changes.feature_artifacts],
         )
         self.assertEqual(
-            [".specify/generated.json"],
-            [
-                item.path
-                for item in changes.generated
-            ],
+            [".specify/generated.json"], [item.path for item in changes.generated]
         )
 
-    def test_authorization_snapshot_is_stored_in_git_metadata(self):
+    def test_authorization_evidence_preserves_boundary_and_spec_plan(self):
         temporary, root = self.initialize_repository()
         with temporary:
-            payload = {
-                "schemaVersion": 1,
-                "feature": "001-login",
-            }
-            snapshot = verification.write_authorization_snapshot(
-                root,
-                payload,
+            payload = {"schemaVersion": 1, "feature": "001-login"}
+            spec_targets = ("src/auth/auth.sdd", "src/users/users.sdd")
+            snapshot, spec_plan = verification.write_authorization_evidence(
+                root, payload, spec_targets
             )
-
             self.assertEqual(
-                (
-                    root
-                    / ".git"
-                    / "specdd"
-                    / "authorization-boundary.json"
-                ).resolve(),
+                (root / ".git/specdd/authorization-boundary.json").resolve(),
                 snapshot,
             )
             self.assertEqual(
-                payload,
-                json.loads(
-                    snapshot.read_text(
-                        encoding="utf-8",
-                    )
-                ),
+                (root / ".git/specdd/authorization-spec-evolution.json").resolve(),
+                spec_plan,
             )
-
+            self.assertEqual(payload, json.loads(snapshot.read_text(encoding="utf-8")))
+            self.assertEqual(
+                spec_targets,
+                verification.load_authorization_spec_plan(root, spec_plan, payload),
+            )
             changes = verification.collect_git_changes(
-                root,
-                feature_dir="specs/001-login",
+                root, feature_dir="specs/001-login"
             )
+        all_paths = [
+            item.path
+            for item in (
+                *changes.writes,
+                *changes.specs,
+                *changes.controls,
+                *changes.feature_artifacts,
+                *changes.generated,
+            )
+        ]
+        self.assertNotIn(str(snapshot), all_paths)
+        self.assertNotIn(str(spec_plan), all_paths)
 
-        self.assertNotIn(
-            str(snapshot),
-            [
-                item.path
-                for item in (
-                    *changes.writes,
-                    *changes.specs,
-                    *changes.controls,
-                    *changes.feature_artifacts,
-                    *changes.generated,
-                )
-            ],
-        )
+    def test_spec_plan_is_bound_to_exact_authorization_snapshot(self):
+        temporary, root = self.initialize_repository()
+        with temporary:
+            payload = {"schemaVersion": 1, "feature": "001-login"}
+            _, spec_plan = verification.write_authorization_evidence(
+                root, payload, ("src/auth/auth.sdd",)
+            )
+            changed = {**payload, "feature": "002-other"}
+            with self.assertRaisesRegex(
+                verification.VerificationError,
+                "different feature|does not match",
+            ):
+                verification.load_authorization_spec_plan(root, spec_plan, changed)
 
     def test_preserves_spaces_and_literal_grouping_characters_in_git_paths(self):
         temporary, root = self.initialize_repository()
         with temporary:
             special = root / "src/auth/provider [legacy].ts"
-            special.write_text(
-                "export const provider = true;\n",
-                encoding="utf-8",
-            )
-
+            special.write_text("export const provider = true;\n", encoding="utf-8")
             changes = verification.collect_git_changes(
-                root,
-                feature_dir="specs/001-login",
+                root, feature_dir="specs/001-login"
             )
-
         matching = [
-            item
-            for item in changes.writes
-            if item.path == "src/auth/provider [legacy].ts"
+            item for item in changes.writes if item.path == "src/auth/provider [legacy].ts"
         ]
-        self.assertEqual(
-            1,
-            len(matching),
-        )
-        self.assertEqual(
-            "UNTRACKED",
-            matching[0].status,
-        )
-        self.assertFalse(
-            matching[0].deleted
-        )
+        self.assertEqual(1, len(matching))
+        self.assertEqual("UNTRACKED", matching[0].status)
+        self.assertFalse(matching[0].deleted)
 
     def test_marks_deleted_project_file(self):
         temporary, root = self.initialize_repository()
         with temporary:
             (root / "docs/old.md").unlink()
-
             changes = verification.collect_git_changes(
-                root,
-                feature_dir="specs/001-login",
+                root, feature_dir="specs/001-login"
             )
-
-        deleted = [
-            item
-            for item in changes.writes
-            if item.path == "docs/old.md"
-        ]
-        self.assertEqual(
-            1,
-            len(deleted),
-        )
-        self.assertTrue(
-            deleted[0].deleted
-        )
-        self.assertEqual(
-            "DELETED",
-            deleted[0].status,
-        )
+        deleted = [item for item in changes.writes if item.path == "docs/old.md"]
+        self.assertEqual(1, len(deleted))
+        self.assertTrue(deleted[0].deleted)
+        self.assertEqual("DELETED", deleted[0].status)
 
     def test_missing_git_is_explicit_infrastructure_failure(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(
-                temporary
-            ).resolve()
+            root = Path(temporary).resolve()
 
             def missing_git(*args, **kwargs):
-                raise FileNotFoundError(
-                    "git"
-                )
+                raise FileNotFoundError("git")
 
             with self.assertRaisesRegex(
                 verification.VerificationError,
                 "Required Git executable was not found",
             ) as raised:
-                verification.collect_git_changes(
-                    root,
-                    runner=missing_git,
-                )
-
-        self.assertIn(
-            "bash scripts/bootstrap.sh --check",
-            str(
-                raised.exception
-            ),
-        )
+                verification.collect_git_changes(root, runner=missing_git)
+        self.assertIn("bash scripts/bootstrap.sh --check", str(raised.exception))

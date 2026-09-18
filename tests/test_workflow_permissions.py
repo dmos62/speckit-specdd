@@ -89,9 +89,42 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
             )
             snapshot = verification.authorization_snapshot_path(root)
             stored = json.loads(snapshot.read_text(encoding="utf-8"))
+            spec_plan = verification.authorization_spec_plan_path(root)
+            planned_specs = verification.load_authorization_spec_plan(
+                root,
+                spec_plan,
+                stored,
+            )
 
         self.assertEqual(0, status)
         self.assertEqual(boundary, stored)
+        self.assertEqual((), planned_specs)
+
+    def test_authorization_records_explicit_spec_evolution_targets(self):
+        temporary, root, _, boundary_path, task_path = self.initialize_operation()
+        task_path.write_text(
+            "- [ ] T000 [US1] SPEC_EVOLUTION_REQUIRED: Update `src/auth/auth.sdd`\n"
+            "- [ ] T001 [US1] Update src/auth/service.ts\n",
+            encoding="utf-8",
+        )
+        with temporary, contextlib.redirect_stdout(io.StringIO()):
+            status = workflow_gate._authorize(
+                root,
+                "001-login",
+                boundary_path,
+                task_path,
+            )
+            snapshot = verification.authorization_snapshot_path(root)
+            stored = json.loads(snapshot.read_text(encoding="utf-8"))
+            spec_plan = verification.authorization_spec_plan_path(root)
+            planned_specs = verification.load_authorization_spec_plan(
+                root,
+                spec_plan,
+                stored,
+            )
+
+        self.assertEqual(0, status)
+        self.assertEqual(("src/auth/auth.sdd",), planned_specs)
 
     def test_authorization_rejects_cross_owned_write_without_permission(self):
         temporary, root, _, boundary_path, task_path = self.initialize_operation()
@@ -108,6 +141,8 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
             )
             snapshot = verification.authorization_snapshot_path(root)
             snapshot_exists = snapshot.exists()
+            spec_plan_exists = verification.authorization_spec_plan_path(root).exists()
 
         self.assertEqual(1, status)
         self.assertFalse(snapshot_exists)
+        self.assertFalse(spec_plan_exists)
