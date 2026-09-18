@@ -1,6 +1,3 @@
-
-
-
 @include files.include
 
 Edit `files.include` to change which files/folders are made available to the next programming iteration: adjust this as needed to change focus of your work. `@glob packages/core/**`: one per line inside the `@filegroup`, and you leverage the `@globexclude` declarations to get rid of unnecessary files. The `@#` pattern (as in `@#glob [...]`) is a comment and is used to comment-out/disable directives. Note, each `@glob` pattern must match something, otherwise there's an exception; however, `@globexclude` can be used profilactically, they don't need to match.
@@ -15,6 +12,7 @@ Edit `dev-scripts.include` to change which script outputs are made available to 
 @file dev-scripts.include
 
 @comment
+@endcomment
 
 Fix errors, failed tests, if there are any. If not, work on the TODO.
 
@@ -35,13 +33,9 @@ Be proactive about getting rid of unnecessary code/text and refactoring code for
 
 You must split code and documentation files into small files, so that they don't exceed 250 lines. We need focused, highly orthogonal files.
 
-
-
-
 @llmformat
-@endcomment
 
-Let's discuss.
+@#Let's discuss.
 
 
 
