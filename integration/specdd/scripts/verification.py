@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify actual Git writes against the planned SpecDD authority snapshot."""
+"""Verify actual Git writes against the authorized SpecDD authority snapshot."""
 
 from __future__ import annotations
 
@@ -22,7 +22,9 @@ from verification_engine import (  # noqa: E402,F401
     verify_change_set,
 )
 from verification_git import (  # noqa: E402,F401
+    authorization_snapshot_path,
     collect_git_changes,
+    write_authorization_snapshot,
 )
 from verification_types import (  # noqa: E402,F401
     ChangeSet,

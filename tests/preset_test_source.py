@@ -9,7 +9,10 @@ from preset_test_support import (
 
 class PresetSourceTests(unittest.TestCase):
     def test_manifest_uses_pinned_append_composition(self):
-        manifest = (PRESET_ROOT / "preset.yml").read_text(
+        manifest = (
+            PRESET_ROOT
+            / "preset.yml"
+        ).read_text(
             encoding="utf-8"
         )
 
@@ -22,7 +25,7 @@ class PresetSourceTests(unittest.TestCase):
             manifest,
         )
         self.assertIn(
-            'id: specdd',
+            "id: specdd",
             manifest,
         )
         self.assertIn(
@@ -31,7 +34,9 @@ class PresetSourceTests(unittest.TestCase):
         )
         self.assertEqual(
             3,
-            manifest.count('strategy: "append"'),
+            manifest.count(
+                'strategy: "append"'
+            ),
         )
         for command in (
             "speckit.plan",
@@ -45,11 +50,17 @@ class PresetSourceTests(unittest.TestCase):
 
     def test_external_compatibility_claims_match_direct_evidence(self):
         extension = (
-            EXTENSION_ROOT / "extension.yml"
-        ).read_text(encoding="utf-8")
+            EXTENSION_ROOT
+            / "extension.yml"
+        ).read_text(
+            encoding="utf-8"
+        )
         preset = (
-            PRESET_ROOT / "preset.yml"
-        ).read_text(encoding="utf-8")
+            PRESET_ROOT
+            / "preset.yml"
+        ).read_text(
+            encoding="utf-8"
+        )
         bootstrap = BOOTSTRAP_PATH.read_text(
             encoding="utf-8"
         )
@@ -89,8 +100,11 @@ class PresetSourceTests(unittest.TestCase):
 
     def test_extension_declares_blocking_lifecycle_hooks(self):
         manifest = (
-            EXTENSION_ROOT / "extension.yml"
-        ).read_text(encoding="utf-8")
+            EXTENSION_ROOT
+            / "extension.yml"
+        ).read_text(
+            encoding="utf-8"
+        )
 
         for command in (
             "speckit.specdd.context",
@@ -116,21 +130,45 @@ class PresetSourceTests(unittest.TestCase):
 
         self.assertEqual(
             4,
-            manifest.count("optional: false"),
+            manifest.count(
+                "optional: false"
+            ),
         )
 
         authorize = (
             EXTENSION_ROOT
             / "commands"
             / "authorize.md"
-        ).read_text(encoding="utf-8")
+        ).read_text(
+            encoding="utf-8"
+        )
         self.assertIn(
-            '--stage "implementation"',
+            "workflow_gate.py authorize",
             authorize,
+        )
+        self.assertIn(
+            "authorization snapshot",
+            authorize.lower(),
         )
         self.assertIn(
             "`summary.blocking`",
             authorize,
+        )
+
+        verify = (
+            EXTENSION_ROOT
+            / "commands"
+            / "verify.md"
+        ).read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "authorization snapshot",
+            verify.lower(),
+        )
+        self.assertIn(
+            "--authorization-snapshot",
+            verify,
         )
 
     def test_bootstrap_selects_registrar_backed_codex_integration(self):
@@ -165,8 +203,12 @@ class PresetSourceTests(unittest.TestCase):
 
     def test_plan_fragment_projects_context_without_copying_constraints(self):
         content = (
-            PRESET_ROOT / "commands" / "plan.md"
-        ).read_text(encoding="utf-8")
+            PRESET_ROOT
+            / "commands"
+            / "plan.md"
+        ).read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn(
             "## SpecDD Planning Augmentation",
@@ -187,8 +229,12 @@ class PresetSourceTests(unittest.TestCase):
 
     def test_task_fragment_preserves_story_grouping_and_authority_locality(self):
         content = (
-            PRESET_ROOT / "commands" / "tasks.md"
-        ).read_text(encoding="utf-8")
+            PRESET_ROOT
+            / "commands"
+            / "tasks.md"
+        ).read_text(
+            encoding="utf-8"
+        )
         normalized = " ".join(
             content.split()
         )
@@ -218,18 +264,30 @@ class PresetSourceTests(unittest.TestCase):
             content,
         )
         self.assertIn(
+            "speckit.specdd.authorize",
+            content,
+        )
+        self.assertIn(
             "speckit.specdd.validate",
             content,
         )
 
     def test_converge_fragment_adds_specdd_diagnostics(self):
         content = (
-            PRESET_ROOT / "commands" / "converge.md"
-        ).read_text(encoding="utf-8")
+            PRESET_ROOT
+            / "commands"
+            / "converge.md"
+        ).read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn(
             "speckit.specdd.verify",
             content,
+        )
+        self.assertIn(
+            "authorization snapshot",
+            content.lower(),
         )
         for code in (
             "SPECDD_VIOLATION",

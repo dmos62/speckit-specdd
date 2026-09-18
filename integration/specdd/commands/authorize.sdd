@@ -1,13 +1,14 @@
 Spec: SpecDD Implementation Authorization Command
 
 Purpose:
-  Provide a blocking pre-implementation gate that evaluates the active feature against its existing SpecDD authority snapshot before implementation work begins.
+  Provide a blocking pre-implementation gate that validates the active feature and records immutable authority evidence for the implementation operation.
 
 Owns:
   ./authorize.md
 
 References:
   ./validate.sdd
+  ../scripts/workflow_gate.sdd
 
 Must:
   The command locates the active Spec Kit feature using supported Spec Kit state.
@@ -15,6 +16,9 @@ Must:
   Deterministic validation runs at the `implementation` lifecycle stage.
   Blocking validation diagnostics prevent implementation from proceeding under the current boundary.
   Non-blocking cross-authority findings remain visible without being treated as automatic authority violations.
+  Successful authorization stores the exact validated Change Boundary as the operation authorization snapshot.
+  Failed authorization leaves any prior authorization snapshot unchanged.
+  Later Change Boundary refreshes do not alter the authorization snapshot for the current implementation operation.
   Specification evolution never grants authority to the implementation operation that performs the evolution.
 
 Must not:
@@ -22,8 +26,5 @@ Must not:
   Edit `.sdd` files or Spec Kit tasks.
   Relax ownership or modification authority to make implementation pass.
 
-Depends on:
-  ../scripts/validation.py
-
 Done when:
-  Valid authority-local fixture tasks pass the gate and unknown, stale, or conflicting implementation authority blocks it.
+  Valid authority-local fixture tasks establish an authorization snapshot and unknown, stale, or conflicting implementation authority blocks snapshot replacement.

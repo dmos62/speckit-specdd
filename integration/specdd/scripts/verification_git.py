@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable, Mapping, Sequence
 
+from boundary_builder import write_boundary
 from boundary_paths import normalize_target
 from boundary_types import BoundaryError
 from verification_types import (
@@ -21,21 +22,22 @@ _GENERATED_PREFIXES = (
 _GENERATED_EXACT = {
     ".specdd/bootstrap.local.md",
 }
+_AUTHORIZATION_SNAPSHOT_RELATIVE = (
+    Path("specdd")
+    / "authorization-boundary.json"
+)
 
 
 def _run_git(
     root: Path,
+    args: Sequence[str],
     runner: RunGit,
 ) -> subprocess.CompletedProcess[str]:
     try:
         return runner(
             [
                 "git",
-                "status",
-                "--porcelain=v1",
-                "-z",
-                "--untracked-files=all",
-                "--no-renames",
+                *args,
             ],
             cwd=str(root),
             check=False,
@@ -49,8 +51,67 @@ def _run_git(
         ) from exc
     except OSError as exc:
         raise VerificationError(
-            f"Git could not be executed for change discovery: {exc}"
+            f"Git could not be executed: {exc}"
         ) from exc
+
+
+def authorization_snapshot_path(
+    root: Path,
+    *,
+    runner: RunGit = subprocess.run,
+) -> Path:
+    result = _run_git(
+        root,
+        [
+            "rev-parse",
+            "--git-dir",
+        ],
+        runner,
+    )
+    if result.returncode != 0:
+        detail = " ".join(
+            (
+                result.stderr
+                or result.stdout
+                or ""
+            ).split()
+        )
+        raise VerificationError(
+            "Could not determine the Git metadata directory"
+            + (f": {detail}" if detail else "")
+        )
+
+    raw_git_dir = result.stdout.strip()
+    if not raw_git_dir:
+        raise VerificationError(
+            "Git returned an empty metadata directory"
+        )
+
+    git_dir = Path(raw_git_dir)
+    if not git_dir.is_absolute():
+        git_dir = root / git_dir
+
+    return (
+        git_dir.resolve(strict=False)
+        / _AUTHORIZATION_SNAPSHOT_RELATIVE
+    )
+
+
+def write_authorization_snapshot(
+    root: Path,
+    boundary: Mapping[str, Any],
+    *,
+    runner: RunGit = subprocess.run,
+) -> Path:
+    path = authorization_snapshot_path(
+        root,
+        runner=runner,
+    )
+    write_boundary(
+        boundary,
+        path,
+    )
+    return path
 
 
 def _status_name(value: str) -> str:
@@ -128,6 +189,13 @@ def collect_git_changes(
 ) -> ChangeSet:
     result = _run_git(
         root,
+        [
+            "status",
+            "--porcelain=v1",
+            "-z",
+            "--untracked-files=all",
+            "--no-renames",
+        ],
         runner,
     )
     if result.returncode != 0:
@@ -174,10 +242,12 @@ def collect_git_changes(
                 f"Git returned an invalid repository path: {raw_path}: {exc}"
             ) from exc
 
-        groups[_category(
-            target.path,
-            feature_path,
-        )].append(
+        groups[
+            _category(
+                target.path,
+                feature_path,
+            )
+        ].append(
             GitChange(
                 path=target.path,
                 status=_status_name(record[:2]),

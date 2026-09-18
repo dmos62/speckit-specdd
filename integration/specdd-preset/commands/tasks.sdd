@@ -9,6 +9,7 @@ Owns:
 References:
   ../../specdd/commands/context.sdd
   ../../specdd/commands/validate.sdd
+  ../../specdd/commands/authorize.sdd
 
 Must:
   Task generation preserves Spec Kit user-story grouping and checklist syntax.
@@ -17,8 +18,8 @@ Must:
   Spec evolution and authority evolution remain distinct from ordinary implementation work.
   Deliberate evolution uses `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` in ordinary task text without adding custom bracket labels.
   Evolution tasks name only `.sdd` write targets and remain separate from ordinary implementation writes.
-  Each deliberate evolution task is followed by a separate Change Boundary refresh before dependent implementation continues.
+  Each deliberate evolution task is followed by separate Change Boundary refresh and authorization before dependent implementation continues.
   Task-stage validation runs before task generation reports completion.
 
 Done when:
-  The composed task command preserves upstream grouping while exposing authority-local work, deliberate evolution, and validation guidance.
+  The composed task command preserves upstream grouping while exposing authority-local work, deliberate evolution, fresh authorization requirements, and validation guidance.

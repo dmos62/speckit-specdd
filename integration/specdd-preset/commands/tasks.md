@@ -20,12 +20,14 @@ ordering, and independent user-story structure.
    - never combine an evolution task's `.sdd` targets with non-`.sdd` implementation writes in the same task;
    - these prefixes are text inside a normal Spec Kit task description, not additional bracket labels or authority.
 6. After a deliberate spec-evolution task, generate a separate follow-up task that refreshes `speckit.specdd.context`
-   before the first implementation task that depends on the changed specification. An `AUTHORITY_EVOLUTION_REQUIRED:`
-   task ends the prior authority context; newly proposed authority is unusable until that follow-up refresh produces a
-   fresh Change Boundary.
-7. Do not add custom bracket labels that would violate the upstream task checklist format. Keep task IDs, `[P]`, and
+   before the first implementation task that depends on the changed specification. That dependent implementation must
+   then pass `speckit.specdd.authorize` so a new immutable authorization snapshot is established.
+7. An `AUTHORITY_EVOLUTION_REQUIRED:` task ends the prior authority context. Newly proposed authority is unusable until
+   the specification operation completes, context is refreshed, and authorization succeeds for the next operation.
+8. Do not add custom bracket labels that would violate the upstream task checklist format. Keep task IDs, `[P]`, and
    `[US#]` semantics unchanged.
-8. After generating `tasks.md`, invoke `speckit.specdd.validate` at the `tasks` stage. Correct stale, unresolved, mixed
+9. After generating `tasks.md`, invoke `speckit.specdd.validate` at the `tasks` stage. Correct stale, unresolved, mixed
    evolution/implementation, or malformed evolution scope before completion. Use `authorityGroups` to improve
    decomposition where useful, but never rewrite SpecDD authority to make a task valid.
-9. Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries and never parse `.sdd` source to infer ownership.
+10. Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries and never parse `.sdd` source to infer
+    ownership.

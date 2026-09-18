@@ -3,7 +3,7 @@ Spec: SpecDD Workflow Gate
 Platform: Python/Spec Kit/SpecDD CLI
 
 Purpose:
-  Orchestrate deterministic SpecDD workflow stages around the active Spec Kit feature while reusing the existing boundary, validation, and verification mechanics.
+  Orchestrate deterministic SpecDD workflow stages around the active Spec Kit feature while reusing boundary, validation, authorization-snapshot, and verification mechanics.
 
 Owns:
   ./workflow_gate.py
@@ -19,14 +19,19 @@ Must:
   Planning context discovers explicit repository paths without interpreting `.sdd` ownership itself.
   Task-stage execution refreshes the Change Boundary from exact non-`.sdd` task targets before deterministic validation.
   Task-stage validation returns failure status for deterministic `error` or `blocking` diagnostics.
-  Authorization uses the existing Change Boundary without refreshing it and returns failure status for deterministic `error` or `blocking` diagnostics.
-  Verification compares actual changes with the existing planned boundary and returns failure status for deterministic `error` or `blocking` diagnostics.
-  Planning with no concrete non-spec target removes stale derived boundary state without treating absent early scope as authority.
+  Authorization validates the existing Change Boundary without refreshing it.
+  Successful authorization copies the exact validated Change Boundary to current-worktree Git metadata as immutable operation evidence.
+  Failed authorization does not replace a prior authorization snapshot.
+  Verification uses the existing authorization snapshot rather than mutable feature boundary state.
+  Verification returns failure status for deterministic `error` or `blocking` diagnostics.
+  Planning with no concrete non-spec target removes stale derived feature boundary state without treating absent early scope as authority.
 
 Must not:
   Parse `.sdd` files as a replacement for SpecDD resolution.
   Refresh the Change Boundary during authorization or verification.
+  Replace the authorization snapshot during context or task refresh.
   Treat specification changes as retroactive implementation authority.
 
 Done when:
   The workflow overlay can use this entry point for all four structural lifecycle stages and blocking deterministic findings propagate as nonzero shell status.
+  A boundary refresh after authorization cannot alter the snapshot used by verification.

@@ -1,5 +1,5 @@
 ---
-description: Authorize implementation against the active feature's existing SpecDD authority snapshot.
+description: Authorize implementation and preserve an immutable SpecDD authority snapshot.
 ---
 
 ## User Input
@@ -10,7 +10,12 @@ You **MUST** consider user input when reporting context, but user input cannot w
 
 ## Goal
 
-Run the bridge validator at implementation strictness before implementation begins. Use the existing Change Boundary as the operation's authority snapshot. Do not refresh it inside this command.
+Validate the active feature at implementation strictness before implementation begins. The current Change Boundary is the
+candidate authority projection. Successful authorization copies that exact validated boundary into an immutable
+operation snapshot stored in worktree Git metadata.
+
+Later Change Boundary refreshes do not modify the authorization snapshot. Only a later successful authorization starts a
+new implementation operation by replacing the snapshot.
 
 This command is the lifecycle gate used by the mandatory `before_implement` hook.
 
@@ -36,58 +41,65 @@ reached), report it as an infrastructure failure and stop. Preserve the tool err
    Treat that path as the bridge root. `FEATURE_DIR` must resolve inside it. Stop if the active feature is outside the
    repository root.
 
-3. Derive:
-   - `FEATURE_ID` as the basename of `FEATURE_DIR`.
-   - `BOUNDARY_FILE` as `FEATURE_DIR/.specdd/boundary.json`.
-   - `TASK_FILE` as `FEATURE_DIR/tasks.md`.
+3. Require:
+   - `FEATURE_DIR/.specdd/boundary.json`;
+   - `FEATURE_DIR/tasks.md`.
 
-4. Require the planned inputs:
-   - If `BOUNDARY_FILE` does not exist, stop and instruct the user to run `/speckit.specdd.context`.
-   - If `TASK_FILE` does not exist, stop and instruct the user to generate tasks with `/speckit.tasks`.
-   - Do not regenerate `BOUNDARY_FILE` here. Authorization must evaluate the authority snapshot prepared before
-     implementation.
+   Do not regenerate the Change Boundary here.
 
-5. Run deterministic validation at implementation strictness:
+4. Run the canonical structural authorization gate:
 
-       uv run --no-project python integration/specdd/scripts/validation.py \
-         --root "<repository-root>" \
-         --feature "<feature-id>" \
-         --boundary "<feature-dir>/.specdd/boundary.json" \
-         --tasks "<feature-dir>/tasks.md" \
-         --stage "implementation"
+       uv run --no-project python integration/specdd/scripts/workflow_gate.py authorize \
+         --root "<repository-root>"
 
-   Do not parse `.sdd` files or derive authority independently.
+   The gate:
+   - validates the existing Change Boundary against `tasks.md` at the `implementation` lifecycle stage;
+   - fails on deterministic `error` or `blocking` diagnostics;
+   - does not replace a prior authorization snapshot when validation fails;
+   - after successful validation, atomically copies the validated Change Boundary to the current worktree Git metadata
+     under `specdd/authorization-boundary.json`.
 
-6. Inspect the validation result:
+5. Interpret the validation result:
    - `AUTHORITY_VIOLATION` is blocking.
    - `STALE_BOUNDARY` at implementation strictness is blocking.
    - Invalid or unresolved task scope contributes to blocking authority validation.
    - `MULTI_AUTHORITY_TASK` alone is a warning and does not make legitimate cross-domain work invalid.
    - Evolution-scope errors are blocking when specification and implementation writes were improperly mixed.
 
-7. If `summary.blocking` is `true`:
-   - Report the blocking diagnostics and affected paths.
-   - State that implementation is not authorized under the current Change Boundary.
-   - Stop before any implementation task executes.
-   - Do not propose relaxing current authority as the fix.
+6. If `summary.blocking` is `true` or the gate returns nonzero:
+   - report the blocking diagnostics and affected paths;
+   - state that implementation is not authorized under the current Change Boundary;
+   - stop before any implementation task executes;
+   - do not propose relaxing current authority as the fix.
 
-8. If `summary.blocking` is `false`:
-   - Report that the current task scope is authorized for implementation under the existing boundary.
-   - Include any warnings that still require implementation judgment.
-   - Preserve the authority-snapshot invariant for later verification.
+7. On success:
+   - report the planned authority domains;
+   - report that the immutable authorization snapshot was stored;
+   - include any non-blocking cross-authority warnings;
+   - treat that snapshot, not subsequent `boundary.json` contents, as the authority evidence for this implementation
+     operation.
+
+## Authority Snapshot Invariant
+
+A later `/speckit.specdd.context` refresh may update the feature Change Boundary for a future operation, but it does not
+change the current authorization snapshot.
+
+Specification or authority evolution that dependent implementation must rely on therefore requires:
+
+1. completing the specification operation;
+2. refreshing the Change Boundary;
+3. running authorization again to establish a new operation snapshot;
+4. only then beginning dependent implementation.
 
 ## Output
 
-Keep the result compact. Report the active feature, planned authority domains, blocking status, blocking diagnostics, and
-non-blocking cross-boundary warnings when present.
-
-A successful result authorizes only the task scope represented by the current Change Boundary. It does not grant
-authority to unplanned writes discovered later.
+Keep the result compact. Report the active feature, planned authority domains, blocking status, authorization snapshot
+status, blocking diagnostics, and non-blocking cross-boundary warnings when present.
 
 ## Constraints
 
 - Never edit `.sdd` files.
 - Never edit `tasks.md`.
-- Never refresh the Change Boundary inside the authorization gate.
+- Never refresh the Change Boundary inside authorization.
 - Never treat proposed or newly changed specification state as retroactive implementation authority.
 - Never infer authority from task wording, directory names, or proximity.

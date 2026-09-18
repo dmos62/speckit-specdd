@@ -1,3 +1,4 @@
+import json
 import subprocess
 import tempfile
 import unittest
@@ -148,6 +149,55 @@ class VerificationGitTests(unittest.TestCase):
             ],
         )
 
+    def test_authorization_snapshot_is_stored_in_git_metadata(self):
+        temporary, root = self.initialize_repository()
+        with temporary:
+            payload = {
+                "schemaVersion": 1,
+                "feature": "001-login",
+            }
+            snapshot = verification.write_authorization_snapshot(
+                root,
+                payload,
+            )
+
+            self.assertEqual(
+                (
+                    root
+                    / ".git"
+                    / "specdd"
+                    / "authorization-boundary.json"
+                ).resolve(),
+                snapshot,
+            )
+            self.assertEqual(
+                payload,
+                json.loads(
+                    snapshot.read_text(
+                        encoding="utf-8",
+                    )
+                ),
+            )
+
+            changes = verification.collect_git_changes(
+                root,
+                feature_dir="specs/001-login",
+            )
+
+        self.assertNotIn(
+            str(snapshot),
+            [
+                item.path
+                for item in (
+                    *changes.writes,
+                    *changes.specs,
+                    *changes.controls,
+                    *changes.feature_artifacts,
+                    *changes.generated,
+                )
+            ],
+        )
+
     def test_preserves_spaces_and_literal_grouping_characters_in_git_paths(self):
         temporary, root = self.initialize_repository()
         with temporary:
@@ -167,9 +217,17 @@ class VerificationGitTests(unittest.TestCase):
             for item in changes.writes
             if item.path == "src/auth/provider [legacy].ts"
         ]
-        self.assertEqual(1, len(matching))
-        self.assertEqual("UNTRACKED", matching[0].status)
-        self.assertFalse(matching[0].deleted)
+        self.assertEqual(
+            1,
+            len(matching),
+        )
+        self.assertEqual(
+            "UNTRACKED",
+            matching[0].status,
+        )
+        self.assertFalse(
+            matching[0].deleted
+        )
 
     def test_marks_deleted_project_file(self):
         temporary, root = self.initialize_repository()
@@ -205,7 +263,9 @@ class VerificationGitTests(unittest.TestCase):
             ).resolve()
 
             def missing_git(*args, **kwargs):
-                raise FileNotFoundError("git")
+                raise FileNotFoundError(
+                    "git"
+                )
 
             with self.assertRaisesRegex(
                 verification.VerificationError,
@@ -218,5 +278,7 @@ class VerificationGitTests(unittest.TestCase):
 
         self.assertIn(
             "bash scripts/bootstrap.sh --check",
-            str(raised.exception),
+            str(
+                raised.exception
+            ),
         )

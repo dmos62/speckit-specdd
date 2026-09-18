@@ -8,6 +8,7 @@ Owns:
 
 References:
   ./context.sdd
+  ./authorize.sdd
 
 Must:
   Deterministic validation delegates task-path and authority calculations to the bridge validation script.
@@ -18,12 +19,13 @@ Must:
   Explicit `SPEC_EVOLUTION_REQUIRED:` and `AUTHORITY_EVOLUTION_REQUIRED:` task-text prefixes remain visible in deterministic validation output without granting authority.
   Evolution tasks keep `.sdd` changes separate from ordinary implementation writes.
   Deliberate evolution reports the smallest proposed `.sdd` delta as advisory output without applying it.
-  Authority evolution ends the prior authority context and requires fresh Change Boundary resolution before dependent implementation.
+  Authority evolution ends the prior authority context and requires fresh Change Boundary resolution plus fresh authorization before dependent implementation.
   Authority-local decomposition guidance does not rewrite `tasks.md` automatically.
 
 Must not:
   Edit `.sdd` files.
   Treat proposed specification evolution as authority for the current operation.
+  Create an implementation authorization snapshot.
   Relax durable SpecDD authority to make a task valid.
   Synchronize Spec Kit tasks with SpecDD `Tasks:` entries.
 
@@ -34,5 +36,5 @@ Done when:
   One-authority fixture tasks validate without cross-boundary findings.
   A multi-authority fixture task preserves its feature and user-story context while exposing authority-local target groups.
   Deliberate durable-contract evolution is explicitly represented without mixing implementation writes.
-  Authority evolution remains unusable under the prior boundary and requires fresh resolution.
+  Authority evolution remains unusable under the prior authorization snapshot and requires fresh context plus authorization.
   Implementation-stage validation blocks unresolved or conflicting authority.

@@ -15,7 +15,7 @@ Validate concrete Spec Kit task write targets against the active feature's deriv
 path and authority mechanics belong to the bridge validation script. Architectural classification remains an agentic
 responsibility where the deterministic result cannot decide intent.
 
-This command never rewrites tasks, edits `.sdd` files, or relaxes SpecDD authority.
+This command never rewrites tasks, edits `.sdd` files, relaxes SpecDD authority, or creates implementation authorization.
 
 ## External dependency failures
 
@@ -114,9 +114,10 @@ diagnostics.
     - The validator's evolution projection sets `requiresFreshBoundary` for deliberate spec evolution.
     - `AUTHORITY_EVOLUTION_REQUIRED` also sets `endsAuthorityContext`; after that specification operation is applied,
       the current authority context is over.
-    - Apply specification evolution separately, then run `/speckit.specdd.context` before any implementation task relies
-      on the changed contract or authority.
-    - Newly proposed authority remains unusable until that fresh resolution exists.
+    - Apply specification evolution separately, then run `/speckit.specdd.context`.
+    - Before dependent implementation begins, run `/speckit.specdd.authorize` to establish a new immutable authorization
+      snapshot from the refreshed Change Boundary.
+    - Newly proposed authority remains unusable until that fresh authorization succeeds.
 
 ## Output
 

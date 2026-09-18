@@ -8,13 +8,15 @@ Owns:
 
 References:
   ../scripts/scripts.sdd
+  ../integration/specdd/scripts/workflow_gate.sdd
 
 Must:
   Development guidance records the pinned tool versions used by repository bootstrap.
   Development guidance identifies the supported registrar-backed Spec Kit integration used for local bridge execution.
-  Generated Spec Kit command, workflow-overlay, and installation state remains distinct from canonical bridge source under `../integration/`.
+  Generated Spec Kit command, workflow-overlay, feature boundary, and authorization-snapshot state remains distinct from canonical bridge source under `../integration/`.
   Migration between active integrations uses supported Spec Kit commands rather than manual generated-state edits.
   Structural workflow enforcement and agent-facing lifecycle hooks have distinct documented responsibilities.
+  Development guidance explains that successful authorization records immutable operation evidence in current-worktree Git metadata and verification consumes that evidence.
 
 Done when:
-  A clean development host can reproduce the supported local setup by following the guide and repository bootstrap.
+  A clean development host can reproduce the supported local setup and understand the generated authority state by following the guide and repository bootstrap.
