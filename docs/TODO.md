@@ -9,6 +9,10 @@ authority, the bridge retains non-existent implementation targets as `UNRESOLVED
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
 
+## P0 - Reduce test bloat
+
+Examine tests, cut down size, get rid of unnecessary tests: make them more maintainable, less voluminous, less code to maintain.
+
 ## P0 — Unplanned specification edits
 
 - [ ] Treat changed `.sdd` files as planned evolution targets rather than automatically informational.
