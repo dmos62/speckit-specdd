@@ -3,7 +3,7 @@
 Edit `files.include` to change which files/folders are made available to the next programming iteration: adjust this as needed to change focus of your work. `@glob packages/core/**`: one per line inside the `@filegroup`, and you leverage the `@globexclude` declarations to get rid of unnecessary files. The `@#` pattern (as in `@#glob [...]`) is a comment and is used to comment-out/disable directives. Note, each `@glob` pattern must match something, otherwise there's an exception; however, `@globexclude` can be used profilactically, they don't need to match.
 @file files.include
 
-General `files.include` policy: we want to include the maximum of files that can be useful (now or later): that is preferable to being selective, because currently all important files can fit inside the LLM agent's context. However, we still want to exclude generated artifacts and files that will not be useful to an implementing agent. IMPORTANT: if you are shown a file that cannot be relevant to an implementor, add a `@globexclude` directive for that file so that it doesn't waste LLM context.
+General `files.include` policy: we want to include the maximum of files that can be useful (now or later): that is preferable to being selective, because currently all important files can fit inside the LLM agent's context. However, we still want to exclude generated artifacts and files that will not be useful to an implementing agent. IMPORTANT: if you are shown a file that cannot be relevant to an implementor, add a `@globexclude` directive for that file so that it doesn't waste LLM context. NOTE: LLM context is getting full: start excluding least used/relevant files, like tests: reinclude when next programming iteration needs them.
 
 
 @include dev-scripts.include
