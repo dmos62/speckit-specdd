@@ -33,3 +33,4 @@ class ChangeSet:
     controls: tuple[GitChange, ...] = ()
     feature_artifacts: tuple[GitChange, ...] = ()
     generated: tuple[GitChange, ...] = ()
+    preauthorization: tuple[GitChange, ...] = ()

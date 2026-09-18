@@ -2,34 +2,32 @@
 
 The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authority correctness. Completed items are
 removed here: authorization preserves the validated Change Boundary in worktree Git metadata, records exact explicit
-`.sdd` evolution targets, records explicitly selected editable bootstrap overrides, and rejects refresh-time boundaries
-whose effective SpecDD governing context changed before authorization.
+`.sdd` evolution targets, records explicitly selected editable bootstrap overrides, rejects refresh-time boundaries
+whose effective SpecDD governing context changed before authorization, and records an operation-scoped Git baseline.
 
-Boundary refresh now records deterministic per-target effective-context SHA-256 identities in refreshable current-
-worktree Git metadata bound to the exact boundary. Authorization fresh-resolves the target context and rejects
-ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, governing-chain, or resolver-generation drift
-with blocking `STALE_BOUNDARY`. The immutable authorization snapshot remains the historical post-authorization reference.
+Boundary refresh records deterministic per-target effective-context SHA-256 identities in refreshable current-worktree
+Git metadata bound to the exact boundary. Authorization fresh-resolves the target context and rejects ownership-
+preserving `Must`, `Forbids`, `References`, referenced-contract, governing-chain, or resolver-generation drift with
+blocking `STALE_BOUNDARY`. The immutable authorization snapshot remains the historical post-authorization reference.
+
+Authorization also records the current Git `HEAD` plus exact content/deletion identities for every dirty path before
+implementation. Verification excludes unchanged pre-authorization tracked, staged, untracked, and deleted state while
+including any path whose state changed after authorization. A changed `HEAD` fails closed because the baseline can no
+longer be compared safely; post-authorization concurrent writes remain in operation scope and should use an optional
+isolated worktree when they must not participate in the same verification.
 
 Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. Until the CLI exposes resolver-backed intended-path
 authority, the bridge retains non-existent implementation targets as `UNRESOLVED_TARGET` with an explicit
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
 
-Change Boundary readers now reject deterministic cross-field inconsistency before boundary state can influence
+Change Boundary readers reject deterministic cross-field inconsistency before boundary state can influence
 authorization or verification. Adapter-level tests separately establish that shape-valid corruption is rejected for
 duplicate resolved targets, authority projection mismatch, owner/spec-chain mismatch, resolved/unresolved overlap, and
 invalid candidate-authority state.
 
-## P0 — Operation-scoped Git baseline
-
-- [ ] Bind verification to the implementation operation rather than the entire dirty worktree.
-  - Record an authorization-time Git baseline adjacent to operation authorization evidence.
-  - Define handling for tracked modifications, staged changes, untracked files, and deletions that predate authorization.
-  - Verify only changes introduced after the baseline, or fail early when the baseline cannot be compared safely.
-  - Keep feature worktrees optional rather than making them the correctness mechanism.
-  - Design baseline metadata separately from Change Boundary v1 so authority projection does not become an operation log.
-  - Add tests for pre-existing edits, concurrent unrelated changes, and clean operations.
-  - Completion: unrelated dirty-worktree state cannot contaminate feature authority verification.
+`docs/TECH-DEBT.md` still contains the completed operation-baseline risk because that file currently has no discoverable
+SpecDD ownership or modification permission; do not edit it until ownership is made explicit.
 
 ## P0 — Generated Codex skill exclusion
 

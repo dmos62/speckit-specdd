@@ -18,23 +18,14 @@ from boundary_paths import normalize_target, resolve_root  # noqa: E402
 from boundary_schema import load_schema  # noqa: E402
 from boundary_schema_validation import validate_boundary  # noqa: E402
 from boundary_types import BoundaryError  # noqa: E402
-from validation_cli import (  # noqa: E402
-    _result_exit_code as validation_exit_code,
-    main as validation_main,
-)
+from validation_cli import _result_exit_code as validation_exit_code, main as validation_main  # noqa: E402
 from validation_engine import SEVERITIES, validate_feature  # noqa: E402
-from validation_permissions import (  # noqa: E402
-    project_task_modification_permissions,
-    requires_permission_projection,
-)
+from validation_permissions import project_task_modification_permissions, requires_permission_projection  # noqa: E402
 from validation_tasks import parse_tasks_file  # noqa: E402
-from validation_types import (  # noqa: E402
-    TaskRecord,
-    ValidationError,
-    diagnostic,
-)
+from validation_types import TaskRecord, ValidationError, diagnostic  # noqa: E402
 from verification_cli import main as verification_main  # noqa: E402
 from verification_git import (  # noqa: E402
+    authorization_git_baseline_path,
     authorization_snapshot_path,
     authorization_spec_plan_path,
     write_authorization_evidence,
@@ -55,23 +46,12 @@ from workflow_gate_state import (  # noqa: E402,F401
     _specdd_context_diagnostics,
     _task_targets,
 )
-
-
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Run structural SpecDD context, task validation, "
-            "authorization, or verification."
-        )
+        description="Run structural SpecDD context, task validation, authorization, or verification."
     )
-    parser.add_argument(
-        "stage",
-        choices=("context", "tasks", "authorize", "verify"),
-    )
-    parser.add_argument(
-        "--root",
-        help="Repository root; defaults to repository discovery",
-    )
+    parser.add_argument("stage", choices=("context", "tasks", "authorize", "verify"))
+    parser.add_argument("--root", help="Repository root; defaults to repository discovery")
     parser.add_argument(
         "--operator-control",
         action="append",
@@ -84,9 +64,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _planned_spec_evolution_targets(
-    tasks: Sequence[TaskRecord],
-) -> tuple[str, ...]:
+def _planned_spec_evolution_targets(tasks: Sequence[TaskRecord]) -> tuple[str, ...]:
     return tuple(
         dict.fromkeys(
             target
@@ -98,23 +76,15 @@ def _planned_spec_evolution_targets(
 
 
 def _control_selections(
-    root: Path,
-    tasks: Sequence[TaskRecord],
-    operator_controls: Sequence[str],
+    root: Path, tasks: Sequence[TaskRecord], operator_controls: Sequence[str]
 ) -> dict[str, str]:
-    selections = {
-        path: "workflow"
-        for task in tasks
-        for path in task.control_targets
-    }
+    selections = {path: "workflow" for task in tasks for path in task.control_targets}
     for raw in operator_controls:
         selections[normalize_target(root, raw).path] = "operator"
     return selections
 
 
-def _control_diagnostics(
-    selections: dict[str, str],
-) -> list[dict[str, object]]:
+def _control_diagnostics(selections: dict[str, str]) -> list[dict[str, object]]:
     findings: list[dict[str, object]] = []
     for path, source in sorted(selections.items()):
         if path == IMMUTABLE_BOOTSTRAP_CONTROL:
@@ -122,8 +92,7 @@ def _control_diagnostics(
                 diagnostic(
                     "CONTROL_STATE_VIOLATION",
                     "blocking",
-                    "The immutable SpecDD bootstrap control file cannot be "
-                    "selected for modification.",
+                    "The immutable SpecDD bootstrap control file cannot be selected for modification.",
                     targets=[path],
                     selectedBy=source,
                 )
@@ -133,8 +102,7 @@ def _control_diagnostics(
                 diagnostic(
                     "CONTROL_STATE_VIOLATION",
                     "blocking",
-                    "Root SpecDD control state is not an editable bootstrap "
-                    "override.",
+                    "Root SpecDD control state is not an editable bootstrap override.",
                     targets=[path],
                     selectedBy=source,
                 )
@@ -143,27 +111,17 @@ def _control_diagnostics(
 
 
 def _extend_diagnostics(
-    result: dict[str, object],
-    findings: Sequence[dict[str, object]],
+    result: dict[str, object], findings: Sequence[dict[str, object]]
 ) -> None:
     if not findings:
         return
     diagnostics = result["diagnostics"]
-    if not isinstance(diagnostics, list):
-        raise WorkflowGateError("Validation diagnostics have an invalid shape")
-    diagnostics.extend(findings)
-    counts = Counter(
-        item.get("severity")
-        for item in diagnostics
-        if isinstance(item, dict)
-    )
     summary = result["summary"]
-    if not isinstance(summary, dict):
-        raise WorkflowGateError("Validation summary has an invalid shape")
-    severity_counts = {
-        severity: counts.get(severity, 0)
-        for severity in SEVERITIES
-    }
+    if not isinstance(diagnostics, list) or not isinstance(summary, dict):
+        raise WorkflowGateError("Validation output has an invalid shape")
+    diagnostics.extend(findings)
+    counts = Counter(item.get("severity") for item in diagnostics if isinstance(item, dict))
+    severity_counts = {severity: counts.get(severity, 0) for severity in SEVERITIES}
     summary["diagnosticCount"] = len(diagnostics)
     summary["countsBySeverity"] = severity_counts
     summary["blocking"] = severity_counts["blocking"] > 0
@@ -179,19 +137,11 @@ def _authorize(
     schema = load_schema(root)
     boundary = _load_boundary(boundary_path)
     validate_boundary(boundary, schema)
-    context_findings = _specdd_context_diagnostics(
-        root,
-        boundary,
-        schema,
-    )
+    context_findings = _specdd_context_diagnostics(root, boundary, schema)
     tasks = parse_tasks_file(root, task_path)
     permissions = {}
     if not context_findings and requires_permission_projection(boundary, tasks):
-        permissions = project_task_modification_permissions(
-            root,
-            boundary,
-            tasks,
-        )
+        permissions = project_task_modification_permissions(root, boundary, tasks)
     result = validate_feature(
         boundary,
         tasks,
@@ -201,24 +151,12 @@ def _authorize(
     )
     result["specddContextFresh"] = not context_findings
     _extend_diagnostics(result, context_findings)
-
-    selections = _control_selections(
-        root,
-        tasks,
-        operator_controls,
-    )
+    selections = _control_selections(root, tasks, operator_controls)
     result["controlSelections"] = [
-        {
-            "path": path,
-            "selectedBy": source,
-        }
+        {"path": path, "selectedBy": source}
         for path, source in sorted(selections.items())
     ]
-    _extend_diagnostics(
-        result,
-        _control_diagnostics(selections),
-    )
-
+    _extend_diagnostics(result, _control_diagnostics(selections))
     status = validation_exit_code(result, "error")
     if status != 0:
         print(json.dumps(result, indent=2, sort_keys=True))
@@ -226,14 +164,13 @@ def _authorize(
 
     spec_targets = _planned_spec_evolution_targets(tasks)
     snapshot, spec_plan = write_authorization_evidence(
-        root,
-        boundary,
-        spec_targets,
-        control_selections=selections,
+        root, boundary, spec_targets, control_selections=selections
     )
+    git_baseline = spec_plan.with_name("authorization-git-baseline.json")
     result["authorizationSnapshot"] = {
         "path": str(snapshot),
         "stored": True,
+        "gitBaseline": str(git_baseline),
         "plannedSpecEvolution": {
             "path": str(spec_plan),
             "targets": list(spec_targets),
@@ -245,10 +182,7 @@ def _authorize(
 
 
 def run_stage(
-    root: Path,
-    stage: str,
-    *,
-    operator_controls: Sequence[str] = (),
+    root: Path, stage: str, *, operator_controls: Sequence[str] = ()
 ) -> int:
     feature, feature_dir, feature_path = _active_feature(root)
     boundary_path = feature_dir / ".specdd" / "boundary.json"
@@ -259,25 +193,10 @@ def run_stage(
             root,
             feature,
             boundary_path,
-            _plan_targets(
-                root,
-                feature_dir,
-                feature_path,
-            ),
+            _plan_targets(root, feature_dir, feature_path),
             require_targets=False,
         )
-        print(
-            json.dumps(
-                _boundary_summary(
-                    root,
-                    feature,
-                    boundary_path,
-                    value,
-                ),
-                indent=2,
-                sort_keys=True,
-            )
-        )
+        print(json.dumps(_boundary_summary(root, feature, boundary_path, value), indent=2, sort_keys=True))
         return 0
 
     if stage == "tasks":
@@ -288,78 +207,34 @@ def run_stage(
             _task_targets(root, task_path),
             require_targets=True,
         )
-        print(
-            json.dumps(
-                _boundary_summary(
-                    root,
-                    feature,
-                    boundary_path,
-                    value,
-                ),
-                sort_keys=True,
-            ),
-            file=sys.stderr,
-        )
-        return validation_main(
-            [
-                "--root",
-                str(root),
-                "--feature",
-                feature,
-                "--boundary",
-                str(boundary_path),
-                "--tasks",
-                str(task_path),
-                "--stage",
-                "tasks",
-                "--fail-on",
-                "error",
-            ]
-        )
+        print(json.dumps(_boundary_summary(root, feature, boundary_path, value), sort_keys=True), file=sys.stderr)
+        return validation_main([
+            "--root", str(root), "--feature", feature, "--boundary", str(boundary_path),
+            "--tasks", str(task_path), "--stage", "tasks", "--fail-on", "error",
+        ])
 
     _require_file(boundary_path, "Change Boundary")
     if stage == "authorize":
         _require_file(task_path, "Spec Kit task file")
-        return _authorize(
-            root,
-            feature,
-            boundary_path,
-            task_path,
-            operator_controls,
-        )
+        return _authorize(root, feature, boundary_path, task_path, operator_controls)
 
     snapshot_path = authorization_snapshot_path(root)
     spec_plan_path = authorization_spec_plan_path(root)
+    git_baseline_path = authorization_git_baseline_path(root)
     _require_file(snapshot_path, "Authorization snapshot")
-    _require_file(
-        spec_plan_path,
-        "Authorization specification plan",
-    )
-    return verification_main(
-        [
-            "--root",
-            str(root),
-            "--feature",
-            feature,
-            "--feature-dir",
-            str(feature_dir),
-            "--authorization-snapshot",
-            str(snapshot_path),
-            "--fail-on",
-            "error",
-        ]
-    )
+    _require_file(spec_plan_path, "Authorization specification plan")
+    _require_file(git_baseline_path, "Authorization Git baseline")
+    return verification_main([
+        "--root", str(root), "--feature", feature, "--feature-dir", str(feature_dir),
+        "--authorization-snapshot", str(snapshot_path), "--fail-on", "error",
+    ])
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     try:
         root = resolve_root(args.root)
-        return run_stage(
-            root,
-            args.stage,
-            operator_controls=args.operator_control,
-        )
+        return run_stage(root, args.stage, operator_controls=args.operator_control)
     except (
         BoundaryError,
         ValidationError,

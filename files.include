@@ -55,7 +55,7 @@
 @globexclude tests/boundary_test_resolver.py
 @globexclude tests/test_change_boundary_schema.py
 
-@# Operation-scoped Git verification is the next P0 focus, so its verification and workflow-gate tests remain included.
+@# Generated Codex skill exclusion is the next P0 focus, so Git verification and workflow-gate tests remain included.
 
 @# Other tests remain excluded by default and can be reintroduced when needed.
 @globexclude tests/preset_test_install.py

@@ -17,9 +17,11 @@ from verification_cli import (  # noqa: E402,F401
 )
 from verification_engine import verify_change_set  # noqa: E402,F401
 from verification_git import (  # noqa: E402,F401
+    authorization_git_baseline_path,
     authorization_snapshot_path,
     authorization_spec_plan_path,
     collect_git_changes,
+    load_authorization_git_baseline,
     load_authorization_plan,
     write_authorization_evidence,
 )

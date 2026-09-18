@@ -77,12 +77,17 @@ The resolved `speckit` workflow adds four deterministic shell steps:
 - `specdd-context` refreshes advisory feature Change Boundary context after planning.
 - `specdd-task-validation` refreshes ordinary implementation scope from exact task targets and validates it.
 - `specdd-authorize` validates the existing boundary and records immutable operation evidence.
-- `specdd-verify` compares actual resulting state with that historical evidence.
+- `specdd-verify` compares post-authorization Git state with that historical evidence.
 
-Authorization evidence consists of the exact validated boundary plus a fingerprint-bound companion plan. The companion
-records exact planned `.sdd` evolution targets and exact editable bootstrap overrides selected before implementation.
+Authorization evidence consists of the exact validated boundary, a fingerprint-bound companion plan, and a
+fingerprint-bound Git baseline. The companion records exact planned `.sdd` evolution targets and exact editable
+bootstrap overrides selected before implementation. The Git baseline records authorization-time `HEAD` plus
+content/deletion identities for every dirty path.
 
-A later Change Boundary refresh or task edit cannot change this historical evidence.
+A later Change Boundary refresh or task edit cannot change this historical evidence. Verification excludes unchanged
+pre-authorization dirty state, but any path changed after authorization remains in operation scope. If Git `HEAD`
+changes, verification fails closed and requires fresh authorization. Optional feature worktrees can isolate concurrent
+operations but are not part of SpecDD authority semantics.
 
 ## Bootstrap control state
 
@@ -122,8 +127,9 @@ Canonical bridge source lives under:
 Spec Kit materializes installed commands and bookkeeping under `.agents/skills/` and `.specify/`. Treat those outputs as
 generated integration state.
 
-Feature Change Boundaries are generated feature state. Authorization boundary snapshots and their companion operation
-selection plans are generated worktree Git metadata.
+Feature Change Boundaries are generated feature state. Refresh-time effective-context evidence, authorization boundary
+snapshots, companion operation selections, and authorization-time Git baselines are generated current-worktree Git
+metadata.
 
 SpecDD local operator preferences remain in `.specdd/bootstrap.local.md` and are excluded from shared iteration context.
 

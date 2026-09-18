@@ -13,18 +13,22 @@ An exact editable bootstrap override named directly by the Operator may be passe
 ## Goal
 
 Validate the active feature at implementation strictness before implementation begins. The current Change Boundary is the
-candidate ownership projection. Successful authorization copies that exact validated boundary into immutable operation
-evidence stored in worktree Git metadata.
+candidate ownership projection. Successful authorization preserves that exact validated boundary, its planned
+specification/control selections, and an operation-scoped Git baseline in current-worktree Git metadata.
 
 Authorization first proves that the effective SpecDD context used to generate the boundary is still current. Context
 refresh records a deterministic hash of each target's normalized resolver-returned governing spec context. Authorization
 fresh-resolves those targets and rejects the boundary with `STALE_BOUNDARY` when governing contracts, explicit
 references, the effective governing chain, or generation identity changed.
 
-Authorization also records a fingerprint-bound companion plan. It contains exact `.sdd` targets selected by explicit
-`SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks plus explicitly selected editable bootstrap
-overrides. Bootstrap-control selections record whether they came from an authorized workflow task or direct Operator
-selection. None of this companion state grants implementation authority.
+The companion specification/control plan is fingerprint-bound to the exact boundary. It contains exact `.sdd` targets
+selected by explicit `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks plus explicitly selected
+editable bootstrap overrides. Bootstrap-control selections record whether they came from an authorized workflow task or
+direct Operator selection. None of this companion state grants implementation authority.
+
+The Git baseline is separate operation metadata. Before new authorization evidence is written, it records the current
+Git `HEAD` and exact content/deletion identities for every dirty path. Existing tracked modifications, staged changes,
+untracked files, and deletions are therefore distinguishable from changes introduced after authorization.
 
 The immutable `.specdd/bootstrap.md` can never be selected. The only editable root bootstrap overrides are
 `.specdd/bootstrap.project.md` and `.specdd/bootstrap.local.md`; the latter remains local/generated state and is excluded
@@ -72,15 +76,17 @@ and verifies `Can modify` permission for cross-owned writes.
    - rejects immutable or unrelated root SpecDD control selections;
    - records workflow-task control selections as `workflow` and direct command selections as `operator`;
    - extracts exact `.sdd` targets only from explicit evolution tasks;
-   - does not replace prior authorization evidence when validation fails;
-   - on success writes the validated boundary and fingerprint-bound companion plan under current-worktree Git metadata.
+   - captures the authorization-time Git baseline before replacing operation evidence;
+   - does not replace prior authorization evidence when validation or baseline capture fails;
+   - on success writes the validated boundary, companion plan, and Git baseline under current-worktree Git metadata.
 
 5. Blocking conditions include:
    - `AUTHORITY_VIOLATION`;
    - `STALE_BOUNDARY`, including changed effective SpecDD governing context;
    - unresolved implementation scope;
    - malformed or mixed evolution scope;
-   - `CONTROL_STATE_VIOLATION` for `.specdd/bootstrap.md` or unrelated root control state.
+   - `CONTROL_STATE_VIOLATION` for `.specdd/bootstrap.md` or unrelated root control state;
+   - inability to capture a trustworthy authorization-time Git baseline.
 
 6. On success report:
    - effective SpecDD context freshness;
@@ -88,16 +94,17 @@ and verifies `Can modify` permission for cross-owned writes.
    - declared and resulting operation authorities;
    - exact planned `.sdd` evolution targets;
    - selected bootstrap overrides and whether each was selected by `workflow` or `operator`;
-   - authorization evidence status;
+   - authorization boundary, companion-plan, and Git-baseline evidence status;
    - non-blocking cross-authority warnings.
 
 ## Authority Snapshot Invariant
 
-Later Change Boundary refreshes, task edits, specification changes, or bootstrap-control changes do not alter the
-authorization evidence for the current operation.
+Later Change Boundary refreshes, task edits, specification changes, bootstrap-control changes, or ordinary worktree edits
+do not alter the authorization evidence for the current operation.
 
 Specification or authority evolution that dependent implementation must rely on requires a separate specification
-operation, fresh context, and fresh authorization.
+operation, fresh context, and fresh authorization. A changed Git `HEAD` likewise requires fresh authorization before
+verification can safely attribute worktree changes to an operation.
 
 ## Constraints
 

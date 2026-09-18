@@ -19,12 +19,14 @@ from verification_engine import verify_change_set
 from verification_git import (
     authorization_snapshot_path,
     collect_git_changes,
+    load_authorization_git_baseline,
     load_authorization_plan,
 )
 from verification_types import VerificationError
 
 _FAIL_ON = ("never", "error", "blocking")
 _SPEC_PLAN_FILENAME = "authorization-spec-evolution.json"
+_GIT_BASELINE_FILENAME = "authorization-git-baseline.json"
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -35,8 +37,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         )
     )
     parser.add_argument(
-        "--root",
-        help="Repository root; defaults to repository discovery",
+        "--root", help="Repository root; defaults to repository discovery"
     )
     parser.add_argument(
         "--authorization-snapshot",
@@ -53,6 +54,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--git-baseline",
+        help=(
+            "Authorization-time Git baseline; defaults beside the "
+            "authorization boundary snapshot"
+        ),
+    )
+    parser.add_argument(
         "--feature-dir",
         required=True,
         help="Active Spec Kit feature directory; excluded from implementation writes",
@@ -60,15 +68,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--feature", help="Expected active feature identifier")
     parser.add_argument("--schema", help="Override the Change Boundary schema path")
     parser.add_argument(
-        "--specdd",
-        default="specdd",
-        help="SpecDD CLI executable (default: specdd)",
+        "--specdd", default="specdd", help="SpecDD CLI executable (default: specdd)"
     )
     parser.add_argument(
-        "--output",
-        "-o",
-        default="-",
-        help="Output path, or '-' for stdout (default)",
+        "--output", "-o", default="-", help="Output path, or '-' for stdout (default)"
     )
     parser.add_argument(
         "--fail-on",
@@ -156,11 +159,7 @@ def _result_exit_code(result: Mapping[str, Any], fail_on: str) -> int:
     if fail_on == "never":
         return 0
     summary = result.get("summary", {})
-    counts = (
-        summary.get("countsBySeverity", {})
-        if isinstance(summary, Mapping)
-        else {}
-    )
+    counts = summary.get("countsBySeverity", {}) if isinstance(summary, Mapping) else {}
     if not isinstance(counts, Mapping):
         return 0
     if fail_on == "blocking":
@@ -168,14 +167,16 @@ def _result_exit_code(result: Mapping[str, Any], fail_on: str) -> int:
     return 1 if counts.get("error", 0) or counts.get("blocking", 0) else 0
 
 
-def _spec_plan_path(
-    root: Path,
-    snapshot_path: Path,
-    explicit: str | None,
-) -> Path:
-    if explicit:
-        return _root_path(root, explicit)
-    return snapshot_path.with_name(_SPEC_PLAN_FILENAME)
+def _evidence_path(root: Path, snapshot: Path, explicit: str | None, filename: str) -> Path:
+    return _root_path(root, explicit) if explicit else snapshot.with_name(filename)
+
+
+def _spec_plan_path(root: Path, snapshot: Path, explicit: str | None) -> Path:
+    return _evidence_path(root, snapshot, explicit, _SPEC_PLAN_FILENAME)
+
+
+def _git_baseline_path(root: Path, snapshot: Path, explicit: str | None) -> Path:
+    return _evidence_path(root, snapshot, explicit, _GIT_BASELINE_FILENAME)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -192,23 +193,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         validate_boundary(planned, schema)
         spec_targets, control_targets = load_authorization_plan(
             root,
-            _spec_plan_path(
-                root,
-                snapshot_path,
-                args.spec_evolution_plan,
-            ),
+            _spec_plan_path(root, snapshot_path, args.spec_evolution_plan),
             planned,
         )
-
+        baseline_path = _git_baseline_path(root, snapshot_path, args.git_baseline)
+        baseline = load_authorization_git_baseline(root, baseline_path, planned)
         changes = collect_git_changes(
-            root,
-            feature_dir=args.feature_dir,
+            root, feature_dir=args.feature_dir, baseline=baseline
         )
-        existing_targets = [
-            item.path
-            for item in changes.writes
-            if not item.deleted
-        ]
+        existing_targets = [item.path for item in changes.writes if not item.deleted]
         if existing_targets:
             actual = build_change_boundary(
                 root,
@@ -220,7 +213,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             actual = _empty_actual(planned)
             validate_boundary(actual, schema)
-
         result = verify_change_set(
             planned,
             actual,
@@ -230,6 +222,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             planned_spec_targets=spec_targets,
             planned_control_targets=control_targets,
         )
+        result["authorizationGitBaseline"] = {
+            "path": str(baseline_path),
+            "head": baseline["head"],
+            "excludedPreauthorizationCount": len(changes.preauthorization),
+            "excludedPreauthorization": [
+                {"path": item.path, "status": item.status, "deleted": item.deleted}
+                for item in changes.preauthorization
+            ],
+        }
         _write_output(root, result, args.output)
         return _result_exit_code(result, args.fail_on)
     except (BoundaryError, VerificationError, OSError) as exc:
