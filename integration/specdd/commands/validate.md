@@ -12,15 +12,20 @@ You **MUST** consider user input before validation. The optional lifecycle stage
 ## Goal
 
 Validate concrete Spec Kit task write targets against the active feature's derived SpecDD Change Boundary. Deterministic
-path and authority mechanics belong to the bridge validation script. Architectural classification remains an agentic
-responsibility where the deterministic result cannot decide intent.
+path, ownership, and modification-permission mechanics belong to the bridge validation scripts. Architectural
+classification remains an agentic responsibility where the deterministic result cannot decide intent.
+
+The Change Boundary preserves target ownership through `primaryAuthority`. Unmarked tasks use their target owners as
+participating operation authorities. A task that intentionally executes all writes under one authority declares the
+literal `SPECDD_AUTHORITY:` followed by a backticked repository-relative `.sdd` path. Validation then fresh-resolves that
+authority context and projects inherited `Can modify` grants. A non-owning grant never changes the target owner.
 
 This command never rewrites tasks, edits `.sdd` files, relaxes SpecDD authority, or creates implementation authorization.
 
 ## External dependency failures
 
-If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, or `uv` when
-reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
+If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
+when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
 `bash scripts/bootstrap.sh --check`, and do not convert tool absence into unresolved-target, stale-boundary, or authority
 diagnostics.
 
@@ -50,10 +55,10 @@ diagnostics.
    - If `TASK_FILE` does not exist, stop and instruct the user to generate tasks with `/speckit.tasks`.
 
 5. Select validation strictness:
-   - `planning`: unresolved scope is advisory while concrete implementation paths may still be emerging.
-   - `tasks`: unresolved or stale task scope is an error that must be corrected before implementation planning is
-     considered complete.
-   - `implementation`: stale scope blocks, and unknown or conflicting write authority produces a blocking
+   - `planning`: unresolved or invalid declared-authority scope is advisory while implementation paths may still be emerging.
+   - `tasks`: unresolved, stale, or invalid declared-authority scope is an error that must be corrected before implementation
+     planning is considered complete.
+   - `implementation`: stale scope blocks, and unknown, conflicting, or unpermitted write authority produces a blocking
      `AUTHORITY_VIOLATION`.
    - If `$ARGUMENTS` does not select a stage, use `tasks`.
 
@@ -66,32 +71,37 @@ diagnostics.
          --tasks "<feature-dir>/tasks.md" \
          --stage "<stage>"
 
-   Do not parse `.sdd` files, derive ownership independently, or repair the Change Boundary by hand.
+   Do not parse `.sdd` source, derive ownership independently, or repair the Change Boundary by hand. When task text
+   contains `SPECDD_AUTHORITY:`, the validator calls the real SpecDD resolver for that authority context and evaluates
+   `Can modify` from resolver output.
 
 7. Interpret deterministic diagnostics:
    - `UNRESOLVED_TARGET`: a boundary or task target does not currently have trustworthy authority projection. If its
      message begins with `INTENDED_TARGET_UNSUPPORTED`, pinned SpecDD CLI `1.1.1` cannot resolve the non-existent target;
      this is a bridge limitation rather than evidence that SpecDD forbids creation.
-   - `MULTI_AUTHORITY_TASK`: one task writes targets owned by more than one primary authority. This is a structural
-     finding, not automatic invalidity.
+   - `MULTI_AUTHORITY_TASK`: one task writes targets owned by more than one primary authority. This remains a structural
+     finding and does not by itself imply invalidity.
+   - `AUTHORITY_VIOLATION`: at task or implementation strictness, a declared `SPECDD_AUTHORITY:` is invalid, conflicting,
+     or lacks `Owns`/`Can modify` coverage for every resolved write target; implementation strictness also uses this code
+     for unresolved or conflicting target authority.
    - `STALE_BOUNDARY`: current task targets or feature identity no longer match the boundary projection.
-   - `AUTHORITY_VIOLATION`: implementation-stage authority is unresolved or conflicting and implementation must not
-     proceed.
    - `EVOLUTION_CLASSIFICATION_CONFLICT`: a task declares both supported evolution classes and must be corrected.
    - `EVOLUTION_SPEC_TARGET_REQUIRED`: an evolution task does not name a `.sdd` target.
    - `EVOLUTION_SCOPE_MIXED`: an evolution task mixes `.sdd` evolution with ordinary implementation writes instead of
      keeping the operations separate.
 
-   An intended target carrying `INTENDED_TARGET_UNSUPPORTED` is therefore an error at the `tasks` stage and contributes
-   to blocking `AUTHORITY_VIOLATION` at the `implementation` stage. Do not infer ownership to bypass that result.
+   `modificationPermissions` reports each target's owner, the task authorities permitted to write it, and the resolved
+   spec sources of non-owning `Can modify` grants. Ownership remains unchanged.
 
 8. Preserve Spec Kit task identity:
    - Keep original task order.
    - Keep the original task ID as the anchor when discussing decomposition.
    - Keep the original user-story grouping.
    - Do not rewrite `tasks.md` automatically.
-   - When a `MULTI_AUTHORITY_TASK` is naturally decomposable, recommend authority-local sub-work using the validator's
-     `authorityGroups`, while keeping the work under the same feature and user story.
+   - For genuinely coordinated multi-owner work, an absent `SPECDD_AUTHORITY:` is valid and `operationAuthorities`
+     reflects the participating owners.
+   - When a declared authority cannot cover cross-owned targets, recommend removing an unnecessary declaration,
+     decomposing by `authorityGroups`, or correcting the implementation path instead of relaxing authority.
 
 9. Apply architectural classification only where reasoning is required:
    - Use `IMPLEMENTATION_CONFLICT` when the requested feature can remain unchanged but the proposed task structure or
@@ -102,9 +112,7 @@ diagnostics.
    - Explicit evolution tasks use `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` in ordinary task text,
      not a custom checklist marker. The validator projects that intent into the task `classification` and `evolution`
      fields without treating it as authority.
-   - Legitimate contract work may remain cross-boundary when the current authority model already permits the required
-     writes and the task is not usefully decomposable.
-   - A task merely touching multiple authorities is not sufficient evidence for spec or authority evolution.
+   - A task merely touching multiple owners is not sufficient evidence for spec or authority evolution.
 
 10. For each deliberate evolution classification, include a compact Proposed `.sdd` delta subsection in the command
     response:
@@ -122,31 +130,21 @@ diagnostics.
     - Apply specification evolution separately, then run `/speckit.specdd.context`.
     - Before dependent implementation begins, run `/speckit.specdd.authorize` to establish a new immutable authorization
       snapshot from the refreshed Change Boundary.
-    - Newly proposed authority remains unusable until that fresh authorization succeeds.
 
 ## Output
 
-Report, in task order:
+Report, in task order: stage, task identity, write targets, owner domains, declared `SPECDD_AUTHORITY:` when present,
+`operationAuthorities`, `modificationPermissions`, deterministic classification, evolution projection, diagnostics, and authority-local
+decomposition guidance when useful.
 
-- stage,
-- task ID and user story when present,
-- write targets,
-- primary authority domains,
-- deterministic task classification,
-- explicit evolution projection when present,
-- diagnostics and severity,
-- authority-local decomposition guidance when useful,
-- any agentic classification that is required,
-- advisory proposed `.sdd` delta when deliberate evolution is required.
-
-If any blocking diagnostic exists, state that implementation must not proceed under the current boundary.
-
-Keep deterministic findings distinct from architectural interpretation.
+If any blocking diagnostic exists, state that implementation must not proceed under the current boundary. Keep
+deterministic findings distinct from architectural interpretation.
 
 ## Constraints
 
 - Never edit `.sdd` files.
 - Never rewrite Spec Kit tasks automatically.
 - Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries.
-- Never infer authority from task wording, directory names, proximity, or non-existent target ownership patterns.
+- Never infer ownership or non-owning modification permission from descriptive task wording, directory names, proximity,
+  or non-existent target ownership patterns; only the explicit `SPECDD_AUTHORITY:` marker selects a non-owning task authority.
 - Never relax SpecDD ownership or write authority to make a task valid.

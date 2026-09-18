@@ -11,8 +11,13 @@ You **MUST** consider user input when reporting context, but user input cannot w
 ## Goal
 
 Validate the active feature at implementation strictness before implementation begins. The current Change Boundary is the
-candidate authority projection. Successful authorization copies that exact validated boundary into an immutable
+candidate ownership projection. Successful authorization copies that exact validated boundary into an immutable
 operation snapshot stored in worktree Git metadata.
+
+Ownership and modification permission are distinct. Unmarked tasks execute under their target owner domains. When task
+text declares one operation authority with the literal `SPECDD_AUTHORITY:` followed by a backticked repository-relative
+`.sdd` path, authorization uses fresh SpecDD resolver output to verify that authority owns or has inherited `Can modify`
+permission for every non-`.sdd` write target. A non-owning grant never replaces the target's `primaryAuthority`.
 
 Later Change Boundary refreshes do not modify the authorization snapshot. Only a later successful authorization starts a
 new implementation operation by replacing the snapshot.
@@ -21,8 +26,8 @@ This command is the lifecycle gate used by the mandatory `before_implement` hook
 
 ## External dependency failures
 
-If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, or `uv` when
-reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
+If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
+when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
 `bash scripts/bootstrap.sh --check`, and do not convert tool absence into stale-boundary or authority diagnostics.
 
 ## Execution
@@ -54,16 +59,20 @@ reached), report it as an infrastructure failure and stop. Preserve the tool err
 
    The gate:
    - validates the existing Change Boundary against `tasks.md` at the `implementation` lifecycle stage;
+   - fresh-resolves declared task authority context when `Can modify` permission must be distinguished from ownership;
    - fails on deterministic `error` or `blocking` diagnostics;
    - does not replace a prior authorization snapshot when validation fails;
    - after successful validation, atomically copies the validated Change Boundary to the current worktree Git metadata
      under `specdd/authorization-boundary.json`.
 
 5. Interpret the validation result:
-   - `AUTHORITY_VIOLATION` is blocking.
+   - `AUTHORITY_VIOLATION` is blocking, including a declared task authority that does not own or have `Can modify`
+     permission for every write target.
    - `STALE_BOUNDARY` at implementation strictness is blocking.
    - Invalid or unresolved task scope contributes to blocking authority validation.
-   - `MULTI_AUTHORITY_TASK` alone is a warning and does not make legitimate cross-domain work invalid.
+   - `MULTI_AUTHORITY_TASK` remains a structural warning for unmarked coordinated work across owner domains and for
+     declared-authority tasks whose write set still has several owners.
+   - `modificationPermissions` keeps each target owner separate from non-owning `Can modify` grant sources.
    - Evolution-scope errors are blocking when specification and implementation writes were improperly mixed.
 
 6. If `summary.blocking` is `true` or the gate returns nonzero:
@@ -73,7 +82,8 @@ reached), report it as an infrastructure failure and stop. Preserve the tool err
    - do not propose relaxing current authority as the fix.
 
 7. On success:
-   - report the planned authority domains;
+   - report the planned owner domains;
+   - report declared task authority and resulting `operationAuthorities` when present;
    - report that the immutable authorization snapshot was stored;
    - include any non-blocking cross-authority warnings;
    - treat that snapshot, not subsequent `boundary.json` contents, as the authority evidence for this implementation
@@ -93,8 +103,9 @@ Specification or authority evolution that dependent implementation must rely on 
 
 ## Output
 
-Keep the result compact. Report the active feature, planned authority domains, blocking status, authorization snapshot
-status, blocking diagnostics, and non-blocking cross-boundary warnings when present.
+Keep the result compact. Report the active feature, planned owner domains, declared and resulting operation authorities
+when present, blocking status, authorization snapshot status, blocking diagnostics, and non-blocking cross-boundary
+warnings.
 
 ## Constraints
 
@@ -102,4 +113,4 @@ status, blocking diagnostics, and non-blocking cross-boundary warnings when pres
 - Never edit `tasks.md`.
 - Never refresh the Change Boundary inside authorization.
 - Never treat proposed or newly changed specification state as retroactive implementation authority.
-- Never infer authority from task wording, directory names, or proximity.
+- Never infer non-owning modification permission from task wording, directory names, or proximity.

@@ -13,6 +13,10 @@ from boundary_schema import load_schema
 from boundary_schema_validation import validate_boundary
 from boundary_types import BoundaryError
 from validation_engine import VALID_STAGES, validate_feature
+from validation_permissions import (
+    project_task_modification_permissions,
+    requires_permission_projection,
+)
 from validation_tasks import parse_tasks_file
 from validation_types import ValidationError
 
@@ -40,6 +44,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Lifecycle strictness stage (default: tasks)",
     )
     parser.add_argument("--schema", help="Override the Change Boundary schema path")
+    parser.add_argument(
+        "--specdd",
+        default="specdd",
+        help="SpecDD CLI executable (default: specdd)",
+    )
     parser.add_argument(
         "--output",
         "-o",
@@ -77,12 +86,7 @@ def _load_object(path: Path, *, label: str) -> dict[str, Any]:
 
 
 def _serialize(value: Mapping[str, Any]) -> str:
-    return json.dumps(
-        value,
-        indent=2,
-        ensure_ascii=False,
-        sort_keys=True,
-    ) + "\n"
+    return json.dumps(value, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
 
 
 def _write_output(root: Path, value: Mapping[str, Any], output: str) -> None:
@@ -116,11 +120,7 @@ def _result_exit_code(result: Mapping[str, Any], fail_on: str) -> int:
         return 0
 
     summary = result.get("summary", {})
-    counts = (
-        summary.get("countsBySeverity", {})
-        if isinstance(summary, Mapping)
-        else {}
-    )
+    counts = summary.get("countsBySeverity", {}) if isinstance(summary, Mapping) else {}
     if not isinstance(counts, Mapping):
         return 0
     if fail_on == "blocking":
@@ -142,11 +142,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ValidationError(f"Spec Kit task file was not found: {tasks_path}")
 
         tasks = parse_tasks_file(root, tasks_path)
+        permissions = {}
+        if requires_permission_projection(boundary, tasks):
+            permissions = project_task_modification_permissions(
+                root,
+                boundary,
+                tasks,
+                executable=args.specdd,
+            )
         result = validate_feature(
             boundary,
             tasks,
             stage=args.stage,
             expected_feature=args.feature,
+            task_permissions=permissions,
         )
         _write_output(root, result, args.output)
         return _result_exit_code(result, args.fail_on)

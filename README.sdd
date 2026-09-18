@@ -18,12 +18,13 @@ Must:
   Explain the Spec Kit change-lifecycle role and SpecDD persistent-system role before command-level usage.
   Installation guidance uses repository bootstrap and identifies `codex` as the registrar-backed Spec Kit integration required by pinned Spec Kit `1.0.7`.
   Canonical bridge source remains distinct from generated extension, preset, command, workflow, feature-boundary, and authorization-snapshot state.
-  Describe the Change Boundary as refreshable, rebuildable, feature-scoped context rather than another source of truth.
+  Describe the Change Boundary as refreshable, rebuildable, feature-scoped ownership context rather than another source of truth.
+  Explain that unmarked multi-owner tasks remain coordinated across owner domains while explicit `SPECDD_AUTHORITY:` tasks require `Can modify` coverage for cross-owned targets.
   Describe successful authorization as preserving the exact validated Change Boundary in immutable operation evidence outside the worktree.
   Explain the normal `context` → `validate` → `authorize` → `implement` → `verify` lifecycle and the structural workflow gates that enforce it.
   Explain that verification uses the authorization snapshot rather than later Change Boundary refreshes.
   Explain that specification evolution is separate from implementation authority and dependent implementation requires fresh context plus authorization after evolution.
-  Include a concise cross-domain example showing one feature with authority-local implementation work across independently governed domains.
+  Include a concise cross-domain example showing one feature with separately owned targets and explicit non-owning modification permission.
   Detailed development-host prerequisites, rematerialization procedures, and maintenance commands remain in ./docs/development.md.
 
 Must not:
@@ -31,4 +32,4 @@ Must not:
   Present changed `.sdd` state or refreshed Change Boundary state as retroactive authority for implementation in the same operation.
 
 Done when:
-  A new user can install the bridge, understand the responsibility split, distinguish current boundary context from historical authorization evidence, and follow the authority-aware workflow.
+  A new user can install the bridge, understand the responsibility split, distinguish ownership from modification permission, distinguish current boundary context from historical authorization evidence, and follow the authority-aware workflow.

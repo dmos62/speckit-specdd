@@ -7,6 +7,7 @@ Purpose:
 
 Owns:
   ./workflow_gate.py
+  ./workflow_gate_state.py
 
 References:
   ../commands/context.sdd
@@ -19,6 +20,7 @@ Must:
   Planning context discovers explicit repository paths without interpreting `.sdd` ownership itself.
   Task-stage execution refreshes the Change Boundary from exact non-`.sdd` task targets before deterministic validation.
   Task-stage validation returns failure status for deterministic `error` or `blocking` diagnostics.
+  Tasks with explicit `SPECDD_AUTHORITY:` use fresh SpecDD resolver output to distinguish target ownership from applicable non-owning `Can modify` permission.
   Authorization validates the existing Change Boundary without refreshing it.
   Successful authorization copies the exact validated Change Boundary to current-worktree Git metadata as immutable operation evidence.
   Failed authorization does not replace a prior authorization snapshot.

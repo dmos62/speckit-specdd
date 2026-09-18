@@ -1,11 +1,11 @@
 # Change Boundary
 
-A Change Boundary is disposable, feature-scoped integration state that projects current SpecDD authority onto the
+A Change Boundary is disposable, feature-scoped integration state that projects current SpecDD ownership onto the
 concrete implementation paths of one Spec Kit feature.
 
 It answers:
 
-> Which SpecDD authority domains govern the implementation targets currently planned for this feature?
+> Which SpecDD authority domains own the implementation targets currently planned for this feature?
 
 The boundary is not a specification, permission grant, task system, or historical authorization record. Canonical
 system authority remains in the `.sdd` hierarchy.
@@ -14,7 +14,6 @@ For the broader responsibility split and normal workflow, see [../README.md](../
 development-host procedures, see [development.md](development.md).
 
 ## Two derived states
-
 The bridge keeps two deliberately different derived states.
 
 The feature Change Boundary is refreshable planning and task context:
@@ -32,16 +31,32 @@ change it.
 This separation preserves historical authority evidence if a specification or Change Boundary changes during or after
 the implementation operation.
 
-## Change Boundary contents
+## Ownership and modification permission
+Change Boundary v1 records each target's primary owning specification. It deliberately does not copy `Can modify` rules
+into `boundary.json`.
 
+Task validation and authorization treat ownership and modification permission separately. An unmarked task uses its
+target owners as the participating operation authorities; a multi-owner task therefore remains representable and is
+reported structurally rather than rejected merely for spanning domains.
+
+When task text declares one operation authority with the literal `SPECDD_AUTHORITY:` followed by a backticked
+repository-relative `.sdd` path, the bridge fresh-resolves that authority context through the real `specdd` CLI. Each
+target keeps its `primaryAuthority`. Any target owned by another spec must be covered by an inherited `Can modify`
+grant in the declared authority context, or task-stage validation errors and implementation authorization blocks.
+
+The validation result exposes `operationAuthorities` and `modificationPermissions` so the owning spec remains visible
+beside any non-owning grant source. This permission projection is execution-time derived context; it is not another
+persistent authority store.
+
+## Change Boundary contents
 Change Boundary v1 records:
 
 - the active feature identifier;
 - resolved non-spec implementation targets;
 - each target's primary SpecDD authority;
 - the resolved governing specs for each target;
-- the distinct authority domains involved;
-- whether more than one authority domain is involved;
+- the distinct owning authority domains involved;
+- whether more than one owning authority domain is involved;
 - unresolved target diagnostics;
 - SpecDD CLI and framework versions used for generation.
 
@@ -49,10 +64,10 @@ It deliberately does not copy persistent `Must`, `Must not`, `Owns`, `Can modify
 files.
 
 The authorization snapshot uses the same validated Change Boundary document. It is a historical copy, not another
-schema or authority model.
+schema or authority model. Successful authorization is the evidence that task scope, including any required
+declared-authority modification-permission check, passed before that snapshot was stored.
 
 ## Tracking policy
-
 Feature Change Boundaries are generated, uncommitted state. The repository ignore policy covers:
 
     specs/*/.specdd/boundary.json
@@ -65,7 +80,6 @@ SpecDD resolution. An authorization snapshot is reconstructed only by performing
 operation.
 
 ## Canonical inputs
-
 A Change Boundary is reconstructed from:
 
 - concrete or intended paths named by Spec Kit feature artifacts or supplied explicitly;
@@ -76,12 +90,11 @@ The bridge delegates SpecDD resolution to the real `specdd` CLI. It does not par
 authority engine.
 
 ## Lifecycle
-
 | Stage | Change Boundary | Authorization snapshot |
 | --- | --- | --- |
 | Planning | Create or refresh from exact plan targets when available. | Unchanged. |
 | Task generation | Refresh from exact non-spec task write targets. | Unchanged. |
-| Authorization | Preserve and validate the existing boundary. | On success, copy the exact validated boundary into Git metadata. |
+| Authorization | Preserve boundary, validate task ownership and any declared cross-owned modification permission. | On success, copy the exact validated boundary into Git metadata. |
 | Implementation | May not gain authority from later boundary or spec changes. | Remains immutable for this operation. |
 | Verification | Current boundary is not authority evidence. | Compare actual writes against this snapshot plus fresh target resolution. |
 
@@ -97,7 +110,6 @@ The installed workflow overlay applies these stages as:
       → specdd-verify
 
 ## Planning target discovery
-
 During structural workflow execution, the planning context gate reads exact repository paths from `plan.md`.
 
 Only concrete repository paths are candidates. The bridge does not derive implementation targets from code symbols,
@@ -112,7 +124,6 @@ When `/speckit.specdd.context` is invoked directly, explicit target paths suppli
 Otherwise the command prefers exact paths from `tasks.md`, then exact paths from `plan.md`.
 
 ## Intended non-existent targets
-
 SpecDD permits an intended ordinary-file path only when its pre-operation authority is established by the applicable
 `Owns` or `Can modify` contract. The bridge must not turn that rule into a local approximation.
 
@@ -126,32 +137,31 @@ file. It is advisory during planning. Task-stage validation fails on it, and imp
 until resolver-backed authority can be established.
 
 ## Task-stage refinement
-
 Task generation is where implementation scope must become precise.
 
 Before task-stage validation, the structural gate regenerates the Change Boundary from exact non-`.sdd` task targets.
-A multi-domain feature may therefore contain several authorities.
+A multi-domain feature may therefore contain several owners.
 
-A task target absent from this refreshed boundary is not silently accepted as an implied write.
+Validation preserves those owners. Unmarked multi-owner tasks remain coordinated across their owner domains. A task
+that declares one `SPECDD_AUTHORITY:` is checked separately for `Can modify` permission on every cross-owned target. A
+task target absent from the refreshed boundary is not silently accepted as an implied write.
 
 ## Unresolved targets
-
 The boundary can retain an input as unresolved instead of inventing authority.
 
 | Code | Meaning |
 | --- | --- |
 | `INVALID_TARGET` | The input cannot identify a valid repository target. |
-| `UNRESOLVED_TARGET` | The path is valid input but one primary authority cannot currently be established. For non-existent paths, `INTENDED_TARGET_UNSUPPORTED` in the message identifies the pinned resolver limitation. |
+| `UNRESOLVED_TARGET` | The path is valid input but one primary authority cannot currently be established. For non-existent paths, `INTENDED_TARGET_UNSUPPORTED` identifies the pinned resolver limitation. |
 | `RESOLUTION_FAILED` | The SpecDD resolver failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | More than one resolved specification claims ownership. |
 
-Unresolved scope is advisory during planning but becomes an error during task validation. Unknown or conflicting
-implementation authority blocks authorization.
+Unresolved scope is advisory during planning but becomes an error during task validation. Unknown, conflicting, or
+unpermitted implementation authority blocks authorization.
 
 Unresolved context never grants permission.
 
 ## Stale boundaries
-
 A feature Change Boundary is stale when it no longer represents the active feature or task write scope.
 
 `STALE_BOUNDARY` is reported when, for example:
@@ -164,10 +174,10 @@ At task stage stale scope is an error. At authorization it blocks creation of a 
 A stale or refreshed feature boundary does not mutate an already established authorization snapshot.
 
 ## Authorization snapshot
-
 Successful authorization performs two operations in order:
 
-1. validate the existing feature boundary against current tasks at implementation strictness;
+1. validate the existing feature boundary against current tasks at implementation strictness, including any declared
+   cross-owned `Can modify` checks;
 2. atomically copy that exact validated boundary to the worktree Git metadata.
 
 Validation failure leaves any prior snapshot unchanged.
@@ -178,7 +188,6 @@ even if `boundary.json` is refreshed later.
 A later successful authorization replaces the snapshot and therefore begins a new implementation authority context.
 
 ## Specification evolution
-
 A specification change cannot grant new rights to the implementation operation already authorized.
 
 The supported sequence is:
@@ -194,27 +203,20 @@ Refreshing only `boundary.json` is insufficient. The previous authorization snap
 evidence until a new authorization succeeds.
 
 ## Verification
-
 Verification keeps the authorization snapshot unchanged.
 
 The verifier obtains actual implementation writes from Git and separates them from active feature artifacts, generated
 Spec Kit state, changed `.sdd` files, and root SpecDD bootstrap control state.
 
-Existing actual implementation targets are freshly resolved through SpecDD and compared with the snapshot.
-
-This distinguishes:
-
-- an actual target retaining its authorized authority;
-- an unplanned target inside an already authorized authority domain;
-- an actual write introducing an authority domain absent from the snapshot;
-- a target whose authority changed after authorization;
-- changed specifications that cannot retroactively justify implementation.
+Existing actual implementation targets are freshly resolved through SpecDD and compared with the snapshot. This
+distinguishes an actual target retaining its authorized owner, unplanned scope inside an authorized owner domain,
+new authority domains, ownership changes after authorization, and specification changes that cannot retroactively
+justify implementation.
 
 Deleted implementation targets cannot be freshly resolved, so their authority must already be represented by the
 snapshot.
 
 ## Deterministic regeneration
-
 Equivalent canonical inputs produce semantically equivalent feature Change Boundaries. Generation avoids timestamps and
 normalizes deterministic collections.
 
@@ -222,21 +224,18 @@ The authorization snapshot is intentionally different: it is not refreshed by co
 created only by successful authorization.
 
 ## Troubleshooting
-
 If no feature boundary is produced during planning, confirm that the plan names an exact non-spec repository target.
 
 If a non-existent target reports `INTENDED_TARGET_UNSUPPORTED`, either select an existing implementation target for the
-current operation or defer file creation until the SpecDD toolchain can provide resolver-backed intended-path
-authority. Do not infer ownership from nearby `.sdd` files to bypass the diagnostic.
+current operation or defer file creation until the SpecDD toolchain can provide resolver-backed intended-path authority.
+Do not infer ownership from nearby `.sdd` files to bypass the diagnostic.
 
-If another target is unresolved, verify the intended path and its SpecDD ownership chain. Do not infer authority from
-directory proximity.
+If another target is unresolved, verify the intended path and its SpecDD ownership chain. If a task with a declared
+`SPECDD_AUTHORITY:` reports `AUTHORITY_VIOLATION`, inspect `modificationPermissions`; remove the declaration for genuinely
+coordinated owner-local work, split the task, or correct the implementation path rather than relaxing authority.
 
-If `AMBIGUOUS_AUTHORITY` appears, correct the competing ownership claims.
-
-If task validation reports `STALE_BOUNDARY`, refresh context before authorization.
-
-If authorization fails, no new snapshot is created.
+If `AMBIGUOUS_AUTHORITY` appears, correct the competing ownership claims. If task validation reports
+`STALE_BOUNDARY`, refresh context before authorization. If authorization fails, no new snapshot is created.
 
 If verification reports a missing authorization snapshot, run the normal authorization gate before implementation.
 Do not regenerate a boundary and treat that as historical authorization evidence.

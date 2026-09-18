@@ -7,6 +7,9 @@ Purpose:
 
 Structure:
   ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
+  ./workflow_gate_state.py: Active-feature and workflow-artifact state helpers
+  ./validation_authority.py: Pure task ownership and operation-authority projection
+  ./validation_permissions.py: Resolver-backed `Can modify` projection for declared task authority
 
 Owns:
   ./boundary.py
@@ -20,8 +23,10 @@ Owns:
   ./boundary_specdd.py
   ./boundary_types.py
   ./validation.py
+  ./validation_authority.py
   ./validation_cli.py
   ./validation_engine.py
+  ./validation_permissions.py
   ./validation_tasks.py
   ./validation_types.py
   ./verification.py
@@ -38,13 +43,14 @@ Must:
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
-  Validation consumes Change Boundary projection and exact task paths without parsing `.sdd` source.
+  Validation consumes Change Boundary ownership projection and exact task paths without parsing `.sdd` source.
+  Validation derives non-owning modification permission for explicit `SPECDD_AUTHORITY:` tasks from fresh resolved `Can modify` context while preserving each target's owning authority.
   Validation preserves task order, task IDs, user-story labels, and explicit SpecDD evolution classifications in its analysis output.
   Validation distinguishes zero-authority, single-authority, and multi-authority task write sets.
   Validation CLI callers may request nonzero process status when deterministic `error` or `blocking` diagnostics are present.
   Evolution classifications require `.sdd` targets and remain separate from ordinary implementation writes.
   Validation records when deliberate evolution requires fresh boundary resolution and when authority evolution ends the prior authority context.
-  Unknown or conflicting authority blocks validation at the implementation stage.
+  Unknown, conflicting, or unpermitted declared authority blocks validation at the implementation stage.
   Successful authorization stores the exact validated Change Boundary in current-worktree Git metadata without changing feature boundary state.
   Failed authorization leaves any prior authorization snapshot unchanged.
   Verification derives actual implementation writes from Git and fresh SpecDD resolution.

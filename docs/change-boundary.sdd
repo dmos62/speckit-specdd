@@ -18,6 +18,7 @@ References:
 Must:
   The guide explains how target discovery becomes more precise from planning through task generation.
   The guide explains deterministic Change Boundary regeneration from canonical Spec Kit artifacts and fresh SpecDD resolver output without copying persistent SpecDD constraints.
+  The guide distinguishes target ownership recorded in the Change Boundary from task-time non-owning `Can modify` permission resolved for explicit `SPECDD_AUTHORITY:` tasks during validation and authorization.
   The guide distinguishes the refreshable feature Change Boundary from the immutable authorization snapshot recorded after successful authorization.
   The guide distinguishes advisory unresolved planning context from unresolved implementation authority that cannot grant permission.
   The guide explains when a Change Boundary is refreshed, when authorization records its exact validated state, and why later refreshes do not alter current-operation authority.
@@ -26,4 +27,4 @@ Must:
   Installation and development-host maintenance remain delegated to the README and development guide rather than duplicated here.
 
 Done when:
-  A maintainer can determine when a Change Boundary is created or refreshed, when authorization snapshots it, which state verification uses, and how a new authority context begins after evolution.
+  A maintainer can determine when a Change Boundary is created or refreshed, how ownership and `Can modify` permission differ, when authorization snapshots it, which state verification uses, and how a new authority context begins after evolution.

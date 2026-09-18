@@ -6,7 +6,10 @@ from pathlib import Path
 from boundary_paths import normalize_target
 from boundary_types import BoundaryError
 from validation_types import (
-    EVOLUTION_CLASSIFICATIONS, TaskRecord, diagnostic, task_fields,
+    EVOLUTION_CLASSIFICATIONS,
+    TaskRecord,
+    diagnostic,
+    task_fields,
 )
 
 _TASK_RE = re.compile(r"^\s*-\s+\[(?: |x|X|-|!|\?)\]\s+(?P<body>.+?)\s*$")
@@ -20,6 +23,9 @@ _SLASH_PATH_RE = re.compile(
 )
 _EVOLUTION_RE = re.compile(
     r"\b(?:" + "|".join(EVOLUTION_CLASSIFICATIONS) + r")\b"
+)
+_OPERATION_AUTHORITY_RE = re.compile(
+    r"\bSPECDD_AUTHORITY:\s*`(?P<path>[^`\r\n]+)`"
 )
 _ROOT_FILE_SUFFIXES = {
     ".js", ".json", ".jsx", ".lock", ".md", ".ps1", ".py", ".sdd",
@@ -115,6 +121,38 @@ def extract_repository_targets(
     )
 
 
+def _operation_authority(
+    root: Path,
+    body: str,
+) -> tuple[str | None, tuple[str, ...], str]:
+    matches = list(_OPERATION_AUTHORITY_RE.finditer(body))
+    if not matches:
+        return None, (), body
+
+    normalized: list[str] = []
+    invalid: list[str] = []
+    for match in matches:
+        raw = _clean_token(match.group("path"))
+        try:
+            value = _normalize_task_target(root, raw, literal=True)
+        except BoundaryError:
+            invalid.append(raw or "<empty>")
+            continue
+        if not value.lower().endswith(".sdd"):
+            invalid.append(raw)
+        else:
+            normalized.append(value)
+
+    distinct = list(dict.fromkeys(normalized))
+    if len(distinct) > 1:
+        invalid.extend(distinct)
+        authority = None
+    else:
+        authority = distinct[0] if distinct else None
+    masked = _mask_ranges(body, [match.span() for match in matches])
+    return authority, tuple(dict.fromkeys(invalid)), masked
+
+
 def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
     tasks: list[TaskRecord] = []
     for line in text.splitlines():
@@ -124,17 +162,28 @@ def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
         body = match.group("body")
         task_id_match = _TASK_ID_RE.match(body)
         story_match = _STORY_RE.search(body)
-        targets, spec_targets, invalid_targets = extract_repository_targets(root, body)
-        tasks.append(TaskRecord(
-            order=len(tasks),
-            task_id=task_id_match.group("id") if task_id_match else None,
-            story=story_match.group("story") if story_match else None,
-            text=body,
-            targets=targets,
-            spec_targets=spec_targets,
-            invalid_targets=invalid_targets,
-            evolution_markers=tuple(dict.fromkeys(_EVOLUTION_RE.findall(body))),
-        ))
+        operation_authority, invalid_authorities, target_text = _operation_authority(
+            root,
+            body,
+        )
+        targets, spec_targets, invalid_targets = extract_repository_targets(
+            root,
+            target_text,
+        )
+        tasks.append(
+            TaskRecord(
+                order=len(tasks),
+                task_id=task_id_match.group("id") if task_id_match else None,
+                story=story_match.group("story") if story_match else None,
+                text=body,
+                targets=targets,
+                spec_targets=spec_targets,
+                invalid_targets=invalid_targets,
+                evolution_markers=tuple(dict.fromkeys(_EVOLUTION_RE.findall(body))),
+                operation_authority=operation_authority,
+                invalid_operation_authorities=invalid_authorities,
+            )
+        )
     return tasks
 
 
@@ -149,13 +198,15 @@ def project_evolution(
 
     diagnostics: list[dict[str, object]] = []
     if len(markers) > 1:
-        diagnostics.append(diagnostic(
-            "EVOLUTION_CLASSIFICATION_CONFLICT",
-            severity,
-            "Task declares more than one SpecDD evolution class.",
-            evolutionClassifications=markers,
-            **task_fields(task),
-        ))
+        diagnostics.append(
+            diagnostic(
+                "EVOLUTION_CLASSIFICATION_CONFLICT",
+                severity,
+                "Task declares more than one SpecDD evolution class.",
+                evolutionClassifications=markers,
+                **task_fields(task),
+            )
+        )
         return {
             "classification": None,
             "markers": markers,
@@ -166,22 +217,26 @@ def project_evolution(
 
     classification = markers[0]
     if task.targets:
-        diagnostics.append(diagnostic(
-            "EVOLUTION_SCOPE_MIXED",
-            severity,
-            "SpecDD evolution must remain separate from ordinary implementation writes.",
-            targets=list(task.targets),
-            evolutionClassification=classification,
-            **task_fields(task),
-        ))
+        diagnostics.append(
+            diagnostic(
+                "EVOLUTION_SCOPE_MIXED",
+                severity,
+                "SpecDD evolution must remain separate from ordinary implementation writes.",
+                targets=list(task.targets),
+                evolutionClassification=classification,
+                **task_fields(task),
+            )
+        )
     if not task.spec_targets:
-        diagnostics.append(diagnostic(
-            "EVOLUTION_SPEC_TARGET_REQUIRED",
-            severity,
-            "SpecDD evolution must name at least one .sdd target.",
-            evolutionClassification=classification,
-            **task_fields(task),
-        ))
+        diagnostics.append(
+            diagnostic(
+                "EVOLUTION_SPEC_TARGET_REQUIRED",
+                severity,
+                "SpecDD evolution must name at least one .sdd target.",
+                evolutionClassification=classification,
+                **task_fields(task),
+            )
+        )
     return {
         "classification": classification,
         "specTargets": list(task.spec_targets),

@@ -14,6 +14,9 @@ Must:
   The command locates the active Spec Kit feature using supported Spec Kit state.
   The command requires the existing Change Boundary and task list rather than regenerating authority.
   Deterministic validation runs at the `implementation` lifecycle stage.
+  Unmarked tasks execute under their target owner domains.
+  A task that declares `SPECDD_AUTHORITY:` requires that authority to own or have `Can modify` permission for every implementation target.
+  Target ownership remains authoritative even when another declared task authority receives non-owning modification permission.
   Blocking validation diagnostics prevent implementation from proceeding under the current boundary.
   Non-blocking cross-authority findings remain visible without being treated as automatic authority violations.
   Successful authorization stores the exact validated Change Boundary as the operation authorization snapshot.
@@ -27,4 +30,4 @@ Must not:
   Relax ownership or modification authority to make implementation pass.
 
 Done when:
-  Valid authority-local fixture tasks establish an authorization snapshot and unknown, stale, or conflicting implementation authority blocks snapshot replacement.
+  Valid owner-local, coordinated multi-owner, and explicitly permitted cross-owned fixture tasks can authorize, while unknown, stale, conflicting, or unpermitted declared implementation authority blocks snapshot replacement.

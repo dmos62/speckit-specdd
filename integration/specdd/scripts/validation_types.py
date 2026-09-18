@@ -24,6 +24,8 @@ class TaskRecord:
     spec_targets: tuple[str, ...]
     invalid_targets: tuple[str, ...]
     evolution_markers: tuple[str, ...] = ()
+    operation_authority: str | None = None
+    invalid_operation_authorities: tuple[str, ...] = ()
 
 
 def diagnostic(
@@ -52,6 +54,7 @@ def task_fields(task: TaskRecord) -> dict[str, Any]:
         "taskId": task.task_id,
         "story": task.story,
         "taskOrder": task.order,
+        "operationAuthority": task.operation_authority,
     }
 
 
@@ -116,14 +119,8 @@ def project_boundary_authority(
                 f"Change Boundary target {label} is unresolved"
                 + (f" ({code})." if isinstance(code, str) else "."),
                 targets=[label],
-                boundaryCode=(
-                    code
-                    if isinstance(code, str)
-                    else None
-                ),
-                candidateAuthorities=item.get(
-                    "candidateAuthorities"
-                ),
+                boundaryCode=code if isinstance(code, str) else None,
+                candidateAuthorities=item.get("candidateAuthorities"),
             )
         )
 

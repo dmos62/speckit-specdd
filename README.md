@@ -82,8 +82,14 @@ A feature Change Boundary is refreshable planning and task context:
 
     specs/001-google-login/.specdd/boundary.json
 
-It records resolved implementation targets, primary authorities, governing specs, authority domains, cross-boundary
-status, unresolved diagnostics, and deterministic tool-version metadata.
+It records resolved implementation targets, primary owners, governing specs, owning authority domains, cross-boundary
+status, unresolved diagnostics, and deterministic tool-version metadata. It does not copy `Can modify` rules.
+
+An unmarked multi-owner task remains a coordinated operation across its owning domains and is reported with
+`MULTI_AUTHORITY_TASK`. When a task intentionally performs all writes under one SpecDD authority, task text uses
+`SPECDD_AUTHORITY:` followed by a backticked repository-relative `.sdd` path. Validation and authorization then
+fresh-resolve that authority context. Every cross-owned target must have an applicable inherited `Can modify` grant.
+`modificationPermissions` reports those grants while each target keeps its original `primaryAuthority`.
 
 Pinned SpecDD CLI `1.1.1` resolves existing targets only. A non-existent intended target is retained as
 `UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message rather than receiving authority inferred by the bridge.
@@ -124,7 +130,7 @@ The stages have distinct responsibilities:
 | Stage | Responsibility |
 | --- | --- |
 | context | Refresh current feature scope from concrete non-`.sdd` targets. |
-| validate | Check task scope against the current boundary. |
+| validate | Check task ownership and applicable modification permission against current SpecDD state. |
 | authorize | Validate implementation scope and record an immutable authorization snapshot. |
 | implement | Change project artifacts only within the authorized operation. |
 | verify | Compare actual Git writes with the authorization snapshot and fresh SpecDD resolution. |
@@ -145,7 +151,7 @@ Typical direct invocations are:
 targets come from `tasks.md`, then `plan.md`.
 
 `/speckit.specdd.validate` checks tasks against the current boundary at planning, task, or implementation strictness. It
-does not create authorization.
+also distinguishes target owners from applicable non-owning `Can modify` permission. It does not create authorization.
 
 `/speckit.specdd.authorize` preserves the current boundary, validates it at implementation strictness, and records the
 validated result as the current operation's authorization snapshot.
@@ -155,19 +161,17 @@ authorization snapshot, fresh SpecDD resolution for existing implementation targ
 
 ## Cross-domain work
 
-One feature may legitimately span several SpecDD authority domains.
+One feature may legitimately span several SpecDD owner domains.
 
-The fixture contains independent Auth and Users domains. An external-identity feature can remain one Spec Kit user story
-while implementation work is divided into authority-local tasks:
+The fixture contains independent Auth and Users domains. Auth owns its service, Users owns its identity contract and
+repository, and Auth has explicit `Can modify` permission only for the Users-facing identity contract. An ordinary task
+may coordinate Auth-owned and Users-owned writes and remains a non-blocking multi-authority task. If the task instead
+declares `SPECDD_AUTHORITY:` for Auth, the Users-facing contract is permitted as a cross-owned write while Users
+remains its owner; the Users repository is rejected because Auth has no grant for that internal path.
 
-- Auth changes `src/auth/service.ts`.
-- Users changes Users-owned contract or persistence files.
-- cross-domain interaction uses the exposed Users-facing contract.
-
-A task touching several authorities is not automatically invalid. The bridge reports authority groups so naturally
-separable work can become authority-local without splitting the user story.
-
-The bridge must not relax SpecDD authority merely to make a task pass.
+A `MULTI_AUTHORITY_TASK` warning therefore describes ownership shape, not permission by itself. A declared operation
+authority makes non-owning permission deterministic through `operationAuthorities` and `modificationPermissions`. The
+bridge must not relax SpecDD authority merely to make a task pass.
 
 ## Specification evolution
 
@@ -197,12 +201,12 @@ Core deterministic diagnostics include:
 | Diagnostic | Meaning |
 | --- | --- |
 | `INVALID_TARGET` | Input cannot identify a valid repository target. |
-| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection. For a non-existent target, `INTENDED_TARGET_UNSUPPORTED` in the message identifies the pinned CLI limitation. |
+| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection. For a non-existent target, `INTENDED_TARGET_UNSUPPORTED` identifies the pinned CLI limitation. |
 | `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership. |
-| `MULTI_AUTHORITY_TASK` | One task spans several authority domains. |
+| `MULTI_AUTHORITY_TASK` | One task contains targets owned by several authority domains. |
 | `STALE_BOUNDARY` | Feature or task scope disagrees with the current boundary or snapshot. |
-| `AUTHORITY_VIOLATION` | Actual or proposed implementation authority is unknown, conflicting, changed, or outside authorized scope. |
+| `AUTHORITY_VIOLATION` | Proposed or actual implementation has unknown, conflicting, changed, newly introduced, or unpermitted authority. |
 | `SPECDD_DRIFT` | An actual target was not authorized even though its authority domain was authorized. |
 | `SPECDD_VIOLATION` | Resulting repository state fails deterministic SpecDD checks. |
 | `SPEC_EVOLUTION_PRESENT` | `.sdd` changes exist and grant no authority to the current operation. |
@@ -213,6 +217,6 @@ Core deterministic diagnostics include:
 ## Project documentation
 
 - [docs/spec.md](docs/spec.md): durable project design.
-- [docs/change-boundary.md](docs/change-boundary.md): Change Boundary and authorization-snapshot lifecycle.
+- [docs/change-boundary.md](docs/change-boundary.md): Change Boundary, modification-permission projection, and authorization-snapshot lifecycle.
 - [docs/development.md](docs/development.md): development environment and maintenance.
 - [docs/TODO.md](docs/TODO.md): active implementation work.

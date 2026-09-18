@@ -34,13 +34,45 @@ class ValidationTaskParsingTests(unittest.TestCase):
         self.assertEqual((), tasks[1].targets)
         self.assertEqual(("project.sdd",), tasks[1].spec_targets)
 
+    def test_operation_authority_annotation_is_not_a_spec_write_target(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T012 [US1] SPECDD_AUTHORITY: `src/auth/auth.sdd` Update `src/users/identity-contract.ts`
+""",
+            )
+
+        self.assertEqual("src/auth/auth.sdd", tasks[0].operation_authority)
+        self.assertEqual(("src/users/identity-contract.ts",), tasks[0].targets)
+        self.assertEqual((), tasks[0].spec_targets)
+        self.assertEqual((), tasks[0].invalid_operation_authorities)
+
+    def test_conflicting_operation_authorities_are_invalid(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            tasks = validation.parse_tasks(
+                root,
+                """
+- [ ] T013 [US1] SPECDD_AUTHORITY: `src/auth/auth.sdd` SPECDD_AUTHORITY: `src/users/users.sdd` Update `src/users/identity-contract.ts`
+""",
+            )
+
+        self.assertIsNone(tasks[0].operation_authority)
+        self.assertEqual(
+            ("src/auth/auth.sdd", "src/users/users.sdd"),
+            tasks[0].invalid_operation_authorities,
+        )
+        self.assertEqual((), tasks[0].spec_targets)
+
     def test_backticked_paths_preserve_spaces_and_literal_grouping_characters(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             tasks = validation.parse_tasks(
                 root,
                 """
-- [ ] T012 [US1] Update `src/auth/provider [legacy].ts` and `docs/guide {draft}.md`
+- [ ] T014 [US1] Update `src/auth/provider [legacy].ts` and `docs/guide {draft}.md`
 """,
             )
 
@@ -151,12 +183,8 @@ class ValidationTaskParsingTests(unittest.TestCase):
             },
             task["evolution"],
         )
-        self.assertTrue(
-            result["summary"]["freshBoundaryRequiredAfterEvolution"]
-        )
-        self.assertFalse(
-            result["summary"]["authorityContextEndsAfterEvolution"]
-        )
+        self.assertTrue(result["summary"]["freshBoundaryRequiredAfterEvolution"])
+        self.assertFalse(result["summary"]["authorityContextEndsAfterEvolution"])
         self.assertEqual([], result["diagnostics"])
 
     def test_authority_evolution_cannot_mix_implementation_writes(self):
@@ -191,9 +219,7 @@ class ValidationTaskParsingTests(unittest.TestCase):
             "AUTHORITY_EVOLUTION_REQUIRED",
             result["tasks"][0]["classification"],
         )
-        self.assertTrue(
-            result["tasks"][0]["evolution"]["endsAuthorityContext"]
-        )
+        self.assertTrue(result["tasks"][0]["evolution"]["endsAuthorityContext"])
         mixed = [
             item
             for item in result["diagnostics"]

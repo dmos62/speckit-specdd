@@ -9,17 +9,6 @@ authority, the bridge retains non-existent implementation targets as `UNRESOLVED
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
 
-## P0 — Modification permission distinct from ownership
-
-- [ ] Project `Can modify` separately from primary `Owns` authority.
-  - Define the deterministic representation for owning authority versus operation modification permission.
-  - Preserve the owning spec as the target's authoritative contract.
-  - Resolve and obey the target owning spec when another authority receives non-owning modification permission.
-  - Reject cross-owned writes that have no applicable `Can modify` grant.
-  - Add fixture coverage for permitted and denied cross-owned writes.
-  - Avoid treating a multi-authority task warning as proof that every write is permitted.
-  - Completion: authorization answers both who owns each target and whether the operation may modify it.
-
 ## P0 — Unplanned specification edits
 
 - [ ] Treat changed `.sdd` files as planned evolution targets rather than automatically informational.
@@ -85,6 +74,8 @@ pre-creation authority locally.
 ## P1 — Focused code and documentation cleanup
 
 - [ ] Reduce duplication and split oversized project code or documentation into focused units.
+  - Preserve the existing focused splits in `workflow_gate_state.py`, `validation_authority.py`, and
+    `validation_permissions.py` unless later cleanup finds a clearer boundary.
   - Inventory project-controlled code and documentation above 250 lines.
   - Resolve or add explicit SpecDD ownership before editing any currently unowned artifact.
   - Split by stable responsibility rather than arbitrary line count.

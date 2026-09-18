@@ -1,51 +1,11 @@
 import unittest
 
 from boundary_test_support import validation
-
-
-def sample_boundary():
-    return {
-        "schemaVersion": 1,
-        "feature": "001-login",
-        "targets": [
-            {
-                "path": "src/auth/service.ts",
-                "primaryAuthority": "src/auth/auth.sdd",
-                "resolvedSpecs": ["project.sdd", "src/auth/auth.sdd"],
-            },
-            {
-                "path": "src/users/repository.ts",
-                "primaryAuthority": "src/users/users.sdd",
-                "resolvedSpecs": ["project.sdd", "src/users/users.sdd"],
-            },
-        ],
-        "authorities": ["src/auth/auth.sdd", "src/users/users.sdd"],
-        "crossBoundary": True,
-        "unresolved": [],
-        "generation": {
-            "specddCliVersion": "1.1.1",
-            "specddFrameworkVersion": "1.5",
-        },
-    }
-
-
-def task(
-    *,
-    task_id="T001",
-    story="US1",
-    targets=(),
-    spec_targets=(),
-    invalid_targets=(),
-):
-    return validation.TaskRecord(
-        order=0,
-        task_id=task_id,
-        story=story,
-        text="fixture task",
-        targets=tuple(targets),
-        spec_targets=tuple(spec_targets),
-        invalid_targets=tuple(invalid_targets),
-    )
+from validation_test_support import (
+    permitted_cross_owned_task,
+    sample_boundary,
+    task,
+)
 
 
 class ValidationEngineTests(unittest.TestCase):
@@ -61,13 +21,17 @@ class ValidationEngineTests(unittest.TestCase):
             ["src/auth/auth.sdd"],
             result["tasks"][0]["authorities"],
         )
+        self.assertEqual(
+            ["src/auth/auth.sdd"],
+            result["tasks"][0]["operationAuthorities"],
+        )
         self.assertFalse(result["summary"]["blocking"])
         self.assertNotIn(
             "MULTI_AUTHORITY_TASK",
             [item["code"] for item in result["diagnostics"]],
         )
 
-    def test_multi_authority_task_is_warning_not_automatic_block(self):
+    def test_multi_authority_task_remains_warning_without_declared_authority(self):
         result = validation.validate_feature(
             sample_boundary(),
             [
@@ -84,25 +48,78 @@ class ValidationEngineTests(unittest.TestCase):
         task_result = result["tasks"][0]
         self.assertEqual("CROSS_BOUNDARY", task_result["classification"])
         self.assertEqual(
-            [
-                {
-                    "authority": "src/auth/auth.sdd",
-                    "targets": ["src/auth/service.ts"],
-                },
-                {
-                    "authority": "src/users/users.sdd",
-                    "targets": ["src/users/repository.ts"],
-                },
-            ],
-            task_result["authorityGroups"],
+            ["src/auth/auth.sdd", "src/users/users.sdd"],
+            task_result["operationAuthorities"],
         )
-        diagnostics = result["diagnostics"]
         self.assertEqual(
             ["MULTI_AUTHORITY_TASK"],
-            [item["code"] for item in diagnostics],
+            [item["code"] for item in result["diagnostics"]],
         )
-        self.assertEqual("warning", diagnostics[0]["severity"])
         self.assertFalse(result["summary"]["blocking"])
+
+    def test_declared_cross_owned_authority_preserves_target_owner(self):
+        result = validation.validate_feature(
+            sample_boundary(),
+            [
+                task(
+                    targets=["src/users/repository.ts"],
+                    operation_authority="src/auth/auth.sdd",
+                )
+            ],
+            stage="implementation",
+            expected_feature="001-login",
+            task_permissions=permitted_cross_owned_task(),
+        )
+        task_result = result["tasks"][0]
+        self.assertEqual("NORMAL", task_result["classification"])
+        self.assertEqual(
+            ["src/auth/auth.sdd"],
+            task_result["operationAuthorities"],
+        )
+        self.assertEqual(
+            "src/users/users.sdd",
+            task_result["modificationPermissions"][0]["owner"],
+        )
+        self.assertEqual([], result["diagnostics"])
+
+    def test_declared_cross_owned_authority_without_can_modify_is_blocking(self):
+        result = validation.validate_feature(
+            sample_boundary(),
+            [
+                task(
+                    targets=["src/users/repository.ts"],
+                    operation_authority="src/auth/auth.sdd",
+                )
+            ],
+            stage="implementation",
+            expected_feature="001-login",
+        )
+        self.assertEqual([], result["tasks"][0]["operationAuthorities"])
+        self.assertEqual(
+            ["AUTHORITY_VIOLATION"],
+            [item["code"] for item in result["diagnostics"]],
+        )
+        self.assertEqual("blocking", result["diagnostics"][0]["severity"])
+        self.assertTrue(result["summary"]["blocking"])
+
+    def test_invalid_operation_authority_annotation_is_rejected(self):
+        result = validation.validate_feature(
+            sample_boundary(),
+            [
+                task(
+                    targets=["src/auth/service.ts"],
+                    invalid_operation_authorities=(
+                        "src/auth/auth.sdd",
+                        "src/users/users.sdd",
+                    ),
+                )
+            ],
+            stage="tasks",
+            expected_feature="001-login",
+        )
+        self.assertEqual("UNRESOLVED", result["tasks"][0]["classification"])
+        self.assertEqual("AUTHORITY_VIOLATION", result["diagnostics"][0]["code"])
+        self.assertEqual("error", result["diagnostics"][0]["severity"])
 
     def test_stale_task_target_blocks_implementation(self):
         result = validation.validate_feature(

@@ -23,6 +23,10 @@ from validation_engine import (  # noqa: E402,F401
     VALID_STAGES,
     validate_feature,
 )
+from validation_permissions import (  # noqa: E402,F401
+    project_task_modification_permissions,
+    requires_permission_projection,
+)
 from validation_tasks import (  # noqa: E402,F401
     extract_repository_targets,
     parse_tasks,

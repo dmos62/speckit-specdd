@@ -6,6 +6,9 @@ Purpose:
 Owns:
   ./service.ts
 
+Can modify:
+  ../users/identity-contract.ts
+
 Must:
   External identity lookup uses @ExternalIdentityLookup.
 

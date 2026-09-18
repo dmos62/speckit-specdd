@@ -6,3 +6,5 @@ Purpose:
 
 Must:
   Auth and Users remain separately governed so cross-domain writes are detectable.
+  Auth may modify the Users-facing identity contract through explicit non-owning authority while Users retains ownership.
+  Auth has no modification permission for Users repository internals.
