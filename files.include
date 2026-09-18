@@ -51,14 +51,18 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Boundary, validation, authorization, and workflow tests remain in context for intended-path resolver work.
+@# Boundary, validation, authorization, and relevant workflow tests remain in context for intended-path resolver work.
 
-@# Actual-write verification implementation is stable and outside the blocked intended-path discovery/authorization focus.
+@# Actual-write verification implementation and command guidance are stable and outside the blocked intended-path focus.
 @globexclude integration/specdd/scripts/verification.py
 @globexclude integration/specdd/scripts/verification_cli.py
 @globexclude integration/specdd/scripts/verification_engine.py
 @globexclude integration/specdd/scripts/verification_git.py
 @globexclude integration/specdd/scripts/verification_types.py
+@globexclude integration/specdd/commands/verify.md
+@globexclude integration/specdd/commands/verify.sdd
+@globexclude integration/specdd-preset/commands/converge.md
+@globexclude integration/specdd-preset/commands/converge.sdd
 
 @# Completed Git verification suites are omitted until verification behavior becomes active work again.
 @globexclude tests/test_verification.py
@@ -71,4 +75,9 @@
 @globexclude tests/preset_test_source.py
 @globexclude tests/preset_test_support.py
 @globexclude tests/test_preset.py
+
+@# Static workflow-overlay source coverage and trivial test aggregators are low-value for intended-path resolver work.
+@globexclude tests/workflow_test_source.py
+@globexclude tests/test_workflow.py
+@globexclude tests/test_validation.py
 @endfilegroup

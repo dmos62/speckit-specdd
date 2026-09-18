@@ -1,10 +1,9 @@
-@# Surface bootstrap health, installed workflow state, full tests, fixture lint, patch integrity, canonical worktree state, and clean-clone acceptance.
+@# Surface bootstrap health, resolver capability, workflow shape, full tests, fixture lint, patch integrity, canonical worktree state, and clean-clone acceptance.
+@# Bootstrap check already reports SpecDD lint, workflow-overlay listing, and resolved workflow state; avoid duplicating those outputs here.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
+@cli! bash -c "specdd resolve --help"
 @cli! bash -c "specify workflow info speckit"
-@cli! bash -c "specify workflow resolve speckit"
-@cli! bash -c "specify workflow overlay list speckit"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
-@cli! bash -c "specdd lint"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"
