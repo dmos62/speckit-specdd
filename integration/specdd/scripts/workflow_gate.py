@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Sequence
 
@@ -13,7 +14,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from boundary_paths import resolve_root  # noqa: E402
+from boundary_paths import normalize_target, resolve_root  # noqa: E402
 from boundary_schema import load_schema  # noqa: E402
 from boundary_schema_validation import validate_boundary  # noqa: E402
 from boundary_types import BoundaryError  # noqa: E402
@@ -21,20 +22,28 @@ from validation_cli import (  # noqa: E402
     _result_exit_code as validation_exit_code,
     main as validation_main,
 )
-from validation_engine import validate_feature  # noqa: E402
+from validation_engine import SEVERITIES, validate_feature  # noqa: E402
 from validation_permissions import (  # noqa: E402
     project_task_modification_permissions,
     requires_permission_projection,
 )
 from validation_tasks import parse_tasks_file  # noqa: E402
-from validation_types import TaskRecord, ValidationError  # noqa: E402
+from validation_types import (  # noqa: E402
+    TaskRecord,
+    ValidationError,
+    diagnostic,
+)
 from verification_cli import main as verification_main  # noqa: E402
 from verification_git import (  # noqa: E402
     authorization_snapshot_path,
     authorization_spec_plan_path,
     write_authorization_evidence,
 )
-from verification_types import VerificationError  # noqa: E402
+from verification_types import (  # noqa: E402
+    EDITABLE_BOOTSTRAP_CONTROLS,
+    IMMUTABLE_BOOTSTRAP_CONTROL,
+    VerificationError,
+)
 from workflow_gate_state import (  # noqa: E402,F401
     WorkflowGateError,
     _active_feature,
@@ -62,10 +71,21 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--root",
         help="Repository root; defaults to repository discovery",
     )
+    parser.add_argument(
+        "--operator-control",
+        action="append",
+        default=[],
+        help=(
+            "Explicit operator-selected editable root SpecDD bootstrap override. "
+            "May be supplied more than once during authorization."
+        ),
+    )
     return parser.parse_args(argv)
 
 
-def _planned_spec_evolution_targets(tasks: Sequence[TaskRecord]) -> tuple[str, ...]:
+def _planned_spec_evolution_targets(
+    tasks: Sequence[TaskRecord],
+) -> tuple[str, ...]:
     return tuple(
         dict.fromkeys(
             target
@@ -76,11 +96,84 @@ def _planned_spec_evolution_targets(tasks: Sequence[TaskRecord]) -> tuple[str, .
     )
 
 
+def _control_selections(
+    root: Path,
+    tasks: Sequence[TaskRecord],
+    operator_controls: Sequence[str],
+) -> dict[str, str]:
+    selections = {
+        path: "workflow"
+        for task in tasks
+        for path in task.control_targets
+    }
+    for raw in operator_controls:
+        selections[normalize_target(root, raw).path] = "operator"
+    return selections
+
+
+def _control_diagnostics(
+    selections: dict[str, str],
+) -> list[dict[str, object]]:
+    findings: list[dict[str, object]] = []
+    for path, source in sorted(selections.items()):
+        if path == IMMUTABLE_BOOTSTRAP_CONTROL:
+            findings.append(
+                diagnostic(
+                    "CONTROL_STATE_VIOLATION",
+                    "blocking",
+                    "The immutable SpecDD bootstrap control file cannot be "
+                    "selected for modification.",
+                    targets=[path],
+                    selectedBy=source,
+                )
+            )
+        elif path not in EDITABLE_BOOTSTRAP_CONTROLS:
+            findings.append(
+                diagnostic(
+                    "CONTROL_STATE_VIOLATION",
+                    "blocking",
+                    "Root SpecDD control state is not an editable bootstrap "
+                    "override.",
+                    targets=[path],
+                    selectedBy=source,
+                )
+            )
+    return findings
+
+
+def _extend_diagnostics(
+    result: dict[str, object],
+    findings: Sequence[dict[str, object]],
+) -> None:
+    if not findings:
+        return
+    diagnostics = result["diagnostics"]
+    if not isinstance(diagnostics, list):
+        raise WorkflowGateError("Validation diagnostics have an invalid shape")
+    diagnostics.extend(findings)
+    counts = Counter(
+        item.get("severity")
+        for item in diagnostics
+        if isinstance(item, dict)
+    )
+    summary = result["summary"]
+    if not isinstance(summary, dict):
+        raise WorkflowGateError("Validation summary has an invalid shape")
+    severity_counts = {
+        severity: counts.get(severity, 0)
+        for severity in SEVERITIES
+    }
+    summary["diagnosticCount"] = len(diagnostics)
+    summary["countsBySeverity"] = severity_counts
+    summary["blocking"] = severity_counts["blocking"] > 0
+
+
 def _authorize(
     root: Path,
     feature: str,
     boundary_path: Path,
     task_path: Path,
+    operator_controls: Sequence[str] = (),
 ) -> int:
     schema = load_schema(root)
     boundary = _load_boundary(boundary_path)
@@ -88,7 +181,11 @@ def _authorize(
     tasks = parse_tasks_file(root, task_path)
     permissions = {}
     if requires_permission_projection(boundary, tasks):
-        permissions = project_task_modification_permissions(root, boundary, tasks)
+        permissions = project_task_modification_permissions(
+            root,
+            boundary,
+            tasks,
+        )
     result = validate_feature(
         boundary,
         tasks,
@@ -96,6 +193,24 @@ def _authorize(
         expected_feature=feature,
         task_permissions=permissions,
     )
+
+    selections = _control_selections(
+        root,
+        tasks,
+        operator_controls,
+    )
+    result["controlSelections"] = [
+        {
+            "path": path,
+            "selectedBy": source,
+        }
+        for path, source in sorted(selections.items())
+    ]
+    _extend_diagnostics(
+        result,
+        _control_diagnostics(selections),
+    )
+
     status = validation_exit_code(result, "error")
     if status != 0:
         print(json.dumps(result, indent=2, sort_keys=True))
@@ -106,6 +221,7 @@ def _authorize(
         root,
         boundary,
         spec_targets,
+        control_selections=selections,
     )
     result["authorizationSnapshot"] = {
         "path": str(snapshot),
@@ -113,13 +229,19 @@ def _authorize(
         "plannedSpecEvolution": {
             "path": str(spec_plan),
             "targets": list(spec_targets),
+            "controlTargets": result["controlSelections"],
         },
     }
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
-def run_stage(root: Path, stage: str) -> int:
+def run_stage(
+    root: Path,
+    stage: str,
+    *,
+    operator_controls: Sequence[str] = (),
+) -> int:
     feature, feature_dir, feature_path = _active_feature(root)
     boundary_path = feature_dir / ".specdd" / "boundary.json"
     task_path = feature_dir / "tasks.md"
@@ -129,12 +251,21 @@ def run_stage(root: Path, stage: str) -> int:
             root,
             feature,
             boundary_path,
-            _plan_targets(root, feature_dir, feature_path),
+            _plan_targets(
+                root,
+                feature_dir,
+                feature_path,
+            ),
             require_targets=False,
         )
         print(
             json.dumps(
-                _boundary_summary(root, feature, boundary_path, value),
+                _boundary_summary(
+                    root,
+                    feature,
+                    boundary_path,
+                    value,
+                ),
                 indent=2,
                 sort_keys=True,
             )
@@ -151,7 +282,12 @@ def run_stage(root: Path, stage: str) -> int:
         )
         print(
             json.dumps(
-                _boundary_summary(root, feature, boundary_path, value),
+                _boundary_summary(
+                    root,
+                    feature,
+                    boundary_path,
+                    value,
+                ),
                 sort_keys=True,
             ),
             file=sys.stderr,
@@ -176,12 +312,21 @@ def run_stage(root: Path, stage: str) -> int:
     _require_file(boundary_path, "Change Boundary")
     if stage == "authorize":
         _require_file(task_path, "Spec Kit task file")
-        return _authorize(root, feature, boundary_path, task_path)
+        return _authorize(
+            root,
+            feature,
+            boundary_path,
+            task_path,
+            operator_controls,
+        )
 
     snapshot_path = authorization_snapshot_path(root)
     spec_plan_path = authorization_spec_plan_path(root)
     _require_file(snapshot_path, "Authorization snapshot")
-    _require_file(spec_plan_path, "Authorization specification plan")
+    _require_file(
+        spec_plan_path,
+        "Authorization specification plan",
+    )
     return verification_main(
         [
             "--root",
@@ -202,7 +347,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     try:
         root = resolve_root(args.root)
-        return run_stage(root, args.stage)
+        return run_stage(
+            root,
+            args.stage,
+            operator_controls=args.operator_control,
+        )
     except (
         BoundaryError,
         ValidationError,

@@ -20,10 +20,15 @@ from verification_git import (  # noqa: E402,F401
     authorization_snapshot_path,
     authorization_spec_plan_path,
     collect_git_changes,
-    load_authorization_spec_plan,
+    load_authorization_plan,
     write_authorization_evidence,
 )
 from verification_types import (  # noqa: E402,F401
+    CONTROL_SELECTION_SOURCES,
+    EDITABLE_BOOTSTRAP_CONTROLS,
+    IMMUTABLE_BOOTSTRAP_CONTROL,
+    LOCAL_BOOTSTRAP_CONTROL,
+    PROJECT_BOOTSTRAP_CONTROL,
     ChangeSet,
     GitChange,
     VerificationError,

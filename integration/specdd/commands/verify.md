@@ -7,57 +7,31 @@ description: Verify actual changes against immutable SpecDD authorization eviden
 User input: `$ARGUMENTS`
 
 You **MUST** consider user input when interpreting verification findings. User input may supply feature-specific context,
-but it must not override deterministic authority results.
+but it must not override deterministic authority or bootstrap-control results.
 
 ## Goal
 
 Verify the resulting implementation using actual Git changes, fresh SpecDD resolution, and immutable authorization
 evidence established by the successful pre-implementation gate.
 
-The mutable feature Change Boundary is not verification authority. It may have been refreshed after authorization and
-must not replace the historical boundary snapshot for the current operation. Likewise, current `tasks.md` is not used to
-reconstruct planned specification edits. Authorization records their exact `.sdd` targets separately in Git metadata.
+The mutable feature Change Boundary is not verification authority. Current `tasks.md` is likewise not historical
+authorization evidence. Authorization preserves the exact boundary plus a fingerprint-bound companion plan containing
+selected `.sdd` evolution targets and explicit editable bootstrap-control selections.
 
-This command reports state only. It does not edit implementation files, Spec Kit artifacts, or `.sdd` files.
-
-## External dependency failures
-
-If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
-when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
-`bash scripts/bootstrap.sh --check`, and do not convert tool absence into lint, drift, stale-boundary, or authority
-diagnostics.
+This command reports state only.
 
 ## Execution
 
-1. From the repository root, run:
+1. Locate the active feature and repository root through supported Spec Kit and Git state.
 
-       .specify/scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
-
-   Parse `FEATURE_DIR` from the JSON result. If the command fails or no active feature is available, stop and instruct
-   the user to create or select a feature with `/speckit.specify`.
-
-2. Resolve the repository root with:
-
-       git rev-parse --show-toplevel
-
-   Treat that path as the bridge root. `FEATURE_DIR` must resolve inside it. Stop if the active feature is outside the
-   repository root.
-
-3. Derive `FEATURE_ID` as the basename of `FEATURE_DIR`.
-
-4. Resolve the authorization evidence from the current worktree Git metadata:
-
-       git rev-parse --git-dir
-
-   Require both:
+2. Require current-worktree Git metadata evidence:
 
        specdd/authorization-boundary.json
        specdd/authorization-spec-evolution.json
 
-   The companion specification plan is fingerprint-bound to the exact boundary snapshot. If either document is missing
-   or they do not match, stop and require a fresh successful authorization operation.
+   The companion document must fingerprint-match the exact boundary snapshot.
 
-5. Run deterministic actual-change verification:
+3. Run deterministic verification:
 
        uv run --no-project python integration/specdd/scripts/verification.py \
          --root "<repository-root>" \
@@ -65,56 +39,49 @@ diagnostics.
          --feature-dir "<feature-dir>" \
          --authorization-snapshot "<git-dir>/specdd/authorization-boundary.json"
 
-   The verifier:
-   - gets current tracked and untracked changes from Git;
-   - excludes active feature artifacts and generated Spec Kit integration state from implementation authority checks;
-   - reports changed `.sdd` and SpecDD bootstrap control files separately;
-   - compares changed `.sdd` files with exact evolution targets preserved at authorization time;
-   - freshly resolves every existing actual non-spec implementation target;
-   - compares actual target authority with the immutable authorization boundary snapshot;
-   - checks deleted targets against the snapshot because they no longer exist for fresh resolution;
+4. The verifier:
+   - obtains current tracked and untracked Git changes;
+   - excludes active feature artifacts and generated Spec Kit state from implementation authority checks;
+   - keeps `.specdd/bootstrap.local.md` in local/generated state;
+   - reports shared root `.specdd/` control state separately;
+   - compares changed `.sdd` files with exact evolution targets preserved at authorization;
+   - compares changed editable bootstrap overrides with authorization-time control selections;
+   - freshly resolves existing actual implementation targets;
+   - checks deleted implementation targets against the historical boundary snapshot;
    - runs `specdd lint`.
 
-6. Interpret deterministic diagnostics:
-   - `AUTHORITY_VIOLATION`: actual authority is unknown, conflicting, changed from the snapshot, or introduces an
-     authority domain absent from the snapshot. This is blocking.
-   - `SPECDD_DRIFT`: an actual write was not authorized as a target even though its freshly resolved authority was
-     already in the authorized authority set. Treat this as system-scope drift requiring review.
-   - `SPECDD_VIOLATION`: `specdd lint` failed for the resulting repository state. This is blocking.
-   - `SPEC_EVOLUTION_PRESENT`: changed `.sdd` files were explicitly selected by evolution tasks recorded at
-     authorization. This is informational and never grants implementation authority.
-   - `UNPLANNED_SPEC_EVOLUTION`: one or more changed `.sdd` files were absent from the authorization-time evolution
-     target list. This is blocking whether the file was added, modified, or deleted.
-   - `CONTROL_STATE_CHANGED`: root SpecDD bootstrap control state changed and requires explicit review.
-   - `STALE_BOUNDARY`: the authorization snapshot belongs to a different feature. This is blocking.
+5. Interpret deterministic diagnostics:
+   - `AUTHORITY_VIOLATION`: actual implementation authority is unknown, conflicting, changed, or newly introduced.
+   - `SPECDD_DRIFT`: an actual implementation target was not authorized even though its authority domain was.
+   - `SPECDD_VIOLATION`: `specdd lint` failed.
+   - `SPEC_EVOLUTION_PRESENT`: changed `.sdd` files were explicitly selected at authorization.
+   - `UNPLANNED_SPEC_EVOLUTION`: changed `.sdd` files were not selected at authorization.
+   - `CONTROL_STATE_CHANGED`: `.specdd/bootstrap.project.md` changed after explicit workflow or Operator selection.
+   - `CONTROL_STATE_VIOLATION`: immutable `.specdd/bootstrap.md`, unrelated root SpecDD control state, or an unplanned
+     project bootstrap override changed.
+   - `STALE_BOUNDARY`: the authorization snapshot belongs to a different feature.
 
-7. Enforce the authority-snapshot invariant:
-   - never use the current feature `boundary.json` to replace the authorization snapshot during verification;
-   - never use current `tasks.md` to expand the authorization-time `.sdd` target list;
-   - never use a changed `.sdd` file to justify an implementation write absent from the snapshot;
-   - if fresh resolution reflects authority introduced after authorization, keep the authority finding blocking;
-   - authority-changing specification work must finish separately, followed by fresh context and fresh authorization.
+   `AUTHORITY_VIOLATION`, `SPECDD_VIOLATION`, `UNPLANNED_SPEC_EVOLUTION`, and `CONTROL_STATE_VIOLATION` are blocking.
+   `CONTROL_STATE_CHANGED` is informational because authorization already recorded its explicit selection.
 
-8. Evaluate convergence separately after deterministic verification:
-   - use `FEATURE_GAP` or `CONTRADICTS_FEATURE` only for mismatches with Spec Kit feature intent;
-   - use `MISSING_SPEC_EVOLUTION` when implementation introduces a durable system contract future work must preserve but
-     corresponding deliberate SpecDD evolution is absent;
-   - do not infer `MISSING_SPEC_EVOLUTION` merely because a file was unplanned or a task crossed authorities;
-   - keep feature findings, system findings, governance findings, and authority findings visibly distinct.
+6. Enforce the authority-snapshot invariant:
+   - never replace the snapshot with current `boundary.json`;
+   - never expand planned `.sdd` or bootstrap-control scope from current task text;
+   - never use changed `.sdd` or bootstrap-control state to justify implementation writes absent from historical
+     authorization.
 
-9. If any blocking deterministic diagnostic exists, state that the implementation cannot be accepted under the
-   authorization evidence. Do not propose relaxing current authority as the fix.
+7. Evaluate feature/system convergence separately after deterministic verification.
 
 ## Output
 
-Report actual implementation write paths, excluded feature/generated paths, changed specifications and controls, planned
-specification-evolution targets, authorized and actual authority domains, deterministic diagnostics, the `specdd lint`
-result, and any separate convergence findings.
+Report actual implementation paths, excluded feature/generated paths, changed specifications and controls, planned
+specification and bootstrap-control selections, authorized and actual authority domains, deterministic diagnostics,
+`specdd lint`, and any separate convergence findings.
 
 ## Constraints
 
 - Never edit `.sdd` files.
 - Never regenerate or replace authorization evidence during verification.
-- Never treat `.sdd` changes in the current operation as new implementation authority.
+- Never treat changed specification or bootstrap-control state as retroactive implementation authority.
+- Never downgrade an immutable or unplanned root SpecDD control change to a warning.
 - Never infer authority from Git path proximity, task wording, or directory names.
-- Never duplicate persistent SpecDD constraints into verification output.

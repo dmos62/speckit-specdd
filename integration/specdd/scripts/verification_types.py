@@ -7,6 +7,18 @@ class VerificationError(RuntimeError):
     """Actual-change verification cannot produce a trustworthy result."""
 
 
+IMMUTABLE_BOOTSTRAP_CONTROL = ".specdd/bootstrap.md"
+PROJECT_BOOTSTRAP_CONTROL = ".specdd/bootstrap.project.md"
+LOCAL_BOOTSTRAP_CONTROL = ".specdd/bootstrap.local.md"
+EDITABLE_BOOTSTRAP_CONTROLS = frozenset(
+    {
+        PROJECT_BOOTSTRAP_CONTROL,
+        LOCAL_BOOTSTRAP_CONTROL,
+    }
+)
+CONTROL_SELECTION_SOURCES = frozenset({"operator", "workflow"})
+
+
 @dataclass(frozen=True)
 class GitChange:
     path: str

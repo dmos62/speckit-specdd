@@ -23,6 +23,7 @@ class TaskRecord:
     targets: tuple[str, ...]
     spec_targets: tuple[str, ...]
     invalid_targets: tuple[str, ...]
+    control_targets: tuple[str, ...] = ()
     evolution_markers: tuple[str, ...] = ()
     operation_authority: str | None = None
     invalid_operation_authorities: tuple[str, ...] = ()

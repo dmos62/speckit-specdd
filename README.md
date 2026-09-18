@@ -29,8 +29,6 @@ Spec Kit tasks are not synchronized with SpecDD `Tasks:` entries.
 
 ## Compatibility
 
-The v0.1 baseline is deliberately narrow.
-
 | Component | Requirement |
 | --- | --- |
 | Node.js | 22+ |
@@ -42,9 +40,6 @@ The v0.1 baseline is deliberately narrow.
 The exercised 2026-09-17 host was Windows 10 `10.0.19045` on AMD64 with Python `3.12.11`. Those observations are test
 evidence, not broader compatibility claims.
 
-Pinned Spec Kit `1.0.7` does not register these bridge commands through the `generic` integration, so the repository
-uses the registrar-backed `codex` integration.
-
 ## Install
 
 Run:
@@ -55,8 +50,7 @@ Then verify without intentionally changing repository state:
 
     bash scripts/bootstrap.sh --check
 
-Host prerequisites, rematerialization, and maintenance procedures are in
-[docs/development.md](docs/development.md).
+Development procedures are in [docs/development.md](docs/development.md).
 
 ## Canonical source and generated state
 
@@ -70,44 +64,50 @@ Generated Spec Kit integration state lives under locations such as:
     .agents/skills/
     .specify/
 
-Do not hand-edit generated integration state. Change canonical source and reinstall through supported Spec Kit commands.
-
-Root `.specdd/` framework state is likewise not an implementation surface for the bridge.
+Do not hand-edit generated integration state. Root `.specdd/` framework state is also not an ordinary bridge
+implementation surface.
 
 ## Change Boundary and authorization evidence
 
-A feature Change Boundary is refreshable planning and task context:
+A feature Change Boundary is refreshable planning/task context:
 
     specs/001-google-login/.specdd/boundary.json
 
-It records resolved implementation targets, primary owners, governing specs, owning authority domains, cross-boundary
-status, unresolved diagnostics, and deterministic tool-version metadata. It does not copy `Can modify` rules.
+It records ordinary implementation targets, primary owners, governing specs, authority domains, cross-boundary status,
+unresolved diagnostics, and deterministic tool-version metadata. It does not copy `Can modify` rules.
 
-An unmarked multi-owner task remains a coordinated operation across its owning domains and is reported with
-`MULTI_AUTHORITY_TASK`. When a task intentionally performs all writes under one SpecDD authority, task text uses
-`SPECDD_AUTHORITY:` followed by a backticked repository-relative `.sdd` path. Validation and authorization then
-fresh-resolve that authority context. Every cross-owned target must have an applicable inherited `Can modify` grant.
-`modificationPermissions` reports those grants while each target keeps its original `primaryAuthority`.
+An unmarked multi-owner task remains coordinated across its owning domains. When one task intentionally performs all
+writes under one authority, task text uses `SPECDD_AUTHORITY:` and validation fresh-resolves non-owning `Can modify`
+permission while preserving each target's original owner.
 
-Pinned SpecDD CLI `1.1.1` resolves existing targets only. A non-existent intended target is retained as
-`UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message rather than receiving authority inferred by the bridge.
-This indicates a current tool limitation, not a SpecDD prohibition on creating the file. Planning may carry that
-uncertainty, but task validation and implementation authorization fail closed until resolver-backed authority exists.
+Pinned SpecDD CLI `1.1.1` resolves existing targets only. Missing intended implementation targets remain
+`UNRESOLVED_TARGET` with `INTENDED_TARGET_UNSUPPORTED` rather than receiving locally inferred authority.
 
 Successful authorization stores two immutable operation-evidence documents in current-worktree Git metadata:
 
     <git-dir>/specdd/authorization-boundary.json
     <git-dir>/specdd/authorization-spec-evolution.json
 
-The first is the exact validated Change Boundary. The second records only exact `.sdd` targets selected by explicit
-`SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks and is fingerprint-bound to the boundary snapshot.
-It is not another authority model and never grants implementation authority.
+The first is the exact validated Change Boundary. The fingerprint-bound companion document records exact `.sdd`
+evolution targets plus exact editable bootstrap overrides selected before implementation.
 
-Refreshing the feature Change Boundary or later editing `tasks.md` does not change this authorization evidence.
-Verification therefore detects an added, modified, or deleted `.sdd` file as `UNPLANNED_SPEC_EVOLUTION` when it was not
-selected by an explicit evolution task at authorization time.
+Bootstrap-control selections record whether they came from an authorized workflow task or direct Operator selection.
+They do not grant implementation authority.
 
-Detailed lifecycle semantics are in [docs/change-boundary.md](docs/change-boundary.md).
+Refreshing the feature Change Boundary or later editing `tasks.md` does not change authorization evidence.
+
+## Bootstrap controls
+
+Root SpecDD bootstrap files follow separate control rules rather than Change Boundary ownership:
+
+- `.specdd/bootstrap.md` is immutable.
+- `.specdd/bootstrap.project.md` may change only after explicit workflow or Operator selection is recorded by
+  authorization.
+- `.specdd/bootstrap.local.md` remains local/generated preference state.
+- unrelated root `.specdd/` state is not implicitly editable.
+
+Verification blocks immutable, unrelated, and unplanned shared control changes. A deliberately selected project override
+is reported separately from implementation writes.
 
 ## Normal lifecycle
 
@@ -128,14 +128,11 @@ The installed workflow overlay enforces:
 
 | Stage | Responsibility |
 | --- | --- |
-| context | Refresh current feature scope from concrete non-`.sdd` targets. |
-| validate | Check task ownership and applicable modification permission against current SpecDD state. |
-| authorize | Validate implementation scope and record immutable boundary plus planned `.sdd` evolution evidence. |
+| context | Refresh current ordinary implementation scope. |
+| validate | Check task ownership and applicable modification permission. |
+| authorize | Record immutable boundary, evolution, and control-selection evidence. |
 | implement | Change project artifacts only within the authorized operation. |
-| verify | Compare actual Git writes with historical authorization evidence and fresh SpecDD resolution. |
-
-Agent lifecycle hooks remain useful for direct command execution and interpretation. Structural workflow shell gates are
-the deterministic failure boundary.
+| verify | Compare actual Git state with historical evidence and fresh SpecDD resolution. |
 
 ## Bridge commands
 
@@ -146,70 +143,66 @@ Typical direct invocations are:
     /speckit.specdd.authorize
     /speckit.specdd.verify
 
-`/speckit.specdd.context` refreshes feature boundary state. Explicit target arguments take precedence; otherwise exact
-targets come from `tasks.md`, then `plan.md`.
+`context` refreshes ordinary implementation boundary state.
 
-`/speckit.specdd.validate` checks tasks against the current boundary at planning, task, or implementation strictness. It
-also distinguishes target owners from applicable non-owning `Can modify` permission. It does not create authorization.
+`validate` checks tasks against current ownership and `Can modify` projection. Root bootstrap controls are reported
+separately from implementation targets.
 
-`/speckit.specdd.authorize` preserves the current boundary, validates it at implementation strictness, and records the
-validated boundary plus exact explicit specification-evolution targets as current-operation evidence.
+`authorize` preserves the current boundary and records exact explicit specification/control selections before
+implementation.
 
-`/speckit.specdd.verify` ignores later boundary refreshes and task edits as authorization evidence. It uses actual Git
-changes, the authorization evidence, fresh SpecDD resolution for existing implementation targets, and `specdd lint`.
+`verify` ignores later boundary/task changes as authorization evidence and uses actual Git changes, historical evidence,
+fresh SpecDD resolution, and `specdd lint`.
 
 ## Cross-domain work
 
 One feature may legitimately span several SpecDD owner domains.
 
 The fixture contains independent Auth and Users domains. Auth owns its service, Users owns its identity contract and
-repository, and Auth has explicit `Can modify` permission only for the Users-facing identity contract. An ordinary task
-may coordinate Auth-owned and Users-owned writes and remains a non-blocking multi-authority task. If the task instead
-declares `SPECDD_AUTHORITY:` for Auth, the Users-facing contract is permitted as a cross-owned write while Users remains
-its owner; the Users repository is rejected because Auth has no grant for that internal path.
+repository, and Auth has explicit `Can modify` permission only for the Users-facing identity contract.
 
-A `MULTI_AUTHORITY_TASK` warning therefore describes ownership shape, not permission by itself. A declared operation
-authority makes non-owning permission deterministic through `operationAuthorities` and `modificationPermissions`. The
-bridge must not relax SpecDD authority merely to make a task pass.
+A `MULTI_AUTHORITY_TASK` warning describes ownership shape, not invalidity. A declared operation authority makes
+non-owning permission deterministic through `operationAuthorities` and `modificationPermissions`.
 
 ## Specification evolution
 
 Some features require durable system-contract evolution. The bridge distinguishes ordinary implementation from
 `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED`.
 
-Specification evolution is separate from implementation authority. When dependent implementation requires an `.sdd`
-change:
+When dependent implementation requires `.sdd` evolution:
 
-1. complete the specification change as its own operation;
-2. end the old authority context when authority itself changed;
-3. refresh `/speckit.specdd.context`;
-4. run `/speckit.specdd.authorize` successfully;
-5. begin dependent implementation under the new authorization evidence.
+1. complete specification work separately;
+2. end the old authority context when authority changed;
+3. refresh context;
+4. authorize again;
+5. begin dependent implementation under new evidence.
 
-A changed `.sdd` file or refreshed Change Boundary never retroactively authorizes implementation already performed.
+Changed `.sdd`, bootstrap-control, or Change Boundary state never retroactively authorizes implementation already
+performed.
 
 ## Diagnostics
 
 | Diagnostic | Meaning |
 | --- | --- |
 | `INVALID_TARGET` | Input cannot identify a valid repository target. |
-| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection; `INTENDED_TARGET_UNSUPPORTED` identifies the pinned missing-path resolver limitation. |
+| `UNRESOLVED_TARGET` | A target lacks trustworthy current authority projection. |
 | `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership. |
 | `MULTI_AUTHORITY_TASK` | One task contains targets owned by several authority domains. |
-| `STALE_BOUNDARY` | Feature or task scope disagrees with the current boundary or snapshot. |
-| `AUTHORITY_VIOLATION` | Proposed or actual implementation has unknown, conflicting, changed, newly introduced, or unpermitted authority. |
-| `SPECDD_DRIFT` | An actual target was not authorized even though its authority domain was authorized. |
+| `STALE_BOUNDARY` | Current scope disagrees with the boundary or snapshot. |
+| `AUTHORITY_VIOLATION` | Proposed or actual implementation has invalid authority. |
+| `SPECDD_DRIFT` | An actual target was not authorized though its authority domain was. |
 | `SPECDD_VIOLATION` | Resulting repository state fails deterministic SpecDD checks. |
-| `SPEC_EVOLUTION_PRESENT` | Changed `.sdd` files were explicitly selected at authorization and grant no implementation authority. |
-| `UNPLANNED_SPEC_EVOLUTION` | Changed `.sdd` files were not selected by explicit evolution tasks preserved at authorization; verification blocks. |
-| `CONTROL_STATE_CHANGED` | SpecDD bootstrap control state changed and requires separate review. |
+| `SPEC_EVOLUTION_PRESENT` | Changed `.sdd` files were selected at authorization. |
+| `UNPLANNED_SPEC_EVOLUTION` | Changed `.sdd` files were not selected at authorization. |
+| `CONTROL_STATE_CHANGED` | A selected project bootstrap override changed. |
+| `CONTROL_STATE_VIOLATION` | Immutable, unrelated, or unplanned root SpecDD control state changed. |
 
 `MISSING_SPEC_EVOLUTION` remains an architectural finding rather than a path-only deterministic result.
 
 ## Project documentation
 
 - [docs/spec.md](docs/spec.md): durable project design.
-- [docs/change-boundary.md](docs/change-boundary.md): Change Boundary, authorization evidence, and lifecycle semantics.
+- [docs/change-boundary.md](docs/change-boundary.md): boundary, authorization, and lifecycle semantics.
 - [docs/development.md](docs/development.md): development environment and maintenance.
 - [docs/TODO.md](docs/TODO.md): active implementation work.

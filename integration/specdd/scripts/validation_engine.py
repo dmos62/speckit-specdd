@@ -55,6 +55,8 @@ def _task_classification(
         return "NORMAL"
     if task.spec_targets:
         return "SPEC_ONLY"
+    if task.control_targets:
+        return "CONTROL_ONLY"
     return "NO_WRITE_TARGETS"
 
 
@@ -84,6 +86,7 @@ def validate_feature(
                 boundaryFeature=feature,
             )
         )
+
     (
         resolved,
         unresolved_by_path,
@@ -99,6 +102,7 @@ def validate_feature(
     permission_projection = task_permissions or {}
     task_results: list[dict[str, Any]] = []
     implementation_unknown: list[str] = []
+
     for task in tasks:
         authority = project_task_authority(
             task,
@@ -110,6 +114,7 @@ def validate_feature(
         unknown = authority.pop("unknown")
         missing = authority.pop("missing")
         authorities = authority["authorities"]
+
         if task.invalid_targets:
             diagnostics.append(
                 diagnostic(
@@ -151,6 +156,7 @@ def validate_feature(
                     **task_fields(task),
                 )
             )
+
         unresolved_scope = bool(
             unknown
             or missing
@@ -167,12 +173,14 @@ def validate_feature(
                 diagnostic(
                     "AUTHORITY_VIOLATION",
                     _scope_severity(stage),
-                    "Declared task authority does not own or have Can modify permission for every write target.",
+                    "Declared task authority does not own or have Can modify "
+                    "permission for every write target.",
                     targets=list(task.targets),
                     **authority,
                     **task_fields(task),
                 )
             )
+
         unresolved_targets = list(
             dict.fromkeys([*unknown, *missing, *task.invalid_targets])
         )
@@ -190,6 +198,7 @@ def validate_feature(
                 "text": task.text,
                 "writeTargets": list(task.targets),
                 "specTargets": list(task.spec_targets),
+                "controlTargets": list(task.control_targets),
                 "authorityCount": len(authorities),
                 **authority,
                 "unresolvedTargets": unresolved_targets,
@@ -202,6 +211,7 @@ def validate_feature(
                 "evolution": evolution,
             }
         )
+
     if stage == "implementation":
         unknown_authority = list(
             dict.fromkeys(
@@ -221,8 +231,12 @@ def validate_feature(
                     targets=unknown_authority,
                 )
             )
+
     counts = Counter(item["severity"] for item in diagnostics)
-    severity_counts = {severity: counts.get(severity, 0) for severity in SEVERITIES}
+    severity_counts = {
+        severity: counts.get(severity, 0)
+        for severity in SEVERITIES
+    }
     evolutions = [
         item["evolution"]
         for item in task_results

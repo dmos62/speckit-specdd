@@ -9,20 +9,35 @@ from typing import Any, Callable, Mapping, Sequence
 from boundary_builder import serialize_boundary, write_boundary
 from boundary_paths import normalize_target
 from boundary_types import BoundaryError
-from verification_types import ChangeSet, GitChange, VerificationError
+from verification_types import (
+    CONTROL_SELECTION_SOURCES,
+    EDITABLE_BOOTSTRAP_CONTROLS,
+    LOCAL_BOOTSTRAP_CONTROL,
+    ChangeSet,
+    GitChange,
+    VerificationError,
+)
 
 RunGit = Callable[..., subprocess.CompletedProcess[str]]
 
 _GENERATED_PREFIXES = (".specify/", ".specify-agent/")
-_GENERATED_EXACT = {".specdd/bootstrap.local.md"}
+_GENERATED_EXACT = {LOCAL_BOOTSTRAP_CONTROL}
 _AUTHORIZATION_SNAPSHOT_RELATIVE = Path("specdd") / "authorization-boundary.json"
 _AUTHORIZATION_SPEC_PLAN_RELATIVE = Path("specdd") / "authorization-spec-evolution.json"
 
 
-def _run_git(root: Path, args: Sequence[str], runner: RunGit) -> subprocess.CompletedProcess[str]:
+def _run_git(
+    root: Path,
+    args: Sequence[str],
+    runner: RunGit,
+) -> subprocess.CompletedProcess[str]:
     try:
         return runner(
-            ["git", *args], cwd=str(root), check=False, capture_output=True, text=True
+            ["git", *args],
+            cwd=str(root),
+            check=False,
+            capture_output=True,
+            text=True,
         )
     except FileNotFoundError as exc:
         raise VerificationError(
@@ -50,20 +65,32 @@ def _metadata_path(root: Path, relative: Path, runner: RunGit) -> Path:
     return git_dir.resolve(strict=False) / relative
 
 
-def authorization_snapshot_path(root: Path, *, runner: RunGit = subprocess.run) -> Path:
+def authorization_snapshot_path(
+    root: Path,
+    *,
+    runner: RunGit = subprocess.run,
+) -> Path:
     return _metadata_path(root, _AUTHORIZATION_SNAPSHOT_RELATIVE, runner)
 
 
-def authorization_spec_plan_path(root: Path, *, runner: RunGit = subprocess.run) -> Path:
+def authorization_spec_plan_path(
+    root: Path,
+    *,
+    runner: RunGit = subprocess.run,
+) -> Path:
     return _metadata_path(root, _AUTHORIZATION_SPEC_PLAN_RELATIVE, runner)
 
 
 def _boundary_fingerprint(boundary: Mapping[str, Any]) -> str:
-    return hashlib.sha256(serialize_boundary(boundary).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        serialize_boundary(boundary).encode("utf-8")
+    ).hexdigest()
 
 
 def _spec_plan_document(
-    boundary: Mapping[str, Any], targets: Sequence[str]
+    boundary: Mapping[str, Any],
+    targets: Sequence[str],
+    control_selections: Mapping[str, str],
 ) -> dict[str, Any]:
     feature = boundary.get("feature")
     if not isinstance(feature, str) or not feature:
@@ -73,6 +100,10 @@ def _spec_plan_document(
         "feature": feature,
         "boundarySha256": _boundary_fingerprint(boundary),
         "targets": sorted(dict.fromkeys(targets)),
+        "controlTargets": [
+            {"path": path, "selectedBy": source}
+            for path, source in sorted(control_selections.items())
+        ],
     }
 
 
@@ -81,18 +112,28 @@ def write_authorization_evidence(
     boundary: Mapping[str, Any],
     spec_targets: Sequence[str],
     *,
+    control_selections: Mapping[str, str] | None = None,
     runner: RunGit = subprocess.run,
 ) -> tuple[Path, Path]:
     plan_path = authorization_spec_plan_path(root, runner=runner)
     snapshot_path = authorization_snapshot_path(root, runner=runner)
-    write_boundary(_spec_plan_document(boundary, spec_targets), plan_path)
+    write_boundary(
+        _spec_plan_document(
+            boundary,
+            spec_targets,
+            control_selections or {},
+        ),
+        plan_path,
+    )
     write_boundary(boundary, snapshot_path)
     return snapshot_path, plan_path
 
 
-def load_authorization_spec_plan(
-    root: Path, path: Path, boundary: Mapping[str, Any]
-) -> tuple[str, ...]:
+def load_authorization_plan(
+    root: Path,
+    path: Path,
+    boundary: Mapping[str, Any],
+) -> tuple[tuple[str, ...], dict[str, str]]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
@@ -104,21 +145,31 @@ def load_authorization_spec_plan(
         raise VerificationError(
             f"Authorization specification plan is invalid JSON: {path}: {exc}"
         ) from exc
+
     if not isinstance(value, Mapping) or value.get("schemaVersion") != 1:
-        raise VerificationError("Authorization specification plan must be a version 1 object")
+        raise VerificationError(
+            "Authorization specification plan must be a version 1 object"
+        )
     if value.get("feature") != boundary.get("feature"):
-        raise VerificationError("Authorization specification plan belongs to a different feature")
+        raise VerificationError(
+            "Authorization specification plan belongs to a different feature"
+        )
     if value.get("boundarySha256") != _boundary_fingerprint(boundary):
         raise VerificationError(
             "Authorization specification plan does not match the boundary snapshot"
         )
+
     raw_targets = value.get("targets")
     if not isinstance(raw_targets, list) or any(
         not isinstance(item, str) for item in raw_targets
     ):
-        raise VerificationError("Authorization specification plan targets must be a string array")
+        raise VerificationError(
+            "Authorization specification plan targets must be a string array"
+        )
     if len(raw_targets) != len(set(raw_targets)):
-        raise VerificationError("Authorization specification plan targets must be unique")
+        raise VerificationError(
+            "Authorization specification plan targets must be unique"
+        )
 
     targets: list[str] = []
     for raw in raw_targets:
@@ -137,7 +188,34 @@ def load_authorization_spec_plan(
                 "Authorization specification plan target is not canonical: " + raw
             )
         targets.append(raw)
-    return tuple(targets)
+
+    raw_controls = value.get("controlTargets", [])
+    if not isinstance(raw_controls, list):
+        raise VerificationError(
+            "Authorization control selections must be an array"
+        )
+    controls: dict[str, str] = {}
+    for item in raw_controls:
+        if not isinstance(item, Mapping):
+            raise VerificationError(
+                "Authorization control selection must be an object"
+            )
+        path = item.get("path")
+        source = item.get("selectedBy")
+        if path not in EDITABLE_BOOTSTRAP_CONTROLS:
+            raise VerificationError(
+                f"Authorization control selection is not editable: {path}"
+            )
+        if source not in CONTROL_SELECTION_SOURCES:
+            raise VerificationError(
+                f"Authorization control selection has invalid source: {source}"
+            )
+        if path in controls:
+            raise VerificationError(
+                f"Authorization control selection is duplicated: {path}"
+            )
+        controls[str(path)] = str(source)
+    return tuple(targets), controls
 
 
 def _status_name(value: str) -> str:
@@ -173,7 +251,9 @@ def _feature_path(root: Path, feature_dir: str | Path | None) -> str | None:
 def _category(path: str, feature_dir: str | None) -> str:
     if _inside(path, feature_dir):
         return "feature"
-    if path in _GENERATED_EXACT or any(path.startswith(p) for p in _GENERATED_PREFIXES):
+    if path in _GENERATED_EXACT or any(
+        path.startswith(prefix) for prefix in _GENERATED_PREFIXES
+    ):
         return "generated"
     if path.startswith(".specdd/"):
         return "control"
@@ -199,15 +279,22 @@ def collect_git_changes(
             "Could not determine changed paths from Git"
             + (f": {detail}" if detail else "")
         )
+
     feature_path = _feature_path(root, feature_dir)
     groups: dict[str, list[GitChange]] = {
-        "write": [], "spec": [], "control": [], "feature": [], "generated": []
+        "write": [],
+        "spec": [],
+        "control": [],
+        "feature": [],
+        "generated": [],
     }
     for record in result.stdout.split("\0"):
         if not record:
             continue
         if len(record) < 4 or record[2] != " ":
-            raise VerificationError("Git returned an unexpected porcelain status record")
+            raise VerificationError(
+                "Git returned an unexpected porcelain status record"
+            )
         raw_path = record[3:]
         try:
             target = normalize_target(root, raw_path)
@@ -222,6 +309,7 @@ def collect_git_changes(
                 deleted=not target.absolute_path.exists(),
             )
         )
+
     for values in groups.values():
         values.sort(key=lambda item: item.path)
     return ChangeSet(

@@ -1,23 +1,14 @@
 # Implementation TODO
 
 The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authority correctness. Completed items are
-removed here: authorization preserves the validated Change Boundary in worktree Git metadata, and it now also preserves
-exact explicit `.sdd` evolution targets so verification blocks unplanned specification edits.
+removed here: authorization preserves the validated Change Boundary in worktree Git metadata, records exact explicit
+`.sdd` evolution targets, and records explicitly selected editable bootstrap overrides so verification can reject
+immutable, unrelated, or unplanned root SpecDD control-state changes.
 
 Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. Until the CLI exposes resolver-backed intended-path
 authority, the bridge retains non-existent implementation targets as `UNRESOLVED_TARGET` with an explicit
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
-
-## P0 — Bootstrap control-file authority
-
-- [ ] Enforce SpecDD bootstrap control-file edit rules during verification.
-  - Distinguish immutable `.specdd/bootstrap.md` from explicitly editable project/local overrides.
-  - Represent whether a control-file change was selected by the operator or authorized workflow.
-  - Block immutable or unplanned control-state changes instead of reporting all of them as warnings.
-  - Keep generated/local preferences separate from shared canonical control state.
-  - Add tests for immutable bootstrap, project override, local override, and unrelated root `.specdd/` changes.
-  - Completion: verification applies the bootstrap contract instead of only classifying control paths.
 
 ## P0 — SpecDD state fingerprinting
 

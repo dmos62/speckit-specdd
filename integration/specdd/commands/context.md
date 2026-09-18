@@ -11,10 +11,9 @@ targets discovered from feature artifacts.
 
 ## Goal
 
-Project the current feature's concrete or intended non-spec write targets onto SpecDD authority by calling the existing
-Change Boundary adapter. This command creates derived state only. It does not edit `.sdd` files, infer ownership itself,
-or relax authority. Deliberate `.sdd` evolution is tracked separately and never becomes an implementation boundary
-target.
+Project the current feature's concrete or intended non-spec implementation write targets onto SpecDD authority by
+calling the existing Change Boundary adapter. This command creates derived state only. It does not edit `.sdd` files,
+infer ownership itself, relax authority, or treat root `.specdd/` bootstrap controls as implementation targets.
 
 Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. The adapter therefore retains a non-existent intended
 target as `UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message instead of locally inventing pre-creation
@@ -47,25 +46,27 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    - `BOUNDARY_FILE` as `FEATURE_DIR/.specdd/boundary.json`.
 
 4. Discover candidate targets in this order:
-   - If `$ARGUMENTS` contains explicit repository file or directory paths, use those non-`.sdd` targets and do not add
-     discovered targets.
-   - Otherwise, if `FEATURE_DIR/tasks.md` exists, collect the exact non-`.sdd` file or directory paths named by task
+   - If `$ARGUMENTS` contains explicit repository file or directory paths, use those ordinary non-`.sdd`,
+     non-bootstrap-control implementation targets and do not add discovered targets.
+   - Otherwise, if `FEATURE_DIR/tasks.md` exists, collect exact ordinary implementation paths named by task
      descriptions as files to create or modify.
-   - If tasks produced no targets and `FEATURE_DIR/plan.md` exists, collect exact non-`.sdd` source paths named in the
+   - If tasks produced no targets and `FEATURE_DIR/plan.md` exists, collect exact ordinary source paths named in the
      project structure or as concrete files/directories to create or modify.
    - Ignore `.sdd` paths during Change Boundary discovery. They are specification-evolution targets, not ordinary
      project write targets, and do not grant implementation authority.
+   - Ignore root `.specdd/` bootstrap control paths during Change Boundary discovery. Their edit authority is enforced
+     separately by authorization and verification.
    - Do not derive targets from symbols, URLs, libraries, headings, similar filenames, or semantic guesses.
-   - Keep intended paths even when they do not exist yet. Under pinned SpecDD CLI `1.1.1`, the adapter retains them as
-     unresolved with an `INTENDED_TARGET_UNSUPPORTED` message because `specdd resolve` cannot authorize a missing
-     target. Do not drop them or infer authority from `.sdd` source.
+   - Keep intended ordinary paths even when they do not exist yet. Under pinned SpecDD CLI `1.1.1`, the adapter retains
+     them as unresolved with an `INTENDED_TARGET_UNSUPPORTED` message because `specdd resolve` cannot authorize a
+     missing target.
    - Preserve first-seen order while removing exact duplicate path strings.
 
 5. If no candidate target exists:
    - Remove `BOUNDARY_FILE` if it exists so stale derived state is not presented as current.
-   - Report that the active feature does not yet name a concrete or intended non-spec target.
-   - Report that planning or deliberate spec evolution can continue, but an implementation Change Boundary cannot be
-     generated until at least one non-spec target is known.
+   - Report that the active feature does not yet name a concrete or intended ordinary implementation target.
+   - Report that planning, deliberate spec evolution, or explicitly selected bootstrap-override work can continue, but
+     an implementation Change Boundary cannot be generated until at least one ordinary implementation target is known.
    - Stop without creating a replacement boundary.
 
 6. Run the existing adapter once with all discovered targets:
@@ -76,9 +77,7 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
          --output "<feature-dir>/.specdd/boundary.json" \
          <targets...>
 
-   Quote each path independently. Do not parse `.sdd` files or reproduce resolver logic in this command. Let the adapter
-   normalize targets, call `specdd resolve` for existing targets, derive primary authority, validate the schema, and
-   atomically replace the prior derived file.
+   Quote each path independently. Do not parse `.sdd` files or reproduce resolver logic in this command.
 
 7. If the adapter exits nonzero:
    - Treat the run as failed.
@@ -92,49 +91,24 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    - `crossBoundary`,
    - unresolved entries grouped by diagnostic `code`.
 
-   Distinguish these unresolved classes explicitly:
+   Distinguish:
    - `INVALID_TARGET`: input cannot identify a repository target.
-   - `UNRESOLVED_TARGET`: path is valid as input but cannot currently resolve to one primary authority. When its message
-     starts with `INTENDED_TARGET_UNSUPPORTED`, the path does not exist and pinned SpecDD CLI `1.1.1` cannot establish
-     pre-creation authority; this does not mean SpecDD itself forbids creation.
+   - `UNRESOLVED_TARGET`: valid input cannot currently resolve to one primary authority.
    - `RESOLUTION_FAILED`: SpecDD resolver execution or output failed.
    - `AMBIGUOUS_AUTHORITY`: multiple resolved specs claim ownership.
 
-9. Treat unresolved entries as incomplete context, not permission. Do not convert them into authority. Validation and
-   implementation gates decide whether unresolved context is acceptable at later lifecycle stages. Intended targets
-   carrying `INTENDED_TARGET_UNSUPPORTED` therefore remain advisory in planning and fail task-stage or implementation
-   authorization until a resolver-backed authority result is possible.
+9. Treat unresolved entries as incomplete context, not permission.
 
 ## Output
 
 Keep the result compact. Include the boundary path, targets, authorities, cross-boundary status, and unresolved
-diagnostics. When the feature has no non-spec target yet, state that no current boundary exists.
-
-## Maintainer Smoke Test
-
-This smoke test exercises the same adapter path used by the command without installing the extension. Run it from the
-repository root when changing this command or the adapter:
-
-    tmp_dir="$(mktemp -d)"
-    trap 'rm -rf "$tmp_dir"' EXIT
-    uv run --no-project python integration/specdd/scripts/boundary.py \
-      --root tests/fixtures/specdd-two-domain \
-      --feature context-smoke \
-      --output "$tmp_dir/first.json" \
-      src/auth/service.ts src/users/repository.ts
-    uv run --no-project python integration/specdd/scripts/boundary.py \
-      --root tests/fixtures/specdd-two-domain \
-      --feature context-smoke \
-      --output "$tmp_dir/second.json" \
-      src/auth/service.ts src/users/repository.ts
-    cmp "$tmp_dir/first.json" "$tmp_dir/second.json"
-
-A successful run proves deterministic generation and replacement through the command's adapter invocation.
+diagnostics. When the feature has no ordinary implementation target yet, state that no current boundary exists.
 
 ## Constraints
 
 - Never edit `.sdd` files.
 - Never include `.sdd` evolution targets as implementation authority targets.
+- Never include root `.specdd/` bootstrap controls as implementation authority targets.
 - Never patch `.specify/`, `.specify-agent/`, or root `.specdd/` framework files to expose this command.
 - Never duplicate persistent SpecDD constraints into feature artifacts.
 - Never infer write authority from proximity, naming, task grouping, or a missing intended path.

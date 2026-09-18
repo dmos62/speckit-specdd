@@ -35,6 +35,10 @@ _PATTERN_WILDCARDS = "*?"
 _PATTERN_GROUPING = "[]{}"
 
 
+def is_specdd_control_path(path: str) -> bool:
+    return path.startswith(".specdd/") and not path.lower().endswith(".sdd")
+
+
 def _clean_token(value: str) -> str:
     token = value.strip().strip("\"'()<>,;:").rstrip(".")
     if token.endswith("]") and "[" not in token[:-1]:
@@ -52,12 +56,14 @@ def _mask_ranges(text: str, ranges: list[tuple[int, int]]) -> str:
 
 
 def _inline_path_candidate(value: str) -> bool:
-    if not value or _URL_RE.fullmatch(value):
-        return False
-    return (
-        "/" in value
-        or "\\" in value
-        or Path(value).suffix.lower() in _ROOT_FILE_SUFFIXES
+    return bool(
+        value
+        and not _URL_RE.fullmatch(value)
+        and (
+            "/" in value
+            or "\\" in value
+            or Path(value).suffix.lower() in _ROOT_FILE_SUFFIXES
+        )
     )
 
 
@@ -79,7 +85,6 @@ def _raw_targets(text: str) -> list[tuple[str, bool]]:
         value = _clean_token(match.group(1))
         if _inline_path_candidate(value):
             candidates.append((match.start(), value, True))
-
     candidates.sort(key=lambda item: item[0])
     values: dict[str, bool] = {}
     for _, value, literal in candidates:
@@ -93,7 +98,9 @@ def _normalize_task_target(root: Path, raw: str, *, literal: bool) -> str:
         candidate = candidate[1:]
     if any(character in candidate for character in _PATTERN_WILDCARDS):
         raise BoundaryError(f"Task target must be an exact path: {raw}")
-    if not literal and any(character in candidate for character in _PATTERN_GROUPING):
+    if not literal and any(
+        character in candidate for character in _PATTERN_GROUPING
+    ):
         raise BoundaryError(f"Task target must be an exact path: {raw}")
     return normalize_target(root, candidate).path
 
@@ -128,7 +135,6 @@ def _operation_authority(
     matches = list(_OPERATION_AUTHORITY_RE.finditer(body))
     if not matches:
         return None, (), body
-
     normalized: list[str] = []
     invalid: list[str] = []
     for match in matches:
@@ -142,15 +148,15 @@ def _operation_authority(
             invalid.append(raw)
         else:
             normalized.append(value)
-
     distinct = list(dict.fromkeys(normalized))
+    authority = distinct[0] if len(distinct) == 1 else None
     if len(distinct) > 1:
         invalid.extend(distinct)
-        authority = None
-    else:
-        authority = distinct[0] if distinct else None
-    masked = _mask_ranges(body, [match.span() for match in matches])
-    return authority, tuple(dict.fromkeys(invalid)), masked
+    return (
+        authority,
+        tuple(dict.fromkeys(invalid)),
+        _mask_ranges(body, [match.span() for match in matches]),
+    )
 
 
 def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
@@ -162,13 +168,17 @@ def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
         body = match.group("body")
         task_id_match = _TASK_ID_RE.match(body)
         story_match = _STORY_RE.search(body)
-        operation_authority, invalid_authorities, target_text = _operation_authority(
-            root,
-            body,
+        authority, invalid_authorities, target_text = _operation_authority(
+            root, body
         )
-        targets, spec_targets, invalid_targets = extract_repository_targets(
-            root,
-            target_text,
+        raw_targets, spec_targets, invalid_targets = extract_repository_targets(
+            root, target_text
+        )
+        control_targets = tuple(
+            path for path in raw_targets if is_specdd_control_path(path)
+        )
+        targets = tuple(
+            path for path in raw_targets if not is_specdd_control_path(path)
         )
         tasks.append(
             TaskRecord(
@@ -179,8 +189,11 @@ def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
                 targets=targets,
                 spec_targets=spec_targets,
                 invalid_targets=invalid_targets,
-                evolution_markers=tuple(dict.fromkeys(_EVOLUTION_RE.findall(body))),
-                operation_authority=operation_authority,
+                control_targets=control_targets,
+                evolution_markers=tuple(
+                    dict.fromkeys(_EVOLUTION_RE.findall(body))
+                ),
+                operation_authority=authority,
                 invalid_operation_authorities=invalid_authorities,
             )
         )
@@ -195,7 +208,6 @@ def project_evolution(
     markers = list(dict.fromkeys(task.evolution_markers))
     if not markers:
         return None, []
-
     diagnostics: list[dict[str, object]] = []
     if len(markers) > 1:
         diagnostics.append(
@@ -216,13 +228,15 @@ def project_evolution(
         }, diagnostics
 
     classification = markers[0]
-    if task.targets:
+    if task.targets or task.control_targets:
         diagnostics.append(
             diagnostic(
                 "EVOLUTION_SCOPE_MIXED",
                 severity,
-                "SpecDD evolution must remain separate from ordinary implementation writes.",
+                "SpecDD evolution must remain separate from implementation "
+                "and bootstrap-control writes.",
                 targets=list(task.targets),
+                controlTargets=list(task.control_targets),
                 evolutionClassification=classification,
                 **task_fields(task),
             )

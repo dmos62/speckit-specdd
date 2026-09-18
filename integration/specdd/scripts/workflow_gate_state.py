@@ -9,7 +9,11 @@ from boundary_builder import build_change_boundary, write_boundary
 from boundary_paths import normalize_target
 from boundary_schema import load_schema
 from boundary_types import BoundaryError
-from validation_tasks import extract_repository_targets, parse_tasks_file
+from validation_tasks import (
+    extract_repository_targets,
+    is_specdd_control_path,
+    parse_tasks_file,
+)
 
 
 class WorkflowGateError(RuntimeError):
@@ -28,7 +32,6 @@ def _active_feature(root: Path) -> tuple[str, Path, str]:
             raise WorkflowGateError(
                 "Spec Kit active feature state is invalid JSON"
             ) from exc
-
         configured = (
             state.get("feature_directory")
             if isinstance(state, dict)
@@ -39,14 +42,12 @@ def _active_feature(root: Path) -> tuple[str, Path, str]:
         raise WorkflowGateError(
             "Spec Kit active feature directory is not configured"
         )
-
     try:
         target = normalize_target(root, configured)
     except BoundaryError as exc:
         raise WorkflowGateError(
             f"Active feature directory is invalid: {exc}"
         ) from exc
-
     if not target.absolute_path.is_dir():
         raise WorkflowGateError(
             "Active feature directory does not exist: " + str(target.absolute_path)
@@ -74,7 +75,9 @@ def _plan_targets(
     return [
         path
         for path in targets
-        if path != feature_path and not path.startswith(prefix)
+        if path != feature_path
+        and not path.startswith(prefix)
+        and not is_specdd_control_path(path)
     ]
 
 
@@ -130,7 +133,6 @@ def _boundary_summary(
             "authorities": [],
             "crossBoundary": False,
         }
-
     return {
         "feature": feature,
         "boundary": normalize_target(root, str(output)).path,
@@ -159,7 +161,6 @@ def _load_boundary(path: Path) -> dict[str, object]:
         raise WorkflowGateError(
             f"Change Boundary is invalid JSON: {path}: {exc}"
         ) from exc
-
     if not isinstance(value, dict):
         raise WorkflowGateError(f"Change Boundary root must be an object: {path}")
     return value

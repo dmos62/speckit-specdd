@@ -18,8 +18,8 @@ from boundary_types import BoundaryError
 from verification_engine import verify_change_set
 from verification_git import (
     authorization_snapshot_path,
-    load_authorization_spec_plan,
     collect_git_changes,
+    load_authorization_plan,
 )
 from verification_types import VerificationError
 
@@ -48,8 +48,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--spec-evolution-plan",
         help=(
-            "Authorization-time specification evolution plan; defaults beside "
-            "the authorization boundary snapshot"
+            "Authorization-time specification/control selection plan; "
+            "defaults beside the authorization boundary snapshot"
         ),
     )
     parser.add_argument(
@@ -65,7 +65,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="SpecDD CLI executable (default: specdd)",
     )
     parser.add_argument(
-        "--output", "-o", default="-", help="Output path, or '-' for stdout (default)"
+        "--output",
+        "-o",
+        default="-",
+        help="Output path, or '-' for stdout (default)",
     )
     parser.add_argument(
         "--fail-on",
@@ -85,13 +88,17 @@ def _load_snapshot(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise VerificationError(f"Authorization snapshot was not found: {path}") from exc
+        raise VerificationError(
+            f"Authorization snapshot was not found: {path}"
+        ) from exc
     except json.JSONDecodeError as exc:
         raise VerificationError(
             f"Authorization snapshot is invalid JSON: {path}: {exc}"
         ) from exc
     if not isinstance(value, dict):
-        raise VerificationError(f"Authorization snapshot root must be an object: {path}")
+        raise VerificationError(
+            f"Authorization snapshot root must be an object: {path}"
+        )
     return value
 
 
@@ -149,7 +156,11 @@ def _result_exit_code(result: Mapping[str, Any], fail_on: str) -> int:
     if fail_on == "never":
         return 0
     summary = result.get("summary", {})
-    counts = summary.get("countsBySeverity", {}) if isinstance(summary, Mapping) else {}
+    counts = (
+        summary.get("countsBySeverity", {})
+        if isinstance(summary, Mapping)
+        else {}
+    )
     if not isinstance(counts, Mapping):
         return 0
     if fail_on == "blocking":
@@ -179,14 +190,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         planned = _load_snapshot(snapshot_path)
         validate_boundary(planned, schema)
-        spec_targets = load_authorization_spec_plan(
+        spec_targets, control_targets = load_authorization_plan(
             root,
-            _spec_plan_path(root, snapshot_path, args.spec_evolution_plan),
+            _spec_plan_path(
+                root,
+                snapshot_path,
+                args.spec_evolution_plan,
+            ),
             planned,
         )
 
-        changes = collect_git_changes(root, feature_dir=args.feature_dir)
-        existing_targets = [item.path for item in changes.writes if not item.deleted]
+        changes = collect_git_changes(
+            root,
+            feature_dir=args.feature_dir,
+        )
+        existing_targets = [
+            item.path
+            for item in changes.writes
+            if not item.deleted
+        ]
         if existing_targets:
             actual = build_change_boundary(
                 root,
@@ -206,6 +228,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             lint=_specdd_lint(root, args.specdd),
             expected_feature=args.feature,
             planned_spec_targets=spec_targets,
+            planned_control_targets=control_targets,
         )
         _write_output(root, result, args.output)
         return _result_exit_code(result, args.fail_on)
