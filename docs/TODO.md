@@ -1,7 +1,7 @@
 # Implementation TODO
 
-The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authority correctness. Completed items are
-removed here: authorization preserves the validated Change Boundary in worktree Git metadata, records exact explicit
+Active items below are derived from `docs/TECH-DEBT.md` and ordered for correctness and maintainability. Completed items
+are removed here: authorization preserves the validated Change Boundary in worktree Git metadata, records exact explicit
 `.sdd` evolution targets, records explicitly selected editable bootstrap overrides, rejects refresh-time boundaries
 whose effective SpecDD governing context changed before authorization, and records an operation-scoped Git baseline.
 
@@ -26,16 +26,12 @@ authorization or verification. Adapter-level tests separately establish that sha
 duplicate resolved targets, authority projection mismatch, owner/spec-chain mismatch, resolved/unresolved overlap, and
 invalid candidate-authority state.
 
-`docs/TECH-DEBT.md` still contains the completed operation-baseline risk because that file currently has no discoverable
-SpecDD ownership or modification permission; do not edit it until ownership is made explicit.
+Git verification classifies generated Codex skill materializations under `.agents/skills/speckit-*/**` as generated
+state through the shared verification generated-path classifier while preserving canonical `integration/` source as
+ordinary implementation state. Focused Git verification coverage protects that distinction.
 
-## P0 — Generated Codex skill exclusion
-
-- [ ] Exclude generated `.agents/skills/speckit-*/**` materializations from implementation writes.
-  - Centralize or reuse the generated-state classification instead of adding another isolated path rule where practical.
-  - Preserve canonical `integration/` source as implementation state.
-  - Add Git verification tests proving rematerialized Codex skills remain excluded.
-  - Completion: supported bridge rematerialization cannot appear as an implementation authority write.
+`docs/TECH-DEBT.md` still contains completed risks because that file currently has no discoverable SpecDD ownership or
+modification permission; do not edit it until ownership is made explicit.
 
 ## P1 — Focused code and documentation cleanup
 

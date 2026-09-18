@@ -70,6 +70,18 @@ class VerificationGitTests(unittest.TestCase):
         self.assertEqual(["specs/001-login/spec.md"], [item.path for item in changes.feature_artifacts])
         self.assertEqual([".specdd/bootstrap.local.md", ".specify/generated.json"], [item.path for item in changes.generated])
 
+    def test_generated_codex_skills_are_excluded_but_canonical_source_is_write(self):
+        temporary, root = self.initialize_repository()
+        with temporary:
+            generated = root / ".agents/skills/speckit-specdd-context/SKILL.md"
+            canonical = root / "integration/specdd/commands/context.md"
+            for path in (generated, canonical):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("# Changed\n", encoding="utf-8")
+            changes = verification.collect_git_changes(root, feature_dir="specs/001-login")
+        self.assertIn(".agents/skills/speckit-specdd-context/SKILL.md", [item.path for item in changes.generated])
+        self.assertIn("integration/specdd/commands/context.md", [item.path for item in changes.writes])
+
     def test_authorization_evidence_preserves_boundary_plans_and_git_baseline(self):
         temporary, root = self.initialize_repository()
         with temporary:

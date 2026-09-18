@@ -13,15 +13,13 @@ from boundary_types import BoundaryError
 from verification_types import (
     CONTROL_SELECTION_SOURCES,
     EDITABLE_BOOTSTRAP_CONTROLS,
-    LOCAL_BOOTSTRAP_CONTROL,
     ChangeSet,
     GitChange,
     VerificationError,
+    is_generated_path,
 )
 
 RunGit = Callable[..., subprocess.CompletedProcess[str]]
-_GENERATED_PREFIXES = (".specify/", ".specify-agent/")
-_GENERATED_EXACT = {LOCAL_BOOTSTRAP_CONTROL}
 _METADATA_ROOT = Path("specdd")
 _AUTHORIZATION_SNAPSHOT = _METADATA_ROOT / "authorization-boundary.json"
 _AUTHORIZATION_PLAN = _METADATA_ROOT / "authorization-spec-evolution.json"
@@ -210,7 +208,7 @@ def _inside(path: str, directory: str | None) -> bool:
 def _category(path: str, feature_dir: str | None) -> str:
     if _inside(path, feature_dir):
         return "feature"
-    if path in _GENERATED_EXACT or any(path.startswith(prefix) for prefix in _GENERATED_PREFIXES):
+    if is_generated_path(path):
         return "generated"
     if path.startswith(".specdd/"):
         return "control"
