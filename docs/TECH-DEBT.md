@@ -1,153 +1,111 @@
 # Technical Debt and Risk Register
 
-This file tracks known correctness gaps, lifecycle ambiguities, implementation risks, and hardening work for the Spec Kit × SpecDD bridge.
+This register contains unresolved bridge risks only.
 
 Priorities:
 
-- **P0**: can weaken authority guarantees, misclassify permitted work, or allow an implementation operation to be verified against the wrong authority context.
-- **P1**: can produce incorrect workflow behavior, incomplete semantic verification, false positives/negatives, or confusing operator outcomes.
+- **P1**: can produce incorrect workflow behavior, incomplete semantic verification, false positives or negatives, or confusing operator outcomes.
 - **P2**: maintainability, portability, integration robustness, and longer-term scaling concerns.
 
-## P0 — Authority and correctness
-
-- [ ] **Preserve an immutable authorization snapshot across specification evolution.**
-  `boundary.json` is currently both refreshable feature context and the authority snapshot used by authorization and verification. An evolution task can refresh it during implementation, replacing the historical snapshot that verification is supposed to compare against. Define an operation boundary that prevents dependent implementation from continuing under a refreshed boundary in the same authorized operation, or retain a separate immutable authorization snapshot.
-
-- [ ] **Support intended non-existent implementation targets without treating all creation as unresolved authority.**
-  `build_change_boundary()` currently emits `UNRESOLVED_TARGET` before invoking SpecDD when a target does not exist. SpecDD permits intended ordinary files when their pre-operation path is covered by applicable `Owns` or `Can modify` authority. Either add resolver-backed intended-path resolution or explicitly declare new implementation-file creation unsupported until the SpecDD CLI exposes the required authority query.
-
-- [ ] **Model modification permission separately from primary ownership.**
-  The bridge derives a target's primary authority from `Owns`, but does not project `Can modify` or otherwise establish which active authority is permitted to perform a cross-owned write. A task can currently contain targets from several owners and receive only `MULTI_AUTHORITY_TASK`. Define how task/operation authority relates to SpecDD `Owns` plus `Can modify`, and deterministically reject writes that are owned but not permitted for the operation when that distinction is applicable.
-
-- [ ] **Do not treat arbitrary changed `.sdd` files as merely informational.**
-  Verification currently reports all changed `.sdd` files as `SPEC_EVOLUTION_PRESENT` with informational severity. It does not prove that those specification files were explicitly selected by an evolution task or authorized SpecDD workflow. Compare actual changed specifications with explicit planned evolution targets so silent or accidental spec edits are surfaced as a failure or mandatory review condition.
-
-- [ ] **Enforce bootstrap control-file authority during verification.**
-  Any changed root `.specdd/` control file is currently reported as `CONTROL_STATE_CHANGED` with warning severity. This includes immutable `.specdd/bootstrap.md` and `.specdd/bootstrap.project.md`, whose edits require explicit authority under the bootstrap contract. Classify immutable or unplanned control changes separately and block them when the SpecDD control-file rules require it.
-
-- [ ] **Detect SpecDD contract changes between boundary generation and authorization.**
-  `STALE_BOUNDARY` currently detects feature identity and task-path drift, but not changes to governing `.sdd` content when the target paths stay the same. A boundary can therefore be authorized after its owning spec, inherited constraints, references, or authority rules changed. Record and validate a stable fingerprint or equivalent generation identity for the effective SpecDD state used to create the boundary.
-
-- [ ] **Validate semantic consistency of loaded Change Boundary documents.**
-  JSON Schema validation does not establish that `authorities` equals the set of target `primaryAuthority` values, that target paths are unique, that unresolved and resolved entries do not conflict, or that authority data is internally coherent. A manually altered or corrupted `boundary.json` can satisfy the schema while changing authorization behavior. Add deterministic cross-field invariants before authorization and verification trust a boundary.
-
-- [ ] **Bind verification to one implementation operation rather than the entire dirty worktree.**
-  `collect_git_changes()` treats all current Git changes as belonging to the active feature. Pre-existing edits, concurrent feature work, editor-generated changes, or another agent's modifications can cause false drift/authority failures or contaminate the operation. Record an authorization-time Git baseline or require an isolated clean execution context. Dedicated feature worktrees are a useful optional isolation mechanism but should not be the only correctness mechanism.
-
-- [ ] **Exclude generated Codex skill materializations from implementation writes.**
-  Documentation and `files.include` treat `.agents/skills/speckit-*/**` as generated state, but `verification_git.py` does not exclude `.agents/skills/`. Rematerialized commands can therefore be interpreted as implementation writes and subjected to SpecDD authority checks.
+Completed authority-snapshot, effective-context freshness, semantic-consistency, bootstrap-control, Git-baseline, modification-permission, unplanned-specification, and generated-skill verification work is no longer listed as active debt.
 
 ## P1 — Workflow and semantic verification
 
-- [ ] **Make semantic SpecDD contract verification an explicit workflow stage.**
-  The bootstrap requires implementing agents to check applicable `Must`, `Must not`, `Forbids`, `Depends on`, `Scenario`, and `Done when` entries, but the structural post-implementation gate checks primarily paths, authority, and `specdd lint`. Add an explicit agentic contract-verification pass over the effective specs for actual changed targets and report evidence or uncertainty for material rules.
+- [ ] **Make semantic SpecDD contract verification an explicit workflow stage.**  
+  Structural verification checks paths, historical authority evidence, control state, and `specdd lint`, but does not itself prove every applicable `Must`, `Must not`, `Forbids`, `Depends on`, `Scenario`, or `Done when` outcome. Add a deliberate agentic contract-verification stage with evidence or explicit uncertainty.
 
-- [ ] **Do not let the structural workflow imply stronger verification than it performs.**
-  `workflow_gate.py verify` calls deterministic `verification.py` directly and therefore bypasses the agentic reasoning described by `commands/verify.md`. The normal `speckit` workflow ends after this deterministic shell gate; `speckit.converge` is optional. Clarify the guarantee or add a workflow stage that performs the agentic system-contract review.
+- [ ] **Do not imply stronger verification than the structural gate performs.**  
+  `workflow_gate.py verify` invokes deterministic verification directly, while richer reasoning currently lives in the optional convergence layer. Align workflow wording and guarantees or introduce a required semantic review stage.
 
-- [ ] **Define specification evolution as an operational lifecycle transition.**
-  Current task guidance allows evolution tasks followed by a context refresh before dependent implementation, while the workflow has one authorization gate followed by one implementation step. Define how a spec-only operation ends, how a new boundary is created, and how dependent implementation is re-authorized. Authority evolution in particular must end the old operation rather than mutate its authority mid-run.
+- [ ] **Define specification evolution as a first-class operation transition.**  
+  Current semantics require specification evolution to finish before dependent implementation is freshly authorized. The workflow still presents one normal plan/tasks/authorize/implement sequence. Define the executable spec-only transition rather than relying only on guidance.
 
-- [ ] **Support specification-only workflow operations deliberately.**
-  The task-stage structural gate requires at least one non-`.sdd` target, while the design requires specification evolution to be separate from implementation. A legitimate operation containing only deliberate `.sdd` evolution should have a defined validation and completion path rather than failing because no implementation boundary exists.
+- [ ] **Support specification-only workflow operations deliberately.**  
+  Task-stage structural validation currently requires an ordinary implementation target, while valid specification evolution may contain only `.sdd` targets. Provide an explicit validation and completion path for spec-only operations.
 
-- [ ] **Unify active-feature discovery between agent commands and structural gates.**
-  Command instructions use Spec Kit's PowerShell prerequisite script to discover `FEATURE_DIR`, while `workflow_gate.py` reads `SPECIFY_FEATURE_DIRECTORY` or `.specify/feature.json` directly. These mechanisms can disagree or change independently. Use one supported Spec Kit feature-state interface where possible.
+- [ ] **Unify active-feature discovery.**  
+  Agent commands use the supported Spec Kit prerequisite script while structural gates use persisted or environment-provided feature state directly. Prefer one supported upstream feature-state interface so the mechanisms cannot diverge.
 
-- [ ] **Verify hook and workflow-overlay interaction does not duplicate lifecycle execution.**
-  The extension declares `after_plan`, `after_tasks`, `before_implement`, and `after_implement` hooks while the workflow overlay independently inserts equivalent structural steps. Confirm whether the Spec Kit workflow engine also dispatches those hooks for its command steps. Prevent duplicate boundary refreshes, validation, authorization, verification, resolver calls, and lint runs.
+- [ ] **Verify extension hooks and workflow-overlay steps do not double-dispatch lifecycle stages.**  
+  Both mechanisms register context, validation, authorization, and verification behavior. Add end-to-end evidence that one workflow invocation does not execute a bridge stage twice.
 
-- [ ] **Define directory-target semantics.**
-  Context and task documentation permits file or directory targets, but verification compares actual file writes with planned target paths. A planned directory does not currently establish whether descendants are planned, producing ambiguous behavior. Either make directory targets planning-only hints that must become files before authorization, or define exact subtree semantics without turning directory paths into accidental broad globs.
+- [ ] **Define directory-target semantics.**  
+  Planning may name directories while authorization and verification ultimately operate on concrete files. Either make directory targets advisory planning hints only or define deterministic descendant semantics without accidental broad authority.
 
-- [ ] **Preserve and use Spec Kit task status during scope projection.**
-  `parse_tasks()` accepts all supported checklist states but `TaskRecord` discards the marker. Skipped, blocked, completed, and pending tasks therefore contribute equally to the refreshed boundary and authority set. This can widen the planned authority domains with work that will not execute. Preserve task state and define which states participate in each lifecycle stage.
+- [ ] **Preserve Spec Kit task status during scope projection.**  
+  Task parsing accepts checklist states but currently discards the marker. Define which pending, completed, skipped, blocked, and decision-needed tasks contribute to planning, validation, and authorization scope.
 
-- [ ] **Make planning target extraction context-aware or explicitly conservative.**
-  `_plan_targets()` runs repository-path extraction over the entire `plan.md`. Any path-looking text can become a candidate even when it is documentation, an example, an existing read-only dependency, or explanatory prose. Restrict extraction to an explicit plan section/structure or introduce structured target metadata when Spec Kit provides a supported mechanism.
+- [ ] **Make planning target extraction structured or explicitly conservative.**  
+  Whole-document path extraction can interpret explanatory or read-only paths as candidate writes. Prefer an explicit plan section or supported upstream structured target metadata.
 
-- [ ] **Harden task-path parsing without growing an independent NLP layer.**
-  `validation_tasks.py` uses regular expressions over Markdown prose. It can miss unusual valid filenames and can interpret path-looking prose as intended writes. Keep exact-path requirements, but prefer structured upstream task metadata when available rather than continuously expanding heuristic parsing.
+- [ ] **Harden task-path parsing without building an independent natural-language parser.**  
+  Exact-path heuristics can miss unusual filenames or capture path-looking prose. Prefer structured upstream task metadata when available.
 
-- [ ] **Require meaningful review of `MULTI_AUTHORITY_TASK` warnings.**
-  The structural task gate allows warnings to pass, and there is no mandatory review gate between task validation and authorization. Legitimate cross-domain work must remain possible, but naturally decomposable multi-authority tasks can currently proceed without any agentic decision being recorded. Add a review mechanism or explicit acknowledgement when architectural interpretation is required.
+- [ ] **Require deliberate handling of `MULTI_AUTHORITY_TASK` warnings.**  
+  Legitimate multi-owner work must remain possible, but naturally decomposable tasks can currently proceed without a recorded architectural decision. Add acknowledgement or review without converting the warning into automatic failure.
 
-- [ ] **Align diagnostic severity, `summary.blocking`, process exit behavior, and user-facing acceptance semantics.**
-  `SPECDD_DRIFT` is an `error` but does not set `summary.blocking`; the structural workflow nevertheless fails because it uses `--fail-on error`. Direct command guidance focuses on `summary.blocking`. Define one predictable contract for whether a finding blocks acceptance, fails a workflow step, or merely requires review.
+- [ ] **Align diagnostic severity, summary blocking state, process exit behavior, and user-facing acceptance semantics.**  
+  Define one predictable contract for whether each diagnostic blocks acceptance, fails a workflow gate, or merely requires review.
 
-- [ ] **Clarify the meaning of “authorize”.**
-  Current deterministic authorization proves that task targets are represented by a trustworthy ownership projection and are not stale/unresolved. It does not generally prove semantic compliance with `Must`, `Must not`, `Forbids`, or every `Can modify` relationship. Document the narrower guarantee or extend the checks so “authorized” cannot be mistaken for complete SpecDD conformance.
+- [ ] **Keep the meaning of authorization narrow and explicit.**  
+  Deterministic authorization proves trusted scope, fresh governing context, and applicable write authority. It does not prove complete semantic conformance with every behavioral SpecDD rule. User-facing wording should preserve that distinction.
 
-- [ ] **Verify direct `/speckit.tasks` execution refreshes context reliably before its validation hook.**
-  The `after_tasks` extension hook invokes validation, which does not refresh the boundary. The preset augmentation instructs the agent to run context during task generation, while the structural workflow refreshes deterministically after tasks. Direct task-command execution is therefore dependent on the agent following augmentation instructions and may validate against a stale planning boundary.
-
-- [ ] **Track governing-spec-chain drift even when ownership is unchanged.**
-  `resolvedSpecs` is stored in the boundary but verification primarily compares target authority. A parent/local/reference spec can change or enter/leave the effective chain while primary ownership remains identical. This can materially alter `Must`, `Forbids`, dependencies, or scenarios without producing deterministic boundary drift. Include effective-context identity in staleness checks.
+- [ ] **Ensure direct task-command execution refreshes context before validation.**  
+  The structural workflow refreshes the boundary after tasks, while direct command behavior still depends partly on preset instructions. Make direct execution deterministic.
 
 ## P2 — Semantic parity and maintainability
 
-- [ ] **Reduce local reimplementation of SpecDD ownership semantics.**
-  The adapter calls the real `specdd resolve`, but then locally parses `Owns`, resolves SpecDD paths, implements glob behavior, and determines ownership in `boundary_specdd.py` and `boundary_paths.py`. This creates semantic-drift risk when SpecDD evolves. Prefer a SpecDD CLI/API operation that directly returns authoritative owner/modification information for a target.
+- [ ] **Replace local ownership-path interpretation when SpecDD exposes authoritative target ownership APIs.**  
+  The bridge uses real resolver output but still evaluates returned `Owns` and `Can modify` path entries locally. Prefer resolver/API output that directly reports ownership and modification authority.
 
-- [ ] **Remove or minimize the custom JSON Schema implementation.**
-  `boundary_schema_validation.py` implements a selected subset of JSON Schema Draft 2020-12. Future schema changes can silently exceed the supported keyword subset or diverge from standard validator semantics. Either use a maintained JSON Schema implementation or strictly test and document the intentionally supported schema subset.
+- [ ] **Replace or tightly bound the custom JSON Schema subset.**  
+  The current validator supports only the keywords required by Change Boundary v1. Use a maintained validator or keep the supported subset explicitly constrained and covered.
 
-- [ ] **Centralize generated-state classification.**
-  Generated/canonical path knowledge is duplicated across `files.include`, documentation, bootstrap checks, and `verification_git.py`. The missing `.agents/skills/` exclusion demonstrates the drift risk. Define one canonical generated-state policy consumable by verification and tests where practical.
+- [ ] **Centralize generated-state classification further where one source can serve bootstrap, verification, and documentation.**  
+  Verification now correctly excludes generated Codex skill materializations, but generated-state knowledge still appears in several project surfaces.
 
-- [ ] **Harden SpecDD CLI version discovery.**
-  `specdd_cli_version()` depends on executable layout assumptions and npm global package metadata. Alternative npm prefixes, shims, package managers, or future CLI packaging can make a valid installation unverifiable. Prefer an authoritative machine-readable CLI version command once available.
+- [ ] **Harden SpecDD CLI version discovery.**  
+  Version detection depends on executable layout and npm global metadata. Prefer an authoritative machine-readable CLI version command when available.
 
-- [ ] **Clarify host portability requirements and test them intentionally.**
-  The current evidence baseline is Windows 10 under a Bash-capable environment, while direct bridge commands require PowerShell and workflow overlay commands use POSIX shell syntax such as `command -v`. Other operating systems are explicitly unverified. Establish the intended host matrix before accidental platform assumptions become entrenched.
+- [ ] **Define and test the supported host matrix.**  
+  Current evidence is Windows with a Bash-capable environment, PowerShell-based Spec Kit prerequisites, and POSIX-shell workflow gates. Establish intentional Windows, Linux, and macOS expectations before platform assumptions spread.
 
-- [ ] **Add non-ASCII path coverage for Git and resolver integration.**
-  Git porcelain is consumed with Python text decoding based on the host environment. Existing tests cover spaces and grouping characters but not Unicode filenames. Add tests for non-ASCII paths on supported hosts and normalize subprocess encoding behavior if necessary.
+- [ ] **Add non-ASCII path coverage.**  
+  Exercise Unicode repository paths through Git porcelain, normalization, resolver calls, boundary generation, and verification on supported hosts.
 
-- [ ] **Define distributed/CI transport for the historical authority snapshot.**
-  `boundary.json` is intentionally ignored and rebuildable, but verification requires the exact planned snapshot rather than a freshly regenerated one. Authorization and verification occurring in different processes, machines, containers, or CI jobs therefore need an explicit snapshot artifact-transfer model.
+- [ ] **Define transport for historical authorization evidence across CI jobs or machines.**  
+  Authorization evidence is current-worktree Git metadata. Distributed execution needs an explicit artifact-transfer model that preserves the exact historical snapshot, companion plan, and baseline.
 
-- [ ] **Add an end-to-end test through the real resolved Spec Kit workflow.**
-  Current tests cover source, command installation, overlay resolution, gate functions, fixture resolution, and individual validation/verification components. Add a disposable-repository acceptance test that runs the actual `speckit` workflow through planning, tasks, structural gates, implementation changes, and verification to catch integration behavior that unit/source tests cannot expose.
+- [ ] **Add an end-to-end test through the real resolved Spec Kit workflow.**  
+  Current tests cover components, installation, and workflow resolution. A disposable repository should exercise the actual workflow through planning, tasks, authorization, implementation change, and verification.
 
-- [ ] **Add tests for hook/overlay double-dispatch behavior.**
-  Installation tests prove hooks and overlay steps both exist, but not whether one workflow invocation causes both mechanisms to execute the same bridge stage. Capture invocation counts or observable state in a disposable integration test.
+- [ ] **Add invocation-count coverage for hook and overlay interaction.**  
+  Installation proves both mechanisms exist but not whether the same lifecycle stage can execute twice.
 
-- [ ] **Add tests for unplanned specification and bootstrap-control changes.**
-  Verification tests prove specification changes cannot retroactively authorize a new implementation domain, but they do not establish that an unexpected `.sdd` edit or immutable bootstrap edit is rejected as an unauthorized change in its own right.
+- [ ] **Expand explicit `Can modify` integration coverage as authority scenarios evolve.**  
+  Preserve tests for permitted non-owning modification and denial without a grant as resolver behavior or task metadata changes.
 
-- [ ] **Add tests for `Can modify` scenarios.**
-  The fixture contains separate owners and a forbidden dependency but does not exercise a legitimate non-owning modification permission. Add fixture cases where one spec may modify a path owned by another spec and where the same write is denied without that grant.
+- [ ] **Add intended new-file authorization coverage when SpecDD exposes resolver-backed intended-path authority.**  
+  Cover exact ownership, directory ownership, glob ownership, `Can modify`, ambiguous ownership, and absent authority without local emulation.
 
-- [ ] **Add tests for intended new-file authorization.**
-  Once intended-path resolution is defined, cover creation under exact ownership, directory ownership, glob ownership, `Can modify`, ambiguous ownership, and no authority.
+- [ ] **Add explicit directory-target coverage if directory targets remain supported.**
 
-- [ ] **Add tests for directory targets or explicitly reject them.**
-  Ensure planning, task validation, authorization, and verification all agree on whether a directory is a valid implementation target and what descendant writes it represents.
+- [ ] **Add skipped and blocked task-state coverage after task-state semantics are defined.**
 
-- [ ] **Add tests for skipped and blocked task states.**
-  Verify that `[-]`, `[!]`, `[?]`, `[x]`, and open tasks affect boundary construction and authorization according to the intended lifecycle rather than all widening scope identically.
+- [ ] **Resolve the nullable `primaryAuthority` compatibility state before Change Boundary v2.**  
+  Generation normally represents unknown authority in `unresolved`; decide whether nullable authority remains a supported external v1 compatibility form.
 
-- [ ] **Add semantic consistency checks to schema tests.**
-  Current schema tests validate shape and selected cross-boundary constraints but not the relationship between targets, authorities, unresolved records, and governing specs. Add adapter-level invariant tests even if these relationships cannot be expressed conveniently in JSON Schema.
+- [ ] **Define Change Boundary schema-version compatibility before introducing v2.**  
+  Specify whether older historical snapshots are rejected, migrated, or supported concurrently.
 
-- [ ] **Resolve the nullable `primaryAuthority` schema state.**
-  The schema permits resolved targets with `primaryAuthority: null`, while the current builder classifies inability to derive one authority into `unresolved` instead. Decide whether nullable authority is a supported v1 state or remove the unused representation to avoid multiple ways to encode the same condition.
+- [ ] **Distinguish repository-wide lint failure from operation-introduced lint failure.**  
+  `specdd lint` may fail because of unrelated pre-existing state. Future verification should distinguish baseline debt from violations introduced by the active operation.
 
-- [ ] **Define Change Boundary schema-version compatibility behavior.**
-  The schema is fixed at version `1`, but readers do not currently expose an explicit migration/rejection strategy beyond schema validation. Before schema v2 exists, define whether old snapshots are rejected, migrated, or supported concurrently.
+- [ ] **Surface application-test evidence separately from SpecDD lint.**  
+  Feature correctness remains a Spec Kit concern, but final workflow reporting should make required behavioral-test execution visible.
 
-- [ ] **Distinguish repository-wide SpecDD lint failure from operation-introduced lint failure.**
-  Verification runs `specdd lint` over the resulting repository. Pre-existing unrelated lint failures can block the active feature even if the operation did not introduce them. An operation baseline or clean-worktree requirement should make this deterministic, or verification should report baseline versus newly introduced violations separately.
+- [ ] **Require at least one acceptance environment with all external tools installed.**  
+  Tests that skip when SpecDD, Spec Kit, or Git is unavailable must not allow CI to pass without exercising the real pinned toolchain.
 
-- [ ] **Surface project-test evidence separately from SpecDD lint.**
-  `specdd-verify` records SpecDD lint but does not consume or record application test results. Feature correctness remains Spec Kit's responsibility, but the final workflow should make it clear whether behavioral tests required by relevant scenarios or project governance actually ran.
-
-- [ ] **Avoid allowing skipped external-tool integration tests to create false confidence.**
-  Several real fixture and install tests skip when `specdd`, `specify`, or Git is unavailable. Ensure CI/acceptance has at least one mandatory environment where those tools are installed at the pinned versions so the integration suite cannot pass solely on unit tests.
-
-- [ ] **Document or automate clean-worktree expectations when operation baselines are absent.**
-  Until operation-scoped Git baselines exist, successful authority verification assumes the dirty worktree represents one feature operation. Make that precondition explicit and fail early when a clean starting state is required.
-
-- [ ] **Consider optional dedicated Git worktrees for concurrent feature execution.**
-  A feature-specific worktree can isolate active Spec Kit state, derived boundaries, uncommitted implementation writes, and parallel agents. Keep this optional rather than making Git worktrees part of SpecDD semantics, and still retain planned-versus-actual verification inside each worktree.
+- [ ] **Keep optional dedicated worktrees as an isolation mechanism, not an authority primitive.**  
+  Historical baselines remain the correctness mechanism; worktrees may reduce concurrent noise without changing SpecDD semantics.

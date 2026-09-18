@@ -1,0 +1,21 @@
+Spec: Technical Debt Register
+
+Purpose:
+  Track unresolved bridge correctness, workflow, portability, and maintainability risks without retaining completed work as active debt.
+
+Owns:
+  ./TECH-DEBT.md
+
+References:
+  ../speckit-specdd.sdd
+  ./spec.sdd
+  ./TODO.md
+
+Must:
+  The register contains unresolved risks only.
+  Correctness risks distinguish deterministic authority guarantees from agentic semantic verification gaps.
+  Entries identify the observable risk and preferred direction without duplicating detailed implementation plans from ./TODO.md.
+  Completed risks are removed once current code, tests, and documentation establish the intended behavior.
+
+Done when:
+  Maintainers can distinguish unresolved correctness risks from completed bridge hardening and select future work without reconstructing historical TODO state.

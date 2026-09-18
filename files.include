@@ -47,7 +47,7 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Boundary semantic-consistency coverage is complete; retain shared support but omit focused suites from iteration context.
+@# Completed boundary consistency suites are omitted until boundary semantics change again.
 @globexclude tests/test_boundary.py
 @globexclude tests/boundary_test_fixture.py
 @globexclude tests/boundary_test_output.py
@@ -55,7 +55,7 @@
 @globexclude tests/boundary_test_resolver.py
 @globexclude tests/test_change_boundary_schema.py
 
-@# Generated-skill Git verification coverage is complete; omit focused verification/workflow suites until needed again.
+@# Completed Git verification and workflow suites are omitted until their behavior is active work again.
 @globexclude tests/test_verification.py
 @globexclude tests/verification_test_engine.py
 @globexclude tests/verification_test_fixture.py
@@ -63,7 +63,7 @@
 @globexclude tests/test_workflow.py
 @globexclude tests/workflow_test_gate.py
 
-@# Other tests remain excluded by default and can be reintroduced when needed.
+@# Other focused tests remain excluded by default and can be reintroduced when their subsystem becomes active work.
 @globexclude tests/preset_test_install.py
 @globexclude tests/preset_test_source.py
 @globexclude tests/preset_test_support.py

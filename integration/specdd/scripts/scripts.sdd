@@ -8,6 +8,7 @@ Purpose:
 Structure:
   ./boundary_schema.py: Change Boundary schema loading and reusable JSON Schema value checks
   ./boundary_schema_validation.py: Recursive shape validation and deterministic cross-field consistency
+  ./cli_output.py: Shared JSON CLI output and diagnostic exit-threshold handling
   ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
   ./workflow_gate_state.py: Active-feature, boundary-context, and workflow-artifact state helpers
   ./validation_authority.py: Pure task ownership and operation-authority projection
@@ -24,6 +25,7 @@ Owns:
   ./boundary_schema_validation.py
   ./boundary_specdd.py
   ./boundary_types.py
+  ./cli_output.py
   ./validation.py
   ./validation_authority.py
   ./validation_cli.py

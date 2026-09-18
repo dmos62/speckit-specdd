@@ -4,6 +4,7 @@
 @cli! bash -c "specify workflow resolve speckit"
 @cli! bash -c "specify workflow overlay list speckit"
 @cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
+@cli! bash -c "specdd lint"
 @cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"

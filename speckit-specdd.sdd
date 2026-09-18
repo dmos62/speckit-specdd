@@ -9,7 +9,7 @@ Structure:
   ./README.md: User-facing project overview, installation, concepts, and normal usage
   ./integration: Bridge extension and Spec Kit preset source
   ./fixtures: Integration-test systems used to exercise authority behavior
-  ./docs: Project specification, implementation plan, and development guidance
+  ./docs: Project design, technical debt, implementation TODO, and development guidance
   ./scripts: Repository bootstrap tooling
 
 Owns:
@@ -21,8 +21,8 @@ Owns:
   ./HUMAN-REQUEST*.md
 
 References:
-  ./docs/spec.md
-  ./docs/development.md
+  ./docs/spec.sdd
+  ./docs/development.sdd
 
 Must:
   Spec Kit remains authoritative for the change lifecycle and SpecDD remains authoritative for persistent system semantics.

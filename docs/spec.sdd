@@ -1,0 +1,34 @@
+Spec: Integration Design Specification
+
+Purpose:
+  Own the focused design documents that define the Spec Kit and SpecDD responsibility split, bridge architecture, lifecycle semantics, and v0.1 acceptance contract.
+
+Structure:
+  ./spec.md: Design overview, goals, conceptual model, authority classes, and summary invariant
+  ./spec-architecture.md: Change Boundary, task, adapter, and deterministic-versus-agentic architecture
+  ./spec-lifecycle.md: Lifecycle commands, evolution, convergence, promotion, and governance separation
+  ./spec-v0.1.md: v0.1 scope, fixture scenarios, acceptance criteria, design principles, and future direction
+
+Owns:
+  ./spec.md
+  ./spec-architecture.md
+  ./spec-lifecycle.md
+  ./spec-v0.1.md
+
+References:
+  ../speckit-specdd.sdd
+  ./change-boundary.sdd
+  ../integration/specdd/extension.sdd
+  ../integration/specdd/workflow-overlay.sdd
+  ../integration/specdd-preset/specdd-preset.sdd
+
+Must:
+  Spec Kit remains authoritative for feature and implementation intent.
+  SpecDD remains authoritative for persistent system intent, ownership, modification authority, dependencies, and durable local contracts.
+  The Spec Kit constitution remains authoritative for development governance.
+  Derived bridge state remains reconstructible and does not become a second persistent copy of SpecDD constraints.
+  Specification and authority evolution remain explicit lifecycle transitions rather than retroactive permission for an existing implementation operation.
+  The focused documents avoid duplicating detailed command procedures already owned by command and lifecycle guides.
+
+Done when:
+  A maintainer can navigate from the overview to one focused document for architecture, lifecycle semantics, or v0.1 acceptance without reading one oversized project specification.
