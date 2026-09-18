@@ -136,20 +136,26 @@ def project_task_modification_permissions(
         ):
             continue
 
-        context = _authority_context(
-            root,
-            task,
-            owners,
-            executable,
-            runner,
-            resolver_cache,
-        )
+        authority_error: str | None = None
+        try:
+            context = _authority_context(
+                root,
+                task,
+                owners,
+                executable,
+                runner,
+                resolver_cache,
+            )
+        except ValidationError as exc:
+            context = {}
+            authority_error = str(exc)
+
         task_projection: dict[str, dict[str, Any]] = {}
         for path in paths:
             owner = owners[path]
             allowed = [owner]
             grant_sources: dict[str, list[str]] = {}
-            if authority != owner:
+            if authority != owner and authority_error is None:
                 sources = [
                     spec_path
                     for spec_path, spec in context.items()
@@ -159,11 +165,14 @@ def project_task_modification_permissions(
                     allowed.append(authority)
                     grant_sources[authority] = sources
 
-            task_projection[path] = {
+            projection: dict[str, Any] = {
                 "owner": owner,
                 "allowedAuthorities": allowed,
                 "canModifySources": grant_sources,
             }
+            if authority_error is not None:
+                projection["authorityResolutionError"] = authority_error
+            task_projection[path] = projection
         result[task.order] = task_projection
 
     return result

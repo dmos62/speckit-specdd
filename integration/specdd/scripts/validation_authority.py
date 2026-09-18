@@ -29,12 +29,18 @@ def _permission_record(
             for authority, specs in sources.items()
             if isinstance(authority, str) and isinstance(specs, list)
         }
-    return {
+
+    result: dict[str, Any] = {
         "path": path,
         "owner": owner,
         "allowedAuthorities": allowed,
         "canModifySources": source_projection,
     }
+    if isinstance(raw, Mapping):
+        authority_error = raw.get("authorityResolutionError")
+        if isinstance(authority_error, str) and authority_error:
+            result["authorityResolutionError"] = authority_error
+    return result
 
 
 def _operation_authorities(
