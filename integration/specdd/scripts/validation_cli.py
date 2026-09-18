@@ -14,6 +14,7 @@ from cli_output import (
     FAIL_ON as _FAIL_ON,
     result_exit_code as _result_exit_code,
     root_path as _root_path,
+    serialize_json as _serialize,
     write_json_output as _write_output,
 )
 from validation_engine import VALID_STAGES, validate_feature

@@ -55,13 +55,14 @@
 @globexclude tests/boundary_test_resolver.py
 @globexclude tests/test_change_boundary_schema.py
 
-@# Completed Git verification and workflow suites are omitted until their behavior is active work again.
+@# Completed Git verification suites are omitted until their behavior is active work again.
 @globexclude tests/test_verification.py
 @globexclude tests/verification_test_engine.py
 @globexclude tests/verification_test_fixture.py
 @globexclude tests/verification_test_git.py
-@globexclude tests/test_workflow.py
-@globexclude tests/workflow_test_gate.py
+
+@# Workflow tests stay in iteration context while the current workflow regression is being repaired.
+@globexclude tests/test_workflow_permissions.py
 
 @# Other focused tests remain excluded by default and can be reintroduced when their subsystem becomes active work.
 @globexclude tests/preset_test_install.py
@@ -69,10 +70,8 @@
 @globexclude tests/preset_test_support.py
 @globexclude tests/test_preset.py
 @globexclude tests/test_validation.py
-@globexclude tests/test_workflow_permissions.py
 @globexclude tests/validation_test_engine.py
 @globexclude tests/validation_test_fixture.py
 @globexclude tests/validation_test_support.py
 @globexclude tests/validation_test_tasks.py
-@globexclude tests/workflow_test_source.py
 @endfilegroup
