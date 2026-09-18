@@ -4,10 +4,7 @@ import argparse
 import sys
 from typing import Sequence
 
-from boundary_builder import (
-    build_change_boundary,
-    write_boundary,
-)
+from boundary_builder import build_change_boundary, write_boundary
 from boundary_paths import resolve_root
 from boundary_schema import load_schema
 from boundary_types import BoundaryError
@@ -18,48 +15,38 @@ def parse_args(
 ) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Resolve existing targets into a Change Boundary v1 document."
+            "Project repository targets into a Change Boundary v1 document. "
+            "Intended non-existent targets are retained as unresolved when "
+            "the pinned SpecDD resolver cannot authorize them."
         )
     )
     parser.add_argument(
         "targets",
         nargs="+",
-        help=(
-            "Repository-relative or absolute target paths"
-        ),
+        help="Repository-relative or absolute existing or intended target paths",
     )
     parser.add_argument(
         "--root",
-        help=(
-            "Resolution root; defaults to the discovered repository root"
-        ),
+        help="Resolution root; defaults to the discovered repository root",
     )
     parser.add_argument(
         "--feature",
-        help=(
-            "Feature identifier; defaults to the root directory name"
-        ),
+        help="Feature identifier; defaults to the root directory name",
     )
     parser.add_argument(
         "--output",
         "-o",
         default="-",
-        help=(
-            "Output path, or '-' for stdout (default)"
-        ),
+        help="Output path, or '-' for stdout (default)",
     )
     parser.add_argument(
         "--schema",
-        help=(
-            "Override the Change Boundary schema path"
-        ),
+        help="Override the Change Boundary schema path",
     )
     parser.add_argument(
         "--specdd",
         default="specdd",
-        help=(
-            "SpecDD CLI executable (default: specdd)"
-        ),
+        help="SpecDD CLI executable (default: specdd)",
     )
     return parser.parse_args(argv)
 
@@ -71,29 +58,17 @@ def main(
 
     try:
         root = resolve_root(args.root)
-        schema = load_schema(
-            root,
-            args.schema,
-        )
+        schema = load_schema(root, args.schema)
         value = build_change_boundary(
             root,
             args.targets,
-            feature=(
-                args.feature
-                or root.name
-            ),
+            feature=args.feature or root.name,
             schema=schema,
             executable=args.specdd,
         )
-        write_boundary(
-            value,
-            args.output,
-        )
+        write_boundary(value, args.output)
     except BoundaryError as exc:
-        print(
-            f"boundary.py: {exc}",
-            file=sys.stderr,
-        )
+        print(f"boundary.py: {exc}", file=sys.stderr)
         return 2
 
     return 0

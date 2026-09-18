@@ -69,7 +69,9 @@ diagnostics.
    Do not parse `.sdd` files, derive ownership independently, or repair the Change Boundary by hand.
 
 7. Interpret deterministic diagnostics:
-   - `UNRESOLVED_TARGET`: a boundary or task target does not currently have trustworthy authority projection.
+   - `UNRESOLVED_TARGET`: a boundary or task target does not currently have trustworthy authority projection. If its
+     message begins with `INTENDED_TARGET_UNSUPPORTED`, pinned SpecDD CLI `1.1.1` cannot resolve the non-existent target;
+     this is a bridge limitation rather than evidence that SpecDD forbids creation.
    - `MULTI_AUTHORITY_TASK`: one task writes targets owned by more than one primary authority. This is a structural
      finding, not automatic invalidity.
    - `STALE_BOUNDARY`: current task targets or feature identity no longer match the boundary projection.
@@ -79,6 +81,9 @@ diagnostics.
    - `EVOLUTION_SPEC_TARGET_REQUIRED`: an evolution task does not name a `.sdd` target.
    - `EVOLUTION_SCOPE_MIXED`: an evolution task mixes `.sdd` evolution with ordinary implementation writes instead of
      keeping the operations separate.
+
+   An intended target carrying `INTENDED_TARGET_UNSUPPORTED` is therefore an error at the `tasks` stage and contributes
+   to blocking `AUTHORITY_VIOLATION` at the `implementation` stage. Do not infer ownership to bypass that result.
 
 8. Preserve Spec Kit task identity:
    - Keep original task order.
@@ -143,5 +148,5 @@ Keep deterministic findings distinct from architectural interpretation.
 - Never edit `.sdd` files.
 - Never rewrite Spec Kit tasks automatically.
 - Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries.
-- Never infer authority from task wording, directory names, or proximity.
+- Never infer authority from task wording, directory names, proximity, or non-existent target ownership patterns.
 - Never relax SpecDD ownership or write authority to make a task valid.

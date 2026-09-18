@@ -85,6 +85,11 @@ A feature Change Boundary is refreshable planning and task context:
 It records resolved implementation targets, primary authorities, governing specs, authority domains, cross-boundary
 status, unresolved diagnostics, and deterministic tool-version metadata.
 
+Pinned SpecDD CLI `1.1.1` resolves existing targets only. A non-existent intended target is retained as
+`UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message rather than receiving authority inferred by the bridge.
+This indicates a current tool limitation, not a SpecDD prohibition on creating the file. Planning may carry that
+uncertainty, but task validation and implementation authorization fail closed until resolver-backed authority exists.
+
 A successful authorization copies the exact validated Change Boundary into immutable operation evidence stored in the
 current worktree Git metadata:
 
@@ -192,7 +197,7 @@ Core deterministic diagnostics include:
 | Diagnostic | Meaning |
 | --- | --- |
 | `INVALID_TARGET` | Input cannot identify a valid repository target. |
-| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection. |
+| `UNRESOLVED_TARGET` | A valid target lacks trustworthy current authority projection. For a non-existent target, `INTENDED_TARGET_UNSUPPORTED` in the message identifies the pinned CLI limitation. |
 | `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership. |
 | `MULTI_AUTHORITY_TASK` | One task spans several authority domains. |

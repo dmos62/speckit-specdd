@@ -16,6 +16,10 @@ Change Boundary adapter. This command creates derived state only. It does not ed
 or relax authority. Deliberate `.sdd` evolution is tracked separately and never becomes an implementation boundary
 target.
 
+Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. The adapter therefore retains a non-existent intended
+target as `UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message instead of locally inventing pre-creation
+authority. This is a bridge limitation, not a statement that SpecDD forbids creating the file.
+
 ## External dependency failures
 
 If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
@@ -52,8 +56,9 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    - Ignore `.sdd` paths during Change Boundary discovery. They are specification-evolution targets, not ordinary
      project write targets, and do not grant implementation authority.
    - Do not derive targets from symbols, URLs, libraries, headings, similar filenames, or semantic guesses.
-   - Keep intended paths even when they do not exist yet; the adapter must classify them as unresolved rather than the
-     command silently dropping them.
+   - Keep intended paths even when they do not exist yet. Under pinned SpecDD CLI `1.1.1`, the adapter retains them as
+     unresolved with an `INTENDED_TARGET_UNSUPPORTED` message because `specdd resolve` cannot authorize a missing
+     target. Do not drop them or infer authority from `.sdd` source.
    - Preserve first-seen order while removing exact duplicate path strings.
 
 5. If no candidate target exists:
@@ -72,8 +77,8 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
          <targets...>
 
    Quote each path independently. Do not parse `.sdd` files or reproduce resolver logic in this command. Let the adapter
-   normalize targets, call `specdd resolve`, derive primary authority, validate the schema, and atomically replace the
-   prior derived file.
+   normalize targets, call `specdd resolve` for existing targets, derive primary authority, validate the schema, and
+   atomically replace the prior derived file.
 
 7. If the adapter exits nonzero:
    - Treat the run as failed.
@@ -89,12 +94,16 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
 
    Distinguish these unresolved classes explicitly:
    - `INVALID_TARGET`: input cannot identify a repository target.
-   - `UNRESOLVED_TARGET`: path is valid as input but cannot currently resolve to one primary authority.
+   - `UNRESOLVED_TARGET`: path is valid as input but cannot currently resolve to one primary authority. When its message
+     starts with `INTENDED_TARGET_UNSUPPORTED`, the path does not exist and pinned SpecDD CLI `1.1.1` cannot establish
+     pre-creation authority; this does not mean SpecDD itself forbids creation.
    - `RESOLUTION_FAILED`: SpecDD resolver execution or output failed.
    - `AMBIGUOUS_AUTHORITY`: multiple resolved specs claim ownership.
 
 9. Treat unresolved entries as incomplete context, not permission. Do not convert them into authority. Validation and
-   implementation gates decide whether unresolved context is acceptable at later lifecycle stages.
+   implementation gates decide whether unresolved context is acceptable at later lifecycle stages. Intended targets
+   carrying `INTENDED_TARGET_UNSUPPORTED` therefore remain advisory in planning and fail task-stage or implementation
+   authorization until a resolver-backed authority result is possible.
 
 ## Output
 
@@ -128,4 +137,4 @@ A successful run proves deterministic generation and replacement through the com
 - Never include `.sdd` evolution targets as implementation authority targets.
 - Never patch `.specify/`, `.specify-agent/`, or root `.specdd/` framework files to expose this command.
 - Never duplicate persistent SpecDD constraints into feature artifacts.
-- Never infer write authority from proximity, naming, or task grouping.
+- Never infer write authority from proximity, naming, task grouping, or a missing intended path.

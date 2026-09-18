@@ -4,16 +4,10 @@ The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authorit
 authorization-snapshot item is omitted because the current iteration implements it by preserving the successfully
 validated Change Boundary in worktree Git metadata and making verification consume that snapshot.
 
-## P0 — Intended new implementation targets
-
-- [ ] Support intended non-existent ordinary files without treating all creation as unresolved.
-  - Determine whether SpecDD CLI `1.1.1` exposes enough resolver information for intended-path authority.
-  - Prefer resolver-backed authority instead of extending the bridge's local `.sdd` interpretation.
-  - If the CLI cannot answer intended-path authority safely, fail explicitly with a documented unsupported-creation
-    diagnostic rather than implying that all creation is forbidden by SpecDD.
-  - Cover exact ownership, directory ownership, glob ownership, no authority, and ambiguous authority.
-  - Keep `.sdd` evolution paths excluded from implementation boundary targets.
-  - Completion: task-stage and authorization behavior matches SpecDD's intended-path rules without inventing authority.
+Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. Until the CLI exposes resolver-backed intended-path
+authority, the bridge retains non-existent implementation targets as `UNRESOLVED_TARGET` with an explicit
+`INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
+pre-creation authority locally.
 
 ## P0 — Modification permission distinct from ownership
 
@@ -103,3 +97,14 @@ validated Change Boundary in worktree Git metadata and making verification consu
   - Update `files.include` only when a file is genuinely generated, redundant, or irrelevant to future implementors.
   - Completion: project-controlled code and docs are focused, orthogonal, under 250 lines, and retain equivalent tested
     behavior.
+
+## P2 — Intended-path resolver support
+
+- [ ] Replace the current unsupported-creation fallback when SpecDD exposes resolver-backed intended-path authority.
+  - Current pinned CLI `1.1.1` accepts only existing resolver targets; do not emulate missing-path resolution by parsing
+    `.sdd` ownership locally or by creating temporary probe files in the worktree.
+  - When an authoritative CLI/API query becomes available, cover exact ownership, existing-directory ownership, glob
+    ownership, `Can modify`, ambiguous ownership, and no authority.
+  - Preserve `.sdd` evolution-path exclusion from implementation boundaries.
+  - Remove the `INTENDED_TARGET_UNSUPPORTED` fallback only after task-stage and authorization tests prove semantic parity
+    with SpecDD intended-path rules.

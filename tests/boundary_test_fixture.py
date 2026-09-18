@@ -145,6 +145,14 @@ class RealFixtureIntegrationTests(unittest.TestCase):
             "src/auth/missing.ts",
             payload["unresolved"][0]["normalizedPath"],
         )
+        self.assertIn(
+            "INTENDED_TARGET_UNSUPPORTED",
+            payload["unresolved"][0]["message"],
+        )
+        self.assertIn(
+            "SpecDD CLI 1.1.1",
+            payload["unresolved"][0]["message"],
+        )
 
     def test_real_resolver_failure_is_normalized(self):
         if not FIXTURE_ROOT.is_dir():

@@ -15,7 +15,7 @@ development-host procedures, see [development.md](development.md).
 
 ## Two derived states
 
-The bridge now keeps two deliberately different derived states.
+The bridge keeps two deliberately different derived states.
 
 The feature Change Boundary is refreshable planning and task context:
 
@@ -70,7 +70,7 @@ A Change Boundary is reconstructed from:
 
 - concrete or intended paths named by Spec Kit feature artifacts or supplied explicitly;
 - the current SpecDD hierarchy;
-- fresh output from the installed SpecDD resolver.
+- fresh output from the installed SpecDD resolver for targets the resolver can inspect.
 
 The bridge delegates SpecDD resolution to the real `specdd` CLI. It does not parse `.sdd` source as an independent
 authority engine.
@@ -111,6 +111,20 @@ rather than presenting stale current context.
 When `/speckit.specdd.context` is invoked directly, explicit target paths supplied by the user take precedence.
 Otherwise the command prefers exact paths from `tasks.md`, then exact paths from `plan.md`.
 
+## Intended non-existent targets
+
+SpecDD permits an intended ordinary-file path only when its pre-operation authority is established by the applicable
+`Owns` or `Can modify` contract. The bridge must not turn that rule into a local approximation.
+
+Pinned SpecDD CLI `1.1.1` requires `resolve` targets to exist and does not expose a separate intended-path authority
+query. For a non-existent target, Change Boundary generation therefore keeps the normalized path in `unresolved` with
+code `UNRESOLVED_TARGET` and an `INTENDED_TARGET_UNSUPPORTED` message. The bridge does not inspect ownership patterns to
+invent a pre-creation authority result.
+
+This state means creation authority is unsupported by the current bridge/tool combination, not that SpecDD forbids the
+file. It is advisory during planning. Task-stage validation fails on it, and implementation authorization also fails
+until resolver-backed authority can be established.
+
 ## Task-stage refinement
 
 Task generation is where implementation scope must become precise.
@@ -127,7 +141,7 @@ The boundary can retain an input as unresolved instead of inventing authority.
 | Code | Meaning |
 | --- | --- |
 | `INVALID_TARGET` | The input cannot identify a valid repository target. |
-| `UNRESOLVED_TARGET` | The path is valid input but one primary authority cannot currently be established. |
+| `UNRESOLVED_TARGET` | The path is valid input but one primary authority cannot currently be established. For non-existent paths, `INTENDED_TARGET_UNSUPPORTED` in the message identifies the pinned resolver limitation. |
 | `RESOLUTION_FAILED` | The SpecDD resolver failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | More than one resolved specification claims ownership. |
 
@@ -211,7 +225,11 @@ created only by successful authorization.
 
 If no feature boundary is produced during planning, confirm that the plan names an exact non-spec repository target.
 
-If a target is unresolved, verify the intended path and its SpecDD ownership chain. Do not infer authority from
+If a non-existent target reports `INTENDED_TARGET_UNSUPPORTED`, either select an existing implementation target for the
+current operation or defer file creation until the SpecDD toolchain can provide resolver-backed intended-path
+authority. Do not infer ownership from nearby `.sdd` files to bypass the diagnostic.
+
+If another target is unresolved, verify the intended path and its SpecDD ownership chain. Do not infer authority from
 directory proximity.
 
 If `AMBIGUOUS_AUTHORITY` appears, correct the competing ownership claims.
