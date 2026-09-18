@@ -15,6 +15,10 @@ Project the current feature's concrete or intended non-spec implementation write
 calling the existing Change Boundary adapter. This command creates derived state only. It does not edit `.sdd` files,
 infer ownership itself, relax authority, or treat root `.specdd/` bootstrap controls as implementation targets.
 
+Each successful refresh also records deterministic effective-SpecDD context fingerprints in current-worktree Git
+metadata. That refreshable evidence is bound to the exact generated Change Boundary and lets authorization detect
+governing contract drift without copying persistent rule text into `boundary.json`.
+
 Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. The adapter therefore retains a non-existent intended
 target as `UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message instead of locally inventing pre-creation
 authority. This is a bridge limitation, not a statement that SpecDD forbids creating the file.
@@ -75,21 +79,28 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
          --root "<repository-root>" \
          --feature "<feature-id>" \
          --output "<feature-dir>/.specdd/boundary.json" \
+         --record-context-evidence \
          <targets...>
 
    Quote each path independently. Do not parse `.sdd` files or reproduce resolver logic in this command.
 
-7. If the adapter exits nonzero:
+7. The adapter fingerprints the normalized resolver-returned effective spec context for each resolved target, including
+   inherited and explicit-reference context returned by `specdd resolve --sections all`. It stores those hashes in
+   refreshable current-worktree Git metadata bound to the exact Change Boundary. It does not copy rule text into the
+   feature artifact.
+
+8. If the adapter exits nonzero:
    - Treat the run as failed.
    - Do not synthesize or repair `boundary.json` by hand.
    - Report the adapter error and leave any previous file untouched unless step 5 removed it because no targets existed.
 
-8. Load the newly written `BOUNDARY_FILE` and report:
+9. Load the newly written `BOUNDARY_FILE` and report:
    - output path,
    - resolved target count,
    - authority domains,
    - `crossBoundary`,
-   - unresolved entries grouped by diagnostic `code`.
+   - unresolved entries grouped by diagnostic `code`,
+   - that effective SpecDD context evidence was recorded successfully.
 
    Distinguish:
    - `INVALID_TARGET`: input cannot identify a repository target.
@@ -97,12 +108,13 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    - `RESOLUTION_FAILED`: SpecDD resolver execution or output failed.
    - `AMBIGUOUS_AUTHORITY`: multiple resolved specs claim ownership.
 
-9. Treat unresolved entries as incomplete context, not permission.
+10. Treat unresolved entries as incomplete context, not permission.
 
 ## Output
 
-Keep the result compact. Include the boundary path, targets, authorities, cross-boundary status, and unresolved
-diagnostics. When the feature has no ordinary implementation target yet, state that no current boundary exists.
+Keep the result compact. Include the boundary path, targets, authorities, cross-boundary status, unresolved diagnostics,
+and context-evidence status. When the feature has no ordinary implementation target yet, state that no current boundary
+exists.
 
 ## Constraints
 
@@ -110,5 +122,5 @@ diagnostics. When the feature has no ordinary implementation target yet, state t
 - Never include `.sdd` evolution targets as implementation authority targets.
 - Never include root `.specdd/` bootstrap controls as implementation authority targets.
 - Never patch `.specify/`, `.specify-agent/`, or root `.specdd/` framework files to expose this command.
-- Never duplicate persistent SpecDD constraints into feature artifacts.
+- Never duplicate persistent SpecDD constraints into feature artifacts or fingerprint metadata.
 - Never infer write authority from proximity, naming, task grouping, or a missing intended path.

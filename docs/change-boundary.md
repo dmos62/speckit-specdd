@@ -18,7 +18,16 @@ The feature Change Boundary is current planning and task context:
 
     specs/001-google-login/.specdd/boundary.json
 
-Successful authorization records two documents in current-worktree Git metadata:
+Each successful boundary refresh also records a feature-keyed effective-SpecDD context document under current-worktree
+Git metadata:
+
+    <git-dir>/specdd/boundary-context/
+
+That document is bound to the exact boundary and stores only per-target SHA-256 context identities. Each identity is
+derived from the normalized resolver-returned governing spec paths and sections for that target. Rule text is not copied
+into `boundary.json` or into the context document.
+
+Successful authorization records two immutable documents in current-worktree Git metadata:
 
     <git-dir>/specdd/authorization-boundary.json
     <git-dir>/specdd/authorization-spec-evolution.json
@@ -26,6 +35,10 @@ Successful authorization records two documents in current-worktree Git metadata:
 The first is the exact validated Change Boundary. The second is fingerprint-bound to that snapshot and records exact
 `.sdd` targets selected by explicit evolution tasks plus exact editable bootstrap overrides deliberately selected for
 the operation.
+
+Refresh-time context evidence is not authorization evidence. It may be replaced by a later context refresh. Successful
+authorization first fresh-resolves the current boundary targets and verifies that their effective SpecDD context still
+matches the refresh-time fingerprints. A mismatch is a blocking `STALE_BOUNDARY`.
 
 Bootstrap-control selections also record whether selection came from an authorized workflow task or direct Operator
 input. This companion document grants neither implementation authority nor new SpecDD authority.
@@ -76,34 +89,42 @@ Change Boundary v1 records:
 
 It deliberately does not copy persistent `Must`, `Must not`, `Owns`, `Can modify`, or dependency rules.
 
+The separate refresh-time context document detects changes to those effective contracts without extending the v1
+boundary schema or duplicating their text.
+
 ## Tracking policy
 
 Feature Change Boundaries are generated, uncommitted state:
 
     specs/*/.specdd/boundary.json
 
-Authorization evidence is stored in Git metadata rather than the worktree.
+Refresh-time effective-context evidence and authorization evidence are stored in Git metadata rather than the worktree.
 
-None of these documents is a canonical source of truth. A Change Boundary is reconstructed from current feature paths
-and current SpecDD resolution. Authorization evidence is replaced only by another successful authorization operation.
+None of these documents is a canonical source of truth. A Change Boundary and its context identities are reconstructed
+from current feature paths and current SpecDD resolution. Authorization evidence is replaced only by another successful
+authorization operation.
 
 ## Canonical inputs
 
 A Change Boundary is reconstructed from concrete or intended ordinary implementation paths and current SpecDD resolver
 output.
 
+The effective-context identity uses the resolver-returned spec chain and semantic section data. This captures inherited
+contract changes, explicit `References` changes, referenced contracts returned by resolution, and governing-chain
+changes while ignoring unrelated worktree files.
+
 `.sdd` evolution targets and root SpecDD bootstrap controls remain outside the Change Boundary because they do not
 represent implementation ownership.
 
 ## Lifecycle
 
-| Stage | Change Boundary | Authorization evidence |
+| Stage | Change Boundary and context identity | Authorization evidence |
 | --- | --- | --- |
 | Planning | Create or refresh from ordinary implementation targets. | Unchanged. |
 | Task generation | Refresh from exact ordinary task write targets. | Unchanged. |
-| Authorization | Preserve boundary; validate ownership, permissions, evolution scope, and control selections. | Store exact boundary and companion selections. |
+| Authorization | Fresh-resolve context, reject drift, preserve boundary. | Store exact boundary and companion selections. |
 | Implementation | Later boundary/task changes grant no new authority. | Remains historical evidence. |
-| Verification | Current boundary is not authority evidence. | Compare actual writes/spec/control changes with stored evidence. |
+| Verification | Current boundary and context identity are not authority evidence. | Compare actual state with stored evidence. |
 
 The installed workflow overlay applies:
 
@@ -129,7 +150,7 @@ authority can be established.
 ## Task-stage refinement
 
 Before task-stage validation, the structural gate regenerates the Change Boundary from exact ordinary implementation
-targets.
+targets and replaces the corresponding refresh-time context fingerprints.
 
 Multi-owner work remains representable. `SPECDD_AUTHORITY:` is checked separately for non-owning modification permission.
 
@@ -145,11 +166,12 @@ The supported sequence is:
 1. identify required specification or authority evolution;
 2. apply the `.sdd` change as a separate operation;
 3. end the old authority context when authority changed;
-4. refresh the feature Change Boundary;
+4. refresh the feature Change Boundary and effective-context identity;
 5. run authorization again;
 6. begin dependent implementation under new evidence.
 
-Refreshing only `boundary.json` is insufficient.
+Refreshing only `boundary.json` by hand is insufficient because authorization requires matching refresh-time context
+evidence and fresh resolver output.
 
 ## Verification
 
@@ -168,8 +190,8 @@ unrelated root control state always fail closed. Local bootstrap preferences rem
 
 ## Deterministic regeneration
 
-Equivalent canonical inputs produce semantically equivalent feature Change Boundaries. Generation avoids timestamps and
-normalizes deterministic collections.
+Equivalent canonical inputs produce semantically equivalent feature Change Boundaries and effective-context hashes.
+Generation avoids timestamps and normalizes deterministic collections.
 
 Authorization evidence is intentionally different: it is historical state and is replaced only by successful
 authorization.
@@ -178,6 +200,10 @@ authorization.
 
 If no feature boundary is produced during planning, confirm that the plan names an exact ordinary non-spec
 implementation target.
+
+If authorization reports `STALE_BOUNDARY` after no task-path change, refresh context. A governing `.sdd` contract,
+explicit reference, resolved governing chain, SpecDD CLI version, or framework version may have changed since the
+boundary was generated.
 
 If a target reports `INTENDED_TARGET_UNSUPPORTED`, either select an existing implementation target for the current
 operation or defer creation until resolver-backed intended-path authority exists.

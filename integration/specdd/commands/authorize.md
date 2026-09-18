@@ -16,6 +16,11 @@ Validate the active feature at implementation strictness before implementation b
 candidate ownership projection. Successful authorization copies that exact validated boundary into immutable operation
 evidence stored in worktree Git metadata.
 
+Authorization first proves that the effective SpecDD context used to generate the boundary is still current. Context
+refresh records a deterministic hash of each target's normalized resolver-returned governing spec context. Authorization
+fresh-resolves those targets and rejects the boundary with `STALE_BOUNDARY` when governing contracts, explicit
+references, the effective governing chain, or generation identity changed.
+
 Authorization also records a fingerprint-bound companion plan. It contains exact `.sdd` targets selected by explicit
 `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks plus explicitly selected editable bootstrap
 overrides. Bootstrap-control selections record whether they came from an authorized workflow task or direct Operator
@@ -35,7 +40,8 @@ and verifies `Can modify` permission for cross-owned writes.
 
 2. Require:
    - `FEATURE_DIR/.specdd/boundary.json`;
-   - `FEATURE_DIR/tasks.md`.
+   - `FEATURE_DIR/tasks.md`;
+   - fingerprint-bound effective SpecDD context evidence recorded by the latest context/task refresh.
 
    Do not regenerate the Change Boundary here.
 
@@ -55,7 +61,12 @@ and verifies `Can modify` permission for cross-owned writes.
    Do not pass `.specdd/bootstrap.md` or infer control selection from intent that does not name the exact path.
 
 4. The gate:
-   - validates the existing Change Boundary against `tasks.md` at `implementation` strictness;
+   - validates the existing Change Boundary shape;
+   - verifies that its fingerprint-bound context evidence matches the exact current boundary;
+   - fresh-resolves every resolved boundary target without rewriting `boundary.json`;
+   - compares effective SpecDD context fingerprints and generation identity with the refresh-time evidence;
+   - reports governing contract drift as blocking `STALE_BOUNDARY`;
+   - validates `tasks.md` at `implementation` strictness only under a fresh boundary context;
    - fresh-resolves declared task authority context where `Can modify` permission must be distinguished from ownership;
    - treats root `.specdd/` control paths in tasks as control selections rather than implementation boundary targets;
    - rejects immutable or unrelated root SpecDD control selections;
@@ -66,11 +77,13 @@ and verifies `Can modify` permission for cross-owned writes.
 
 5. Blocking conditions include:
    - `AUTHORITY_VIOLATION`;
-   - stale or unresolved implementation scope;
+   - `STALE_BOUNDARY`, including changed effective SpecDD governing context;
+   - unresolved implementation scope;
    - malformed or mixed evolution scope;
    - `CONTROL_STATE_VIOLATION` for `.specdd/bootstrap.md` or unrelated root control state.
 
 6. On success report:
+   - effective SpecDD context freshness;
    - planned owner domains;
    - declared and resulting operation authorities;
    - exact planned `.sdd` evolution targets;
@@ -90,7 +103,8 @@ operation, fresh context, and fresh authorization.
 
 - Never edit `.sdd` files.
 - Never edit `tasks.md`.
-- Never refresh the Change Boundary inside authorization.
+- Never refresh or rewrite the Change Boundary inside authorization.
+- Never replace refresh-time context evidence to make a stale boundary current.
 - Never select `.specdd/bootstrap.md` for modification.
 - Never infer bootstrap-control selection from proximity or descriptive intent.
 - Never treat proposed or newly changed specification or control state as retroactive implementation authority.

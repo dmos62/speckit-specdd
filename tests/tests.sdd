@@ -42,6 +42,8 @@ Must:
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Missing targets remain represented as unresolved diagnostics with `UNRESOLVED_TARGET`.
   Adapter tests preserve path normalization, resolver-backed authority derivation, deterministic output, and schema validation coverage.
+  Effective-context tests prove ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, and governing-chain changes alter the deterministic context identity.
+  Authorization tests prove changed effective SpecDD context blocks snapshot creation while failed reauthorization preserves prior immutable evidence.
   Tests distinguish missing external executables from resolver, lint, and authority diagnostics.
   The real two-domain fixture exercises deterministic ownership projection when the SpecDD CLI is available.
   Validation tests cover owner-local, coordinated multi-owner, explicitly permitted cross-owned, and rejected cross-owned tasks.

@@ -18,10 +18,12 @@ References:
 Must:
   Active feature resolution uses Spec Kit persisted or environment-provided feature state.
   Planning context discovers explicit repository paths without interpreting `.sdd` ownership itself.
+  Context and task-stage boundary refresh record fingerprint-bound effective SpecDD context evidence in current-worktree Git metadata.
   Task-stage execution refreshes the Change Boundary from exact non-`.sdd` task targets before deterministic validation.
   Task-stage validation returns failure status for deterministic `error` or `blocking` diagnostics.
   Tasks with explicit `SPECDD_AUTHORITY:` use fresh SpecDD resolver output to distinguish target ownership from applicable non-owning `Can modify` permission.
-  Authorization validates the existing Change Boundary without refreshing it.
+  Authorization validates the existing Change Boundary without rewriting it.
+  Authorization fresh-resolves every resolved boundary target and blocks when its effective SpecDD context changed since refresh.
   Successful authorization copies the exact validated Change Boundary to current-worktree Git metadata as immutable operation evidence.
   Failed authorization does not replace a prior authorization snapshot.
   Verification uses the existing authorization snapshot rather than mutable feature boundary state.
@@ -30,10 +32,12 @@ Must:
 
 Must not:
   Parse `.sdd` files as a replacement for SpecDD resolution.
-  Refresh the Change Boundary during authorization or verification.
+  Refresh or rewrite the Change Boundary during authorization or verification.
+  Replace refresh-time context evidence during authorization.
   Replace the authorization snapshot during context or task refresh.
   Treat specification changes as retroactive implementation authority.
 
 Done when:
   The workflow overlay can use this entry point for all four structural lifecycle stages and blocking deterministic findings propagate as nonzero shell status.
+  An ownership-preserving governing SpecDD contract change after boundary refresh prevents authorization.
   A boundary refresh after authorization cannot alter the snapshot used by verification.

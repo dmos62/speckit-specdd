@@ -7,7 +7,7 @@ Purpose:
 
 Structure:
   ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
-  ./workflow_gate_state.py: Active-feature and workflow-artifact state helpers
+  ./workflow_gate_state.py: Active-feature, boundary-context, and workflow-artifact state helpers
   ./validation_authority.py: Pure task ownership and operation-authority projection
   ./validation_permissions.py: Resolver-backed `Can modify` projection for declared task authority
 
@@ -43,6 +43,9 @@ Must:
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
+  Boundary refresh records deterministic SHA-256 identities of normalized resolver-returned governing spec sections for each resolved target without copying rule text.
+  Refresh-time context evidence is bound to the exact generated Change Boundary and stored as replaceable current-worktree Git metadata rather than authorization evidence.
+  Authorization fresh-resolves boundary targets and blocks when effective SpecDD context fingerprints or resolver generation identity differ from refresh-time evidence.
   Validation consumes Change Boundary ownership projection and exact task paths without parsing `.sdd` source.
   Validation derives non-owning modification permission for explicit `SPECDD_AUTHORITY:` tasks from fresh resolved `Can modify` context while preserving each target's owning authority.
   Validation preserves task order, task IDs, user-story labels, and explicit SpecDD evolution classifications in its analysis output.

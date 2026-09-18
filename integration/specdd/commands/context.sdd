@@ -12,6 +12,8 @@ Must:
   Candidate targets exclude `.sdd` evolution paths because specification edits do not grant implementation authority.
   Early planning may produce a boundary with unresolved targets when concrete targets are not yet available.
   Rerunning the command replaces derived `boundary.json` state with freshly generated output.
+  Each successful refresh records deterministic effective SpecDD context fingerprints in current-worktree Git metadata bound to the exact generated boundary.
+  Context fingerprints derive from normalized resolver-returned governing spec sections and do not copy persistent rule text into the Change Boundary.
   The command reports authority domains, unresolved targets, and cross-boundary status.
   The command distinguishes invalid target paths from unresolved targets.
 
@@ -24,5 +26,5 @@ Depends on:
   ../scripts/boundary.py
 
 Done when:
-  Unchanged feature targets regenerate semantically equivalent Change Boundary state.
+  Unchanged feature targets and unchanged governing SpecDD contracts regenerate semantically equivalent Change Boundary and context-fingerprint state.
   A fixture feature can generate and regenerate a valid `boundary.json`.

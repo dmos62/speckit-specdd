@@ -7,7 +7,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from boundary_test_support import verification, workflow_gate
+import workflow_gate_state
+from boundary_test_support import (
+    boundary as boundary_adapter,
+    verification,
+    workflow_gate,
+)
 
 
 class WorkflowPermissionAuthorizationTests(unittest.TestCase):
@@ -88,24 +93,52 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
         )
         return stored, specs, controls
 
-    def test_authorization_accepts_explicit_cross_owned_permission(self):
-        temporary, root, boundary, boundary_path, task_path = (
-            self.initialize_operation()
-        )
-        with (
-            temporary,
-            mock.patch.object(
-                workflow_gate,
-                "project_task_modification_permissions",
-                return_value=self.permissions(permit=True),
-            ),
-            contextlib.redirect_stdout(io.StringIO()),
-        ):
+    def authorize(
+        self,
+        root,
+        boundary_path,
+        task_path,
+        *,
+        permit=None,
+        operator_controls=(),
+    ):
+        output = io.StringIO()
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(
+                mock.patch.object(
+                    workflow_gate,
+                    "_specdd_context_diagnostics",
+                    return_value=[],
+                )
+            )
+            if permit is not None:
+                stack.enter_context(
+                    mock.patch.object(
+                        workflow_gate,
+                        "project_task_modification_permissions",
+                        return_value=self.permissions(permit=permit),
+                    )
+                )
+            stack.enter_context(contextlib.redirect_stdout(output))
             status = workflow_gate._authorize(
                 root,
                 "001-login",
                 boundary_path,
                 task_path,
+                operator_controls=operator_controls,
+            )
+        return status, json.loads(output.getvalue())
+
+    def test_authorization_accepts_explicit_cross_owned_permission(self):
+        temporary, root, boundary, boundary_path, task_path = (
+            self.initialize_operation()
+        )
+        with temporary:
+            status, _ = self.authorize(
+                root,
+                boundary_path,
+                task_path,
+                permit=True,
             )
             stored, planned_specs, planned_controls = self.evidence(root)
 
@@ -122,13 +155,8 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
             "- [ ] T001 [US1] Update src/auth/service.ts\n",
             encoding="utf-8",
         )
-        with temporary, contextlib.redirect_stdout(io.StringIO()):
-            status = workflow_gate._authorize(
-                root,
-                "001-login",
-                boundary_path,
-                task_path,
-            )
+        with temporary:
+            status, _ = self.authorize(root, boundary_path, task_path)
             _, planned_specs, planned_controls = self.evidence(root)
 
         self.assertEqual(0, status)
@@ -142,13 +170,8 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
             "`.specdd/bootstrap.project.md`\n",
             encoding="utf-8",
         )
-        with temporary, contextlib.redirect_stdout(io.StringIO()):
-            status = workflow_gate._authorize(
-                root,
-                "001-login",
-                boundary_path,
-                task_path,
-            )
+        with temporary:
+            status, _ = self.authorize(root, boundary_path, task_path)
             _, _, controls = self.evidence(root)
 
         self.assertEqual(0, status)
@@ -159,20 +182,12 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
 
     def test_authorization_records_operator_selected_project_override(self):
         temporary, root, _, boundary_path, task_path = self.initialize_operation()
-        with (
-            temporary,
-            mock.patch.object(
-                workflow_gate,
-                "project_task_modification_permissions",
-                return_value=self.permissions(permit=True),
-            ),
-            contextlib.redirect_stdout(io.StringIO()),
-        ):
-            status = workflow_gate._authorize(
+        with temporary:
+            status, _ = self.authorize(
                 root,
-                "001-login",
                 boundary_path,
                 task_path,
+                permit=True,
                 operator_controls=(".specdd/bootstrap.project.md",),
             )
             _, _, controls = self.evidence(root)
@@ -190,13 +205,8 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
             "`.specdd/bootstrap.md`\n",
             encoding="utf-8",
         )
-        with temporary, contextlib.redirect_stdout(io.StringIO()):
-            status = workflow_gate._authorize(
-                root,
-                "001-login",
-                boundary_path,
-                task_path,
-            )
+        with temporary:
+            status, _ = self.authorize(root, boundary_path, task_path)
             snapshot_exists = verification.authorization_snapshot_path(root).exists()
             plan_exists = verification.authorization_spec_plan_path(root).exists()
 
@@ -206,20 +216,12 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
 
     def test_authorization_rejects_cross_owned_write_without_permission(self):
         temporary, root, _, boundary_path, task_path = self.initialize_operation()
-        with (
-            temporary,
-            mock.patch.object(
-                workflow_gate,
-                "project_task_modification_permissions",
-                return_value=self.permissions(permit=False),
-            ),
-            contextlib.redirect_stdout(io.StringIO()),
-        ):
-            status = workflow_gate._authorize(
+        with temporary:
+            status, _ = self.authorize(
                 root,
-                "001-login",
                 boundary_path,
                 task_path,
+                permit=False,
             )
             snapshot_exists = verification.authorization_snapshot_path(root).exists()
             plan_exists = verification.authorization_spec_plan_path(root).exists()
@@ -227,3 +229,97 @@ class WorkflowPermissionAuthorizationTests(unittest.TestCase):
         self.assertEqual(1, status)
         self.assertFalse(snapshot_exists)
         self.assertFalse(plan_exists)
+
+    def test_authorization_rejects_effective_specdd_context_drift(self):
+        temporary, root, boundary, boundary_path, task_path = (
+            self.initialize_operation()
+        )
+        task_path.write_text(
+            "- [ ] T001 [US1] Update src/auth/service.ts\n",
+            encoding="utf-8",
+        )
+        expected = {
+            "src/auth/service.ts": "a" * 64,
+            "src/users/identity-contract.ts": "b" * 64,
+        }
+
+        def fresh_boundary(*args, context_fingerprints=None, **kwargs):
+            context_fingerprints.update(
+                {
+                    "src/auth/service.ts": "c" * 64,
+                    "src/users/identity-contract.ts": "b" * 64,
+                }
+            )
+            return boundary
+
+        with temporary:
+            boundary_adapter.write_boundary_context_evidence(
+                root,
+                boundary,
+                expected,
+            )
+            output = io.StringIO()
+            with (
+                mock.patch.object(
+                    workflow_gate_state,
+                    "build_change_boundary",
+                    side_effect=fresh_boundary,
+                ),
+                contextlib.redirect_stdout(output),
+            ):
+                status = workflow_gate._authorize(
+                    root,
+                    "001-login",
+                    boundary_path,
+                    task_path,
+                )
+            result = json.loads(output.getvalue())
+            snapshot_exists = verification.authorization_snapshot_path(root).exists()
+
+        self.assertEqual(1, status)
+        self.assertFalse(result["specddContextFresh"])
+        self.assertIn(
+            "STALE_BOUNDARY",
+            [item["code"] for item in result["diagnostics"]],
+        )
+        self.assertFalse(snapshot_exists)
+
+    def test_failed_reauthorization_keeps_previous_snapshot(self):
+        temporary, root, boundary, boundary_path, task_path = (
+            self.initialize_operation()
+        )
+        with temporary:
+            status, _ = self.authorize(
+                root,
+                boundary_path,
+                task_path,
+                permit=True,
+            )
+            self.assertEqual(0, status)
+            stored, _, _ = self.evidence(root)
+
+            refreshed = {
+                **boundary,
+                "targets": [
+                    {
+                        "path": "src/users/identity-contract.ts",
+                        "primaryAuthority": "src/users/users.sdd",
+                        "resolvedSpecs": ["src/users/users.sdd"],
+                    }
+                ],
+                "authorities": ["src/users/users.sdd"],
+                "crossBoundary": False,
+            }
+            boundary_path.write_text(
+                json.dumps(refreshed),
+                encoding="utf-8",
+            )
+            failed_status, _ = self.authorize(
+                root,
+                boundary_path,
+                task_path,
+            )
+            current, _, _ = self.evidence(root)
+
+        self.assertEqual(1, failed_status)
+        self.assertEqual(stored, current)

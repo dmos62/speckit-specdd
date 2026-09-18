@@ -14,9 +14,13 @@ if str(SCRIPT_DIR) not in sys.path:
     )
 
 from boundary_builder import (  # noqa: E402,F401
+    boundary_context_evidence_path,
+    boundary_fingerprint,
     build_change_boundary,
+    load_boundary_context_evidence,
     serialize_boundary,
     write_boundary,
+    write_boundary_context_evidence,
 )
 from boundary_cli import (  # noqa: E402,F401
     main,
@@ -63,6 +67,7 @@ from boundary_specdd import (  # noqa: E402,F401
     derive_primary_authority,
     extract_resolved_specs,
     resolve_target,
+    specdd_context_fingerprint,
 )
 from boundary_types import (  # noqa: E402,F401
     BoundaryError,

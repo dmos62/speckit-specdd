@@ -76,6 +76,14 @@ A feature Change Boundary is refreshable planning/task context:
 It records ordinary implementation targets, primary owners, governing specs, authority domains, cross-boundary status,
 unresolved diagnostics, and deterministic tool-version metadata. It does not copy `Can modify` rules.
 
+Each refresh also records fingerprint-bound effective SpecDD context under current-worktree Git metadata. The
+per-target SHA-256 identities are derived from normalized resolver-returned governing spec sections, including inherited
+and explicit-reference context returned by SpecDD. Rule text is not duplicated in the boundary or fingerprint metadata.
+
+Authorization fresh-resolves those targets and compares the effective context with refresh-time evidence. A changed
+`Must`, `Forbids`, `References`, referenced contract, governing chain, or resolver generation identity therefore makes
+the candidate boundary stale even when primary ownership is unchanged.
+
 An unmarked multi-owner task remains coordinated across its owning domains. When one task intentionally performs all
 writes under one authority, task text uses `SPECDD_AUTHORITY:` and validation fresh-resolves non-owning `Can modify`
 permission while preserving each target's original owner.
@@ -91,10 +99,12 @@ Successful authorization stores two immutable operation-evidence documents in cu
 The first is the exact validated Change Boundary. The fingerprint-bound companion document records exact `.sdd`
 evolution targets plus exact editable bootstrap overrides selected before implementation.
 
+Refresh-time context fingerprints are not authorization evidence and may be replaced by later context refreshes.
+Refreshing the feature Change Boundary, its context fingerprints, or later editing `tasks.md` does not change existing
+authorization evidence.
+
 Bootstrap-control selections record whether they came from an authorized workflow task or direct Operator selection.
 They do not grant implementation authority.
-
-Refreshing the feature Change Boundary or later editing `tasks.md` does not change authorization evidence.
 
 ## Bootstrap controls
 
@@ -128,9 +138,9 @@ The installed workflow overlay enforces:
 
 | Stage | Responsibility |
 | --- | --- |
-| context | Refresh current ordinary implementation scope. |
+| context | Refresh current ordinary implementation scope and effective SpecDD context identity. |
 | validate | Check task ownership and applicable modification permission. |
-| authorize | Record immutable boundary, evolution, and control-selection evidence. |
+| authorize | Recheck governing context and record immutable boundary, evolution, and control-selection evidence. |
 | implement | Change project artifacts only within the authorized operation. |
 | verify | Compare actual Git state with historical evidence and fresh SpecDD resolution. |
 
@@ -143,13 +153,13 @@ Typical direct invocations are:
     /speckit.specdd.authorize
     /speckit.specdd.verify
 
-`context` refreshes ordinary implementation boundary state.
+`context` refreshes ordinary implementation boundary state and records fingerprint-bound effective SpecDD context.
 
 `validate` checks tasks against current ownership and `Can modify` projection. Root bootstrap controls are reported
 separately from implementation targets.
 
-`authorize` preserves the current boundary and records exact explicit specification/control selections before
-implementation.
+`authorize` rejects stale governing context, then preserves the current boundary and records exact explicit
+specification/control selections before implementation.
 
 `verify` ignores later boundary/task changes as authorization evidence and uses actual Git changes, historical evidence,
 fresh SpecDD resolution, and `specdd lint`.
@@ -173,12 +183,12 @@ When dependent implementation requires `.sdd` evolution:
 
 1. complete specification work separately;
 2. end the old authority context when authority changed;
-3. refresh context;
+3. refresh context and its governing-context identity;
 4. authorize again;
 5. begin dependent implementation under new evidence.
 
-Changed `.sdd`, bootstrap-control, or Change Boundary state never retroactively authorizes implementation already
-performed.
+Changed `.sdd`, bootstrap-control, Change Boundary, or refresh-time fingerprint state never retroactively authorizes
+implementation already performed.
 
 ## Diagnostics
 
@@ -189,7 +199,7 @@ performed.
 | `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership. |
 | `MULTI_AUTHORITY_TASK` | One task contains targets owned by several authority domains. |
-| `STALE_BOUNDARY` | Current scope disagrees with the boundary or snapshot. |
+| `STALE_BOUNDARY` | Current scope or effective governing SpecDD context disagrees with refresh-time state. |
 | `AUTHORITY_VIOLATION` | Proposed or actual implementation has invalid authority. |
 | `SPECDD_DRIFT` | An actual target was not authorized though its authority domain was. |
 | `SPECDD_VIOLATION` | Resulting repository state fails deterministic SpecDD checks. |
@@ -203,6 +213,6 @@ performed.
 ## Project documentation
 
 - [docs/spec.md](docs/spec.md): durable project design.
-- [docs/change-boundary.md](docs/change-boundary.md): boundary, authorization, and lifecycle semantics.
+- [docs/change-boundary.md](docs/change-boundary.md): boundary, context freshness, authorization, and lifecycle semantics.
 - [docs/development.md](docs/development.md): development environment and maintenance.
 - [docs/TODO.md](docs/TODO.md): active implementation work.

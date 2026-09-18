@@ -2,24 +2,18 @@
 
 The P0 items below are derived from `docs/TECH-DEBT.md` and ordered for authority correctness. Completed items are
 removed here: authorization preserves the validated Change Boundary in worktree Git metadata, records exact explicit
-`.sdd` evolution targets, and records explicitly selected editable bootstrap overrides so verification can reject
-immutable, unrelated, or unplanned root SpecDD control-state changes.
+`.sdd` evolution targets, records explicitly selected editable bootstrap overrides, and rejects refresh-time boundaries
+whose effective SpecDD governing context changed before authorization.
+
+Boundary refresh now records deterministic per-target effective-context SHA-256 identities in refreshable current-
+worktree Git metadata bound to the exact boundary. Authorization fresh-resolves the target context and rejects
+ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, governing-chain, or resolver-generation drift
+with blocking `STALE_BOUNDARY`. The immutable authorization snapshot remains the historical post-authorization reference.
 
 Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. Until the CLI exposes resolver-backed intended-path
 authority, the bridge retains non-existent implementation targets as `UNRESOLVED_TARGET` with an explicit
 `INTENDED_TARGET_UNSUPPORTED` message and fails closed at task validation and authorization rather than inferring
 pre-creation authority locally.
-
-## P0 — SpecDD state fingerprinting
-
-- [ ] Detect governing SpecDD contract changes between boundary generation and authorization.
-  - Define a deterministic identity for the effective SpecDD state used by each resolved target.
-  - Include inherited and referenced governing context that can change behavior even when primary ownership is stable.
-  - Store the identity in derived boundary state or adjacent deterministic metadata without copying rule text.
-  - Recompute and compare it before authorization.
-  - Keep the immutable authorization snapshot as the historical post-authorization reference.
-  - Add tests for ownership-preserving `Must`, `Forbids`, reference, and governing-chain changes.
-  - Completion: authorization rejects a boundary generated from materially different SpecDD contracts.
 
 ## P0 — Change Boundary semantic consistency
 
@@ -30,6 +24,8 @@ pre-creation authority locally.
   - Prevent one path from appearing as both resolved and unresolved.
   - Validate candidate authorities and resolved spec relationships where deterministically knowable.
   - Decide whether nullable `primaryAuthority` remains a supported v1 representation or is removed.
+  - Keep refresh-time context-evidence validation separate from boundary cross-field validation; it is fingerprint-bound
+    generated metadata rather than part of Change Boundary v1.
   - Add adapter-level invariant tests separate from JSON Schema shape tests.
   - Completion: a shape-valid but semantically corrupted boundary cannot influence authorization or verification.
 

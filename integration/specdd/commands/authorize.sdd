@@ -13,7 +13,9 @@ References:
 Must:
   The command locates the active Spec Kit feature using supported Spec Kit state.
   The command requires the existing Change Boundary and task list rather than regenerating authority.
-  Deterministic validation runs at the `implementation` lifecycle stage.
+  Authorization requires fingerprint-bound effective SpecDD context evidence from the boundary refresh that produced the candidate boundary.
+  Authorization fresh-resolves boundary targets and blocks when governing SpecDD context or resolver generation identity changed after boundary generation.
+  Deterministic validation runs at the `implementation` lifecycle stage only after the candidate boundary context is proven fresh.
   Unmarked tasks execute under their target owner domains.
   A task that declares `SPECDD_AUTHORITY:` requires that authority to own or have `Can modify` permission for every implementation target.
   Target ownership remains authoritative even when another declared task authority receives non-owning modification permission.
@@ -25,9 +27,10 @@ Must:
   Specification evolution never grants authority to the implementation operation that performs the evolution.
 
 Must not:
-  Refresh the Change Boundary before authorization.
+  Refresh or rewrite the Change Boundary before authorization.
+  Replace refresh-time context evidence to make a stale boundary current.
   Edit `.sdd` files or Spec Kit tasks.
   Relax ownership or modification authority to make implementation pass.
 
 Done when:
-  Valid owner-local, coordinated multi-owner, and explicitly permitted cross-owned fixture tasks can authorize, while unknown, stale, conflicting, or unpermitted declared implementation authority blocks snapshot replacement.
+  Valid owner-local, coordinated multi-owner, and explicitly permitted cross-owned fixture tasks can authorize, while unknown, stale, context-drifted, conflicting, or unpermitted declared implementation authority blocks snapshot replacement.

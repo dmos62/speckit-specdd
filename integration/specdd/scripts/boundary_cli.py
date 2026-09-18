@@ -4,7 +4,11 @@ import argparse
 import sys
 from typing import Sequence
 
-from boundary_builder import build_change_boundary, write_boundary
+from boundary_builder import (
+    build_change_boundary,
+    write_boundary,
+    write_boundary_context_evidence,
+)
 from boundary_paths import resolve_root
 from boundary_schema import load_schema
 from boundary_types import BoundaryError
@@ -48,6 +52,14 @@ def parse_args(
         default="specdd",
         help="SpecDD CLI executable (default: specdd)",
     )
+    parser.add_argument(
+        "--record-context-evidence",
+        action="store_true",
+        help=(
+            "Record fingerprint-bound effective SpecDD context in current-"
+            "worktree Git metadata for later authorization freshness checks"
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -59,13 +71,21 @@ def main(
     try:
         root = resolve_root(args.root)
         schema = load_schema(root, args.schema)
+        context_fingerprints: dict[str, str] = {}
         value = build_change_boundary(
             root,
             args.targets,
             feature=args.feature or root.name,
             schema=schema,
             executable=args.specdd,
+            context_fingerprints=context_fingerprints,
         )
+        if args.record_context_evidence:
+            write_boundary_context_evidence(
+                root,
+                value,
+                context_fingerprints,
+            )
         write_boundary(value, args.output)
     except BoundaryError as exc:
         print(f"boundary.py: {exc}", file=sys.stderr)

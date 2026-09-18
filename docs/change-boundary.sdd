@@ -1,7 +1,7 @@
 Spec: Change Boundary Guide
 
 Purpose:
-  Document feature-scoped Change Boundary semantics, immutable implementation authorization snapshots, lifecycle target discovery, regeneration, unresolved handling, staleness, and disposable derived-state behavior.
+  Document feature-scoped Change Boundary semantics, effective-context freshness, immutable implementation authorization snapshots, lifecycle target discovery, regeneration, unresolved handling, staleness, and disposable derived-state behavior.
 
 Owns:
   ./change-boundary.md
@@ -18,13 +18,15 @@ References:
 Must:
   The guide explains how target discovery becomes more precise from planning through task generation.
   The guide explains deterministic Change Boundary regeneration from canonical Spec Kit artifacts and fresh SpecDD resolver output without copying persistent SpecDD constraints.
+  The guide explains refresh-time effective SpecDD context fingerprints as derived Git metadata bound to the exact current boundary rather than persistent specification or authorization state.
+  The guide explains that authorization fresh-resolves governing context and rejects ownership-preserving contract, reference, governing-chain, or generation drift as a stale boundary.
   The guide distinguishes target ownership recorded in the Change Boundary from task-time non-owning `Can modify` permission resolved for explicit `SPECDD_AUTHORITY:` tasks during validation and authorization.
   The guide distinguishes the refreshable feature Change Boundary from the immutable authorization snapshot recorded after successful authorization.
   The guide distinguishes advisory unresolved planning context from unresolved implementation authority that cannot grant permission.
   The guide explains when a Change Boundary is refreshed, when authorization records its exact validated state, and why later refreshes do not alter current-operation authority.
   The guide explains stale-boundary conditions and the required refresh plus reauthorization points after deliberate evolution.
-  The guide presents `boundary.json` as disposable derived state and the authorization snapshot as generated historical operation evidence.
+  The guide presents `boundary.json` and refresh-time context fingerprints as disposable derived state and the authorization snapshot as generated historical operation evidence.
   Installation and development-host maintenance remain delegated to the README and development guide rather than duplicated here.
 
 Done when:
-  A maintainer can determine when a Change Boundary is created or refreshed, how ownership and `Can modify` permission differ, when authorization snapshots it, which state verification uses, and how a new authority context begins after evolution.
+  A maintainer can determine when a Change Boundary is created or refreshed, how governing-context freshness is proven, how ownership and `Can modify` permission differ, when authorization snapshots the boundary, which state verification uses, and how a new authority context begins after evolution.

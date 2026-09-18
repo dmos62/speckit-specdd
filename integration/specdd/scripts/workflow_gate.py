@@ -52,6 +52,7 @@ from workflow_gate_state import (  # noqa: E402,F401
     _plan_targets,
     _refresh_boundary,
     _require_file,
+    _specdd_context_diagnostics,
     _task_targets,
 )
 
@@ -178,9 +179,14 @@ def _authorize(
     schema = load_schema(root)
     boundary = _load_boundary(boundary_path)
     validate_boundary(boundary, schema)
+    context_findings = _specdd_context_diagnostics(
+        root,
+        boundary,
+        schema,
+    )
     tasks = parse_tasks_file(root, task_path)
     permissions = {}
-    if requires_permission_projection(boundary, tasks):
+    if not context_findings and requires_permission_projection(boundary, tasks):
         permissions = project_task_modification_permissions(
             root,
             boundary,
@@ -193,6 +199,8 @@ def _authorize(
         expected_feature=feature,
         task_permissions=permissions,
     )
+    result["specddContextFresh"] = not context_findings
+    _extend_diagnostics(result, context_findings)
 
     selections = _control_selections(
         root,

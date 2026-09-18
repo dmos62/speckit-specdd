@@ -1,3 +1,4 @@
+import copy
 import subprocess
 import tempfile
 import unittest
@@ -90,6 +91,72 @@ class ResolverProjectionTests(unittest.TestCase):
                 ["src/auth/auth.sdd"],
                 owners,
             )
+
+    def test_context_fingerprint_tracks_effective_contract_drift(self):
+        base = [
+            {
+                "path": "project.sdd",
+                "sections": {
+                    "Must": [{"body": ["Preserve stable behavior."]}],
+                    "References": [{"body": ["./policy.sdd"]}],
+                },
+            },
+            {
+                "path": "policy.sdd",
+                "sections": {
+                    "Forbids": [{"body": ["@ForbiddenDependency"]}],
+                },
+            },
+        ]
+        baseline = boundary.specdd_context_fingerprint(base)
+        self.assertEqual(
+            baseline,
+            boundary.specdd_context_fingerprint(copy.deepcopy(base)),
+        )
+
+        variants = {}
+
+        changed_must = copy.deepcopy(base)
+        changed_must[0]["sections"]["Must"][0]["body"] = [
+            "Preserve stricter behavior."
+        ]
+        variants["Must"] = changed_must
+
+        changed_forbids = copy.deepcopy(base)
+        changed_forbids[1]["sections"]["Forbids"][0]["body"] = [
+            "@DifferentForbiddenDependency"
+        ]
+        variants["Forbids"] = changed_forbids
+
+        changed_reference = copy.deepcopy(base)
+        changed_reference[0]["sections"]["References"][0]["body"] = [
+            "./other-policy.sdd"
+        ]
+        variants["References"] = changed_reference
+
+        changed_referenced_contract = copy.deepcopy(base)
+        changed_referenced_contract[1]["sections"]["Must"] = [
+            {"body": ["Referenced policy behavior changed."]}
+        ]
+        variants["referenced contract"] = changed_referenced_contract
+
+        changed_chain = copy.deepcopy(base)
+        changed_chain.append(
+            {
+                "path": "local.sdd",
+                "sections": {
+                    "Must": [{"body": ["Apply local governing behavior."]}],
+                },
+            }
+        )
+        variants["governing chain"] = changed_chain
+
+        for label, specs in variants.items():
+            with self.subTest(label=label):
+                self.assertNotEqual(
+                    baseline,
+                    boundary.specdd_context_fingerprint(specs),
+                )
 
     def test_specdd_globstar_matches_nested_targets(self):
         self.assertTrue(

@@ -3,9 +3,14 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
-from boundary_builder import build_change_boundary, write_boundary
+from boundary_builder import (
+    build_change_boundary,
+    load_boundary_context_evidence,
+    write_boundary,
+    write_boundary_context_evidence,
+)
 from boundary_paths import normalize_target
 from boundary_schema import load_schema
 from boundary_types import BoundaryError
@@ -14,6 +19,7 @@ from validation_tasks import (
     is_specdd_control_path,
     parse_tasks_file,
 )
+from validation_types import diagnostic
 
 
 class WorkflowGateError(RuntimeError):
@@ -109,14 +115,126 @@ def _refresh_boundary(
         return None
 
     schema = load_schema(root)
+    fingerprints: dict[str, str] = {}
     value = build_change_boundary(
         root,
         targets,
         feature=feature,
         schema=schema,
+        context_fingerprints=fingerprints,
+    )
+    write_boundary_context_evidence(
+        root,
+        value,
+        fingerprints,
     )
     write_boundary(value, output)
     return value
+
+
+def _boundary_target_map(
+    boundary: Mapping[str, object],
+) -> dict[str, Mapping[str, object]]:
+    result: dict[str, Mapping[str, object]] = {}
+    for item in boundary.get("targets", []):
+        if not isinstance(item, Mapping):
+            continue
+        path = item.get("path")
+        if isinstance(path, str):
+            result[path] = item
+    return result
+
+
+def _specdd_context_diagnostics(
+    root: Path,
+    boundary: Mapping[str, object],
+    schema: Mapping[str, object],
+) -> list[dict[str, object]]:
+    try:
+        expected_fingerprints = load_boundary_context_evidence(
+            root,
+            boundary,
+        )
+    except BoundaryError as exc:
+        return [
+            diagnostic(
+                "STALE_BOUNDARY",
+                "blocking",
+                "Change Boundary effective SpecDD context evidence is "
+                "missing, invalid, or no longer matches the boundary.",
+                contextError=str(exc),
+            )
+        ]
+
+    planned = _boundary_target_map(boundary)
+    if not planned:
+        return []
+
+    fresh_fingerprints: dict[str, str] = {}
+    fresh = build_change_boundary(
+        root,
+        planned,
+        feature=str(boundary["feature"]),
+        schema=schema,
+        context_fingerprints=fresh_fingerprints,
+    )
+    current = _boundary_target_map(fresh)
+    unresolved = {
+        item.get("normalizedPath"): item
+        for item in fresh.get("unresolved", [])
+        if isinstance(item, Mapping)
+        and isinstance(item.get("normalizedPath"), str)
+    }
+
+    changes: list[dict[str, object]] = []
+    for path, expected_target in planned.items():
+        current_target = current.get(path)
+        expected_hash = expected_fingerprints.get(path)
+        current_hash = fresh_fingerprints.get(path)
+        if current_target is None:
+            unresolved_item = unresolved.get(path, {})
+            changes.append(
+                {
+                    "path": path,
+                    "expectedContextSha256": expected_hash,
+                    "boundaryCode": unresolved_item.get("code"),
+                }
+            )
+            continue
+
+        expected_authority = expected_target.get("primaryAuthority")
+        current_authority = current_target.get("primaryAuthority")
+        if (
+            expected_hash != current_hash
+            or expected_authority != current_authority
+        ):
+            changes.append(
+                {
+                    "path": path,
+                    "expectedContextSha256": expected_hash,
+                    "actualContextSha256": current_hash,
+                    "expectedAuthority": expected_authority,
+                    "actualAuthority": current_authority,
+                    "expectedResolvedSpecs": expected_target.get("resolvedSpecs"),
+                    "actualResolvedSpecs": current_target.get("resolvedSpecs"),
+                }
+            )
+
+    generation_changed = boundary.get("generation") != fresh.get("generation")
+    if not changes and not generation_changed:
+        return []
+
+    return [
+        diagnostic(
+            "STALE_BOUNDARY",
+            "blocking",
+            "Governing SpecDD context changed after the Change Boundary "
+            "was generated. Refresh context before authorization.",
+            targets=[item["path"] for item in changes],
+            contextChanges=changes,
+            generationChanged=True if generation_changed else None,
+        )
+    ]
 
 
 def _boundary_summary(

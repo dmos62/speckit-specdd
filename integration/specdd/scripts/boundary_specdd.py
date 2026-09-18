@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -105,6 +106,37 @@ def extract_resolved_specs(
     return specs
 
 
+def specdd_context_fingerprint(
+    specs: Sequence[Mapping[str, Any]],
+) -> str:
+    projection: list[dict[str, Any]] = []
+    for spec in specs:
+        path = spec.get("path")
+        if not isinstance(path, str) or not path:
+            raise BoundaryError(
+                "Resolved SpecDD context contains a spec without a path"
+            )
+        sections = spec.get("sections")
+        projection.append(
+            {
+                "path": path,
+                "sections": (
+                    sections
+                    if isinstance(sections, Mapping)
+                    else {}
+                ),
+            }
+        )
+
+    encoded = json.dumps(
+        projection,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def derive_primary_authority(
     root: Path,
     target: str,
@@ -158,26 +190,21 @@ def resolve_target(
         else _locate_executable(executable)
     )
 
-    try:
-        result = _run(
-            [
-                command,
-                "resolve",
-                "--root",
-                str(root),
-                str(target.absolute_path),
-                "--sections",
-                "all",
-                "--format",
-                "json",
-            ],
-            root,
-            runner,
-        )
-    except FileNotFoundError as exc:
-        raise BoundaryError(
-            f"SpecDD CLI executable was not found: {executable}"
-        ) from exc
+    result = _run(
+        [
+            command,
+            "resolve",
+            "--root",
+            str(root),
+            str(target.absolute_path),
+            "--sections",
+            "all",
+            "--format",
+            "json",
+        ],
+        root,
+        runner,
+    )
 
     if result.returncode != 0:
         output = result.stderr or result.stdout or ""
