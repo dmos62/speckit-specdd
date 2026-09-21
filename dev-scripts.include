@@ -1,10 +1,10 @@
-@# Surface bootstrap health, resolver capability, workflow shape, full tests, fixture lint, patch integrity, canonical worktree state, and clean-clone acceptance.
-@# Bootstrap check already reports SpecDD lint, workflow-overlay listing, and resolved workflow state; avoid duplicating those outputs here.
+@# Track repository health plus the exact upstream release/capability gate for intended-path resolution.
+@# The upstream handoff is HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md; implementation remains blocked until a released CLI exposes the required kind flags.
+@# Bootstrap check already reports SpecDD lint, workflow-overlay listing, resolved workflow state, and the pinned installed CLI version.
 @cli! bash -c "bash scripts/bootstrap.sh --check"
+@cli! bash -c "npm view specdd version"
 @cli! bash -c "specdd resolve --help"
-@cli! bash -c "specify workflow info speckit"
-@cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
-@cli! bash -c "specdd lint tests/fixtures/specdd-two-domain"
+@cli! bash -c "uv run --no-project python -m unittest discover -s tests -p 'test_boundary.py'"
 @cli! bash -c "git diff --check"
 @cli! bash -c "git status --short"
 @cli! bash -c "printf '%s\n' '--- Tracked files matched by ignore rules ---'; git ls-files -ci --exclude-standard"

@@ -1,34 +1,20 @@
 # Implementation TODO
 
-Active work below is derived from `docs/TECH-DEBT.md`.
+Active work below is derived from the current bridge limitation.
 
-The v0.1 authority-hardening baseline is complete: immutable authorization evidence, effective-context freshness checks,
-semantic Change Boundary consistency, explicit modification-permission projection, planned specification/control
-verification, operation-scoped Git baselines, and generated Codex skill classification are implemented and covered by
-the current test suite.
-
-Project code and documentation have been refocused so oversized design material is split by stable responsibility,
-shared CLI output behavior is centralized, and active technical debt no longer retains completed P0 work.
+The v0.1 authority-hardening baseline is complete. Current bootstrap, SpecDD lint, and focused Change Boundary tests pass.
 
 ## P2 — Intended-path resolver support
 
-- [ ] Replace the current unsupported-creation fallback when SpecDD exposes resolver-backed intended-path authority.
-  - Blocked as of 2026-09-18: pinned SpecDD CLI `1.1.1` requires `resolve` targets to exist.
-  - Rechecked against the official `specdd/cli` repository on 2026-09-18: `main` still reports package version `1.1.1`,
-    its `resolve` documentation explicitly requires targets to exist, and its latest changelog entry is `1.1.1`.
-  - No released or documented machine-readable CLI command, flag, or API currently authorizes a non-existent ordinary
-    target.
-  - The current SpecDD framework describes intended ordinary paths conceptually, but that framework contract is not a
-    substitute for resolver-backed authority in this bridge.
-  - No bridge implementation change is justified while this interface is absent: local ownership parsing, temporary
-    probe files, or undocumented CLI internals would create authority semantics outside the supported SpecDD resolver.
-  - Resume this work only through a deliberate compatibility change to a released SpecDD CLI/API version that exposes
-    authoritative machine-readable resolution for intended ordinary paths.
-  - When that interface exists, update the pinned compatibility contract deliberately before relying on it.
-  - Cover exact ownership, existing-directory ownership, glob ownership, `Can modify`, ambiguous ownership, and no
-    authority.
-  - Preserve `.sdd` evolution-path exclusion from implementation boundaries.
-  - Prove task-stage validation and pre-implementation authorization can carry resolver-backed intended targets without
-    weakening the authority-snapshot invariant.
-  - Remove the `INTENDED_TARGET_UNSUPPORTED` fallback only after those tests establish semantic parity with SpecDD
-    intended-path rules.
+- [ ] Integrate resolver-backed intended-path authority after upstream SpecDD CLI support is released.
+  - Current published SpecDD CLI as of 2026-09-21 is `1.1.1`.
+  - `specdd resolve --help` still exposes no intended-target kind option and the current resolver requires targets to exist.
+  - The upstream implementation handoff is `HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md`. It is deliberately self-contained so it can be copied to an upstream fixer who has no access to this repository.
+  - Required upstream interface: mutually exclusive `--file`, `--folder`, and `--sdd-file` flags that allow non-existent targets to be resolved without changing unflagged existing-target behavior.
+  - Do not emulate intended-target resolution locally through `Owns`/`Can modify` parsing, temporary probe files, or undocumented CLI internals.
+  - When the upstream feature is published, deliberately update the compatibility pin before depending on it.
+  - Replace `INTENDED_TARGET_UNSUPPORTED` fallback handling with resolver-backed intended-target resolution while preserving current target normalization and Change Boundary semantic validation.
+  - Cover exact ownership, directory ownership, glob ownership, `Can modify`, ambiguous ownership, absent authority, ordinary files, directories, and `.sdd` intended targets as applicable to bridge behavior.
+  - Preserve `.sdd` evolution-path and root bootstrap-control exclusion from implementation boundaries.
+  - Prove task-stage validation and pre-implementation authorization can carry resolver-backed intended targets without weakening the authority-snapshot invariant.
+  - Remove `INTENDED_TARGET_UNSUPPORTED` behavior and documentation only after released-CLI tests establish semantic parity.
