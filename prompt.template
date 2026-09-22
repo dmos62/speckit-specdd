@@ -33,7 +33,7 @@ Be proactive about getting rid of unnecessary code/text and refactoring code for
 
 You must split code and documentation files into small files, so that they don't exceed 250 lines. We need focused, highly orthogonal files.
 
-The TODO task is blocked. Write a handoff document for an agent that will fork and fix the upstream specdd cli utility to allow for resolving uncreated files/folders/.sdd-files: the idea is that specdd cli will take an optional argument that will say whether the target is expected to be a file (`--file`), folder (`--folder`) or `.sdd` file (`--sdd-file`), which will allow it to unambiguously resolve it when it doesn't exist: these arguments won't normally be used for targets that are already created.
+The TODO task was blocked, but upstream specdd cli was forked and fixed. Create a HUMAN-REQUEST.md outlining how to setup the fork for usage locally (and for development). It's at `https://github.com/dmos62/specdd-cli` branch `feature/resolve-intended-targets`. The README contains most information about the new resolve features: https://github.com/dmos62/specdd-cli/blob/feature/resolve-intended-targets/README.md.
 
 @llmformat
 
