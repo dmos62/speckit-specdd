@@ -95,12 +95,11 @@ def build_change_boundary(
             unresolved.append(
                 Unresolved(
                     input=target.raw,
-                    code="UNRESOLVED_TARGET",
+                    code="INTENDED_TARGET_UNSUPPORTED",
                     path=target.path,
                     message=(
-                        "INTENDED_TARGET_UNSUPPORTED: SpecDD CLI "
-                        f"{cli_version} does not expose complete typed "
-                        "intended-target resolution; the bridge will not "
+                        f"SpecDD CLI {cli_version} does not expose complete "
+                        "typed intended-target resolution; the bridge will not "
                         "infer pre-creation authority."
                     ),
                 )

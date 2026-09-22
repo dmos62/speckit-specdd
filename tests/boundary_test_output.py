@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from boundary_test_support import REPO_ROOT, boundary
+from boundary_test_support import REPO_ROOT, boundary, validation
 
 
 class BoundaryOutputTests(unittest.TestCase):
@@ -60,14 +60,61 @@ class BoundaryOutputTests(unittest.TestCase):
         }
         self.assertEqual(set(intended), set(records))
         message = (
-            "INTENDED_TARGET_UNSUPPORTED: SpecDD CLI 1.1.1 does not expose "
-            "complete typed intended-target resolution; the bridge will not "
-            "infer pre-creation authority."
+            "SpecDD CLI 1.1.1 does not expose complete typed intended-target "
+            "resolution; the bridge will not infer pre-creation authority."
         )
         for path in intended:
             with self.subTest(path=path):
-                self.assertEqual("UNRESOLVED_TARGET", records[path]["code"])
+                self.assertEqual(
+                    "INTENDED_TARGET_UNSUPPORTED",
+                    records[path]["code"],
+                )
                 self.assertEqual(message, records[path]["message"])
+                self.assertNotIn(
+                    "INTENDED_TARGET_UNSUPPORTED",
+                    records[path]["message"],
+                )
+
+    def test_validation_surfaces_intended_target_unsupported_boundary_code(self):
+        schema = boundary.load_schema(REPO_ROOT)
+        target = "src/future.ts"
+        with tempfile.TemporaryDirectory() as temporary:
+            payload = boundary.build_change_boundary(
+                Path(temporary).resolve(),
+                (target,),
+                feature="sample",
+                schema=schema,
+                cli_version="1.1.1",
+                specdd_framework_version="1.5",
+                intended_targets_supported=False,
+            )
+
+        task = validation.TaskRecord(
+            order=0,
+            task_id="T001",
+            story="US1",
+            text="write future target",
+            targets=(target,),
+            spec_targets=(),
+            invalid_targets=(),
+        )
+        result = validation.validate_feature(
+            payload,
+            [task],
+            stage="implementation",
+        )
+
+        diagnostics = [
+            item
+            for item in result["diagnostics"]
+            if item["code"] == "UNRESOLVED_TARGET"
+            and item.get("boundaryCode") == "INTENDED_TARGET_UNSUPPORTED"
+        ]
+        self.assertEqual(1, len(diagnostics))
+        self.assertNotIn(
+            "INTENDED_TARGET_UNSUPPORTED",
+            payload["unresolved"][0]["message"],
+        )
 
     def test_intended_target_support_is_detected_from_resolve_help(self):
         with tempfile.TemporaryDirectory() as temporary:

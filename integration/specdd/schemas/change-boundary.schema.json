@@ -156,6 +156,7 @@
           "enum": [
             "INVALID_TARGET",
             "UNRESOLVED_TARGET",
+            "INTENDED_TARGET_UNSUPPORTED",
             "RESOLUTION_FAILED",
             "AMBIGUOUS_AUTHORITY"
           ]

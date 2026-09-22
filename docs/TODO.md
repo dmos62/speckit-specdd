@@ -7,18 +7,6 @@ bootstrap builds and installs `https://github.com/dmos62/specdd-cli.git` from br
 The compatibility fallback for older non-pinned resolvers remains intentionally conservative. The supported development
 path is the pinned fork until an equivalent published upstream package is available.
 
-## P1 — Make unsupported intended-target capability a first-class diagnostic
-
-- [ ] Replace the current `UNRESOLVED_TARGET` plus `INTENDED_TARGET_UNSUPPORTED` message convention with a stable
-  machine-readable `INTENDED_TARGET_UNSUPPORTED` unresolved code.
-  - Preserve `UNRESOLVED_TARGET` for targets that the typed resolver successfully resolves but for which no primary
-    ownership authority can be derived.
-  - Update the Change Boundary schema and focused projection tests so consumers do not need to parse diagnostic message
-    text.
-  - Keep the human-readable message descriptive without relying on it as an API token.
-  - Verify deterministic validation continues to surface the resolver-provided boundary code without reinterpreting
-    SpecDD semantics.
-
 ## P1 — Fail when the pinned resolver lacks required intended-target capabilities
 
 - [ ] Distinguish supported compatibility fallback from a broken pinned SpecDD CLI installation.

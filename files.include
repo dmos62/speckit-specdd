@@ -51,8 +51,11 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Intended-path resolution is active against the fork-backed SpecDD CLI 1.2.0 pin.
-@# Keep the upstream handoff, TODO, boundary/resolver implementation, focused tests, and governing specs.
+@# Typed intended-path resolution remains active against the fork-backed SpecDD CLI 1.2.0 pin.
+@# Keep the TODO, schema, boundary/runtime implementation, bootstrap, focused tests, and governing specs.
+@# The completed upstream handoff is excluded until published-package migration becomes active work.
+@globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
+
 @# User-facing design prose stays out of the active context until published-package migration needs it.
 @globexclude README.md
 @globexclude docs/change-boundary.md

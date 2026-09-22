@@ -88,18 +88,24 @@ class RealFixtureIntegrationTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual([], payload["targets"])
         self.assertEqual([], payload["authorities"])
-        self.assertEqual("UNRESOLVED_TARGET", payload["unresolved"][0]["code"])
         self.assertEqual(
             "src/auth/missing.ts",
             payload["unresolved"][0]["normalizedPath"],
         )
 
-        message = payload["unresolved"][0]["message"]
-        if self.intended_targets_supported():
+        supported = self.intended_targets_supported()
+        record = payload["unresolved"][0]
+        message = record["message"]
+        if supported:
+            self.assertEqual("UNRESOLVED_TARGET", record["code"])
             self.assertNotIn("INTENDED_TARGET_UNSUPPORTED", message)
             self.assertIn("No primary authority", message)
         else:
-            self.assertIn("INTENDED_TARGET_UNSUPPORTED", message)
+            self.assertEqual(
+                "INTENDED_TARGET_UNSUPPORTED",
+                record["code"],
+            )
+            self.assertNotIn("INTENDED_TARGET_UNSUPPORTED", message)
             self.assertIn(
                 f"SpecDD CLI {boundary.specdd_cli_version(FIXTURE_ROOT, 'specdd')}",
                 message,

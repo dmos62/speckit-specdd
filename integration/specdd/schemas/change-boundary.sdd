@@ -1,0 +1,16 @@
+Spec: Change Boundary Schema
+
+Purpose:
+  Define the machine-readable Change Boundary v1 JSON contract for feature-scoped SpecDD authority projection.
+
+Owns:
+  ./change-boundary.schema.json
+
+Must:
+  Unresolved target entries require `input`, `code`, and `message`.
+  The unresolved `code` is one of `INVALID_TARGET`, `UNRESOLVED_TARGET`, `INTENDED_TARGET_UNSUPPORTED`, `RESOLUTION_FAILED`, or `AMBIGUOUS_AUTHORITY`.
+  Human-readable unresolved `message` text remains descriptive and is not the machine-readable diagnostic identifier.
+  Generation metadata records SpecDD CLI and framework versions.
+
+Done when:
+  Generated and loaded Change Boundary documents validate stable unresolved diagnostic codes independently of message text.
