@@ -1,30 +1,32 @@
-# Human Request: Use the Intended-Target SpecDD CLI Fork
+# Human Request: Activate the Intended-Target SpecDD CLI Fork
 
-The bridge's intended-target work is implemented on a temporary SpecDD CLI fork, but the feature is not yet available
-through a published upstream `specdd` release.
-
-Set up the fork as the locally active `specdd` executable so the bridge can exercise the implemented `--file`,
-`--folder`, and `--sdd-file` resolver behavior.
+The intended-target resolver implementation is available in a temporary SpecDD CLI fork and needs to be the locally
+active `specdd` executable so this repository can exercise `--file`, `--folder`, and `--sdd-file`.
 
 Fork:
 
 - Repository: https://github.com/dmos62/specdd-cli
 - Branch: `feature/resolve-intended-targets`
+- Current fork package version: `1.2.0`
 - Usage reference:
   https://github.com/dmos62/specdd-cli/blob/feature/resolve-intended-targets/README.md
 - Development reference:
   https://github.com/dmos62/specdd-cli/blob/feature/resolve-intended-targets/DEVELOPMENT.md
 
-The fork intentionally still reports package version `1.1.1`. Do not update this repository's compatibility pin merely
-to distinguish the fork from the published package.
+This repository still deliberately pins the published SpecDD CLI to `1.1.1`. Do not change that compatibility pin merely
+to make the development fork pass bootstrap version checks. The pin should change only when the intended-target behavior
+is available from a published upstream package and the release-finalization TODO is performed.
 
-## 1. Install host prerequisites
+While the `1.2.0` fork is linked, `bash scripts/bootstrap.sh --check` is therefore expected to reject the CLI version
+until the repository deliberately moves its compatibility pin.
 
-The CLI requires Node.js 22 or newer. The fork declares Yarn `1.22.22`.
+## 1. Confirm host prerequisites
 
-The bridge checks also require `uv`, Git, npm, and the Codex CLI.
+The CLI requires Node.js 22 or newer. The fork uses Yarn `1.22.22`.
 
-Confirm the important tools:
+The bridge development host also needs npm, Git, `uv`, and the Codex CLI.
+
+Run:
 
     node --version
     npm --version
@@ -32,16 +34,18 @@ Confirm the important tools:
     uv --version
     codex --version
 
-Install Yarn 1.22.22 if it is not already available:
+Install the expected Yarn version if necessary:
 
     npm install --global yarn@1.22.22
     yarn --version
 
-The expected Yarn version is `1.22.22`.
+Expected Yarn version:
 
-## 2. Clone and build the fork
+    1.22.22
 
-Keep the CLI checkout outside this repository.
+## 2. Clone the fork outside this repository
+
+Keep the CLI checkout beside this repository rather than inside it.
 
 For example:
 
@@ -50,83 +54,112 @@ For example:
     cd specdd-cli-intended-targets
     git status
     git branch --show-current
+
+The active branch must be:
+
+    feature/resolve-intended-targets
+
+If the checkout already exists:
+
+    cd ../specdd-cli-intended-targets
+    git fetch origin
+    git switch feature/resolve-intended-targets
+    git pull --ff-only
+
+## 3. Install, verify, and build the fork
+
+From the fork checkout:
+
     yarn install --frozen-lockfile
     yarn typecheck
     yarn test
     yarn build
 
-The active branch should be:
+The executable uses the built `dist/main.js`, so rebuilding is required after CLI source changes.
 
-    feature/resolve-intended-targets
-
-The package requires a build because its executable is `dist/main.js`.
-
-A direct smoke check from the checkout should succeed:
+Verify the checkout directly:
 
     node dist/main.js resolve --help
 
-Confirm that the help includes all three options:
+The help must contain all three options:
 
     --file
     --folder
     --sdd-file
 
-## 3. Link the development checkout as the global `specdd`
+The fork does not need to expose a `specdd --version` command. Use npm package metadata plus resolver capabilities to
+identify the active installation.
 
-Remove the currently installed global package, then link the built checkout:
+## 4. Link the checkout as the global `specdd`
+
+Remove any currently installed global package, then link the development checkout:
 
     npm uninstall --global specdd
     cd ../specdd-cli-intended-targets
     npm link
     hash -r
 
-Confirm which executable is active:
+Verify the active command:
 
     command -v specdd
     npm list --global --depth=0 specdd
     specdd resolve --help
 
-The resolver help must contain all three intended-target flags. The package version alone is not sufficient evidence
-because both the public package and this fork currently report `1.1.1`.
+Expected package state should identify the linked checkout as `specdd@1.2.0`.
 
-## 4. Smoke-test intended resolution
+The resolver help must expose:
 
-From this bridge repository, run:
+    --file
+    --folder
+    --sdd-file
+
+Do not rely only on the package version. The resolver flags are the capability check needed by this repository.
+
+## 5. Smoke-test intended resolution
+
+Return to this bridge repository.
+
+Resolve the intended Auth target:
 
     specdd resolve --root tests/fixtures/specdd-two-domain --file tests/fixtures/specdd-two-domain/src/auth/future-service.ts --sections all --format json
 
-Then test the intended Users contract:
+Resolve the intended Users target:
 
     specdd resolve --root tests/fixtures/specdd-two-domain --file tests/fixtures/specdd-two-domain/src/users/future-identity-contract.ts --sections all --format json
 
-Both commands should exit with status `0` without creating either target.
+Both commands must exit with status `0` without creating either target.
 
-Also confirm the untyped missing-target behavior remains conservative:
+Confirm that an untyped missing target still fails:
 
     specdd resolve --root tests/fixtures/specdd-two-domain tests/fixtures/specdd-two-domain/src/auth/does-not-exist.ts --sections all --format json
 
-That command should fail because a missing target without an explicit kind still requires an existing path.
+That command should return a non-zero status because missing targets still require an explicit kind.
 
-## 5. Run this repository's checks
+Also verify that the smoke tests did not create the intended files:
 
-From the bridge repository:
+    test ! -e tests/fixtures/specdd-two-domain/src/auth/future-service.ts
+    test ! -e tests/fixtures/specdd-two-domain/src/users/future-identity-contract.ts
 
-    bash scripts/bootstrap.sh --check
+## 6. Run the focused bridge suite
 
-Then run the focused boundary suite:
+With `uv` available:
 
     uv run --no-project python -m unittest discover -s tests -p 'test_boundary.py'
 
-The real-fixture intended-target tests should run rather than skip because the linked resolver exposes all three typed
-target flags.
+The real-fixture intended-target tests should run rather than skip because the linked resolver exposes all three target
+kind flags.
 
-If `bash scripts/bootstrap.sh` is run in apply mode later, re-check `specdd resolve --help` afterward. The temporary
-fork and the published package share version `1.1.1`, so resolver capabilities are the definitive check that the desired
-CLI is active.
+The repository bootstrap check may also be run for diagnostic purposes:
 
-## 6. Development loop for the fork
+    bash scripts/bootstrap.sh --check
 
-When changing the fork itself:
+While the project still pins published `specdd@1.1.1`, a failure reporting that `1.1.1` is required is expected with the
+linked `1.2.0` fork. Do not run bootstrap in apply mode while testing the fork because apply mode may replace the linked
+checkout with the repository's pinned published package.
+
+## 7. Development loop for the fork
+
+When changing the CLI fork itself:
 
     cd ../specdd-cli-intended-targets
     git switch feature/resolve-intended-targets
@@ -135,79 +168,51 @@ When changing the fork itself:
     yarn test
     yarn build
 
-Because `npm link` points the global package at this checkout, rebuilding `dist/` makes the updated CLI available through
-the global `specdd` command without reinstalling it.
+Because the global package is linked to this checkout, rebuilding `dist/` makes the new implementation available through
+the `specdd` command without reinstalling the package.
 
-For the fork's complete release-preparation checks, its development guide uses:
+For the fork's full development/release checks, follow its `DEVELOPMENT.md`. If that guide still uses the repository's
+aggregate build target, run:
 
     make build
 
-After rebuilding, return to this repository and rerun:
+After each rebuild, return to this bridge repository and rerun:
 
     specdd resolve --help
     uv run --no-project python -m unittest discover -s tests -p 'test_boundary.py'
-    bash scripts/bootstrap.sh --check
 
-## 7. Restore the published CLI when needed
+## 8. Restore the published CLI when fork testing is finished
 
-To stop using the fork:
+To stop using the development checkout:
 
     npm unlink --global specdd
     npm install --global specdd@1.1.1
     hash -r
+    npm list --global --depth=0 specdd
     specdd resolve --help
 
-Until an upstream release containing intended-target resolution is published, the restored public `1.1.1` package is
-expected not to expose `--file`, `--folder`, and `--sdd-file`.
+Until upstream publishes intended-target support, the restored public `1.1.1` package is expected not to expose all
+three typed resolver flags.
 
-## Requested result
+## Requested response
 
-After setup, report these outputs so bridge work can continue against the intended-target implementation:
+Report the output of:
 
     node --version
     yarn --version
     command -v specdd
     npm list --global --depth=0 specdd
     specdd resolve --help
-    bash scripts/bootstrap.sh --check
+
+Also report the exit status and output of:
+
+    specdd resolve --root tests/fixtures/specdd-two-domain --file tests/fixtures/specdd-two-domain/src/auth/future-service.ts --sections all --format json
+    specdd resolve --root tests/fixtures/specdd-two-domain --file tests/fixtures/specdd-two-domain/src/users/future-identity-contract.ts --sections all --format json
+    specdd resolve --root tests/fixtures/specdd-two-domain tests/fixtures/specdd-two-domain/src/auth/does-not-exist.ts --sections all --format json
     uv run --no-project python -m unittest discover -s tests -p 'test_boundary.py'
 
+If convenient, also include the result of:
 
-----------
+    bash scripts/bootstrap.sh --check
 
-Response: specdd cli fork is setup and version bumped to 1.2.0.
-
-````
-$ command -v specdd
-specdd --version
-specdd resolve --help
-npm list --global --depth=0 specdd
-/c/Users/Domas/AppData/Roaming/npm/specdd
-error: unknown option '--version'
-Usage: specdd resolve [options] <target>
-
-Resolve relevant SpecDD specs for a target path.
-
-Arguments:
-  target              Directory, .sdd file, or ordinary file to resolve.
-
-Options:
-  --root <path>       Root directory for resolution. Defaults to the current directory.
-  --file              Treat the target as an intended ordinary file.
-  --folder            Treat the target as an intended directory.
-  --sdd-file          Treat the target as an intended .sdd specification file.
-  --section <name>    Section to include, or all. May be repeated. (default: [])
-  --sections <names>  Comma-separated sections to include, or all.
-  --depth <depth>     Soft-link expansion depth: non-negative integer or all. (default:
-                      "2")
-  --format <format>   Output format: text, json, or json-extended. (default: "text")
-  -h, --help          display help for command
-Target kind options are mutually exclusive. They allow resolution before a target exists and are normally unnecessary for existing targets.
-
-Copyright (c) 2026 Matīss Treinis and SpecDD contributors
-Spec help: https://specdd.ai
-CLI help: https://github.com/specdd/cli
-C:\Users\Domas\AppData\Roaming\npm
-└── specdd@1.2.0 -> .\..\..\..\projektai\specdd-cli
-````
-
+A version-pin failure from that final command is expected while the linked `1.2.0` fork is active.
