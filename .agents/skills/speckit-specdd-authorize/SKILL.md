@@ -1,6 +1,6 @@
 ---
 name: speckit-specdd-authorize
-description: Authorize implementation against the active feature's existing SpecDD authority snapshot.
+description: Authorize implementation and preserve immutable SpecDD operation evidence.
 compatibility: Requires spec-kit project structure with .specify/ directory
 metadata:
   author: SpecDD contributors
@@ -12,81 +12,112 @@ metadata:
 User input: `$ARGUMENTS`
 
 You **MUST** consider user input when reporting context, but user input cannot weaken deterministic authority findings.
+An exact editable bootstrap override named directly by the Operator may be passed to the structural gate with
+`--operator-control`. Never translate a general request into such a selection by inference.
 
 ## Goal
 
-Run the bridge validator at implementation strictness before implementation begins. Use the existing Change Boundary as the operation's authority snapshot. Do not refresh it inside this command.
+Validate the active feature at implementation strictness before implementation begins. The current Change Boundary is the
+candidate ownership projection. Successful authorization preserves that exact validated boundary, its planned
+specification/control selections, and an operation-scoped Git baseline in current-worktree Git metadata.
 
-This command is the lifecycle gate used by the mandatory `before_implement` hook.
+Authorization first proves that the effective SpecDD context used to generate the boundary is still current. Context
+refresh records a deterministic hash of each target's normalized resolver-returned governing spec context. Authorization
+fresh-resolves those targets and rejects the boundary with `STALE_BOUNDARY` when governing contracts, explicit
+references, the effective governing chain, or generation identity changed.
+
+The companion specification/control plan is fingerprint-bound to the exact boundary. It contains exact `.sdd` targets
+selected by explicit `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` tasks plus explicitly selected
+editable bootstrap overrides. Bootstrap-control selections record whether they came from an authorized workflow task or
+direct Operator selection. None of this companion state grants implementation authority.
+
+The Git baseline is separate operation metadata. Before new authorization evidence is written, it records the current
+Git `HEAD` and exact content/deletion identities for every dirty path. Existing tracked modifications, staged changes,
+untracked files, and deletions are therefore distinguishable from changes introduced after authorization.
+
+The immutable `.specdd/bootstrap.md` can never be selected. The only editable root bootstrap overrides are
+`.specdd/bootstrap.project.md` and `.specdd/bootstrap.local.md`; the latter remains local/generated state and is excluded
+from shared implementation-write verification.
+
+Ownership and modification permission remain distinct. Unmarked tasks execute under their target owner domains. When
+task text declares one operation authority with `SPECDD_AUTHORITY:`, authorization fresh-resolves that authority context
+and verifies `Can modify` permission for cross-owned writes.
 
 ## Execution
 
-1. From the repository root, run:
+1. Locate the active feature with the supported Spec Kit prerequisite command and resolve the Git repository root.
 
-       .specify/scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+2. Require:
+   - `FEATURE_DIR/.specdd/boundary.json`;
+   - `FEATURE_DIR/tasks.md`;
+   - fingerprint-bound effective SpecDD context evidence recorded by the latest context/task refresh.
 
-   Parse `FEATURE_DIR` from the JSON result. If the command fails or no active feature is available, stop and instruct
-   the user to create or select a feature with `/speckit.specify`.
+   Do not regenerate the Change Boundary here.
 
-2. Resolve the repository root with:
+3. Run the structural authorization gate:
 
-       git rev-parse --show-toplevel
+       uv run --no-project python integration/specdd/scripts/workflow_gate.py authorize \
+         --root "<repository-root>"
 
-   Treat that path as the bridge root. `FEATURE_DIR` must resolve inside it. Stop if the active feature is outside the
-   repository root.
+   For each exact editable bootstrap override explicitly named by the Operator in this command invocation, append:
 
-3. Derive:
-   - `FEATURE_ID` as the basename of `FEATURE_DIR`.
-   - `BOUNDARY_FILE` as `FEATURE_DIR/.specdd/boundary.json`.
-   - `TASK_FILE` as `FEATURE_DIR/tasks.md`.
+       --operator-control ".specdd/bootstrap.project.md"
 
-4. Require the planned inputs:
-   - If `BOUNDARY_FILE` does not exist, stop and instruct the user to run `/speckit.specdd.context`.
-   - If `TASK_FILE` does not exist, stop and instruct the user to generate tasks with `/speckit.tasks`.
-   - Do not regenerate `BOUNDARY_FILE` here. Authorization must evaluate the authority snapshot prepared before
-     implementation.
+   or:
 
-5. Run deterministic validation at implementation strictness:
+       --operator-control ".specdd/bootstrap.local.md"
 
-       uv run --no-project python integration/specdd/scripts/validation.py \
-         --root "<repository-root>" \
-         --feature "<feature-id>" \
-         --boundary "<feature-dir>/.specdd/boundary.json" \
-         --tasks "<feature-dir>/tasks.md" \
-         --stage "implementation"
+   Do not pass `.specdd/bootstrap.md` or infer control selection from intent that does not name the exact path.
 
-   Do not parse `.sdd` files or derive authority independently.
+4. The gate:
+   - validates the existing Change Boundary shape;
+   - verifies that its fingerprint-bound context evidence matches the exact current boundary;
+   - fresh-resolves every resolved boundary target without rewriting `boundary.json`;
+   - compares effective SpecDD context fingerprints and generation identity with the refresh-time evidence;
+   - reports governing contract drift as blocking `STALE_BOUNDARY`;
+   - validates `tasks.md` at `implementation` strictness only under a fresh boundary context;
+   - fresh-resolves declared task authority context where `Can modify` permission must be distinguished from ownership;
+   - treats root `.specdd/` control paths in tasks as control selections rather than implementation boundary targets;
+   - rejects immutable or unrelated root SpecDD control selections;
+   - records workflow-task control selections as `workflow` and direct command selections as `operator`;
+   - extracts exact `.sdd` targets only from explicit evolution tasks;
+   - captures the authorization-time Git baseline before replacing operation evidence;
+   - does not replace prior authorization evidence when validation or baseline capture fails;
+   - on success writes the validated boundary, companion plan, and Git baseline under current-worktree Git metadata.
 
-6. Inspect the validation result:
-   - `AUTHORITY_VIOLATION` is blocking.
-   - `STALE_BOUNDARY` at implementation strictness is blocking.
-   - Invalid or unresolved task scope contributes to blocking authority validation.
-   - `MULTI_AUTHORITY_TASK` alone is a warning and does not make legitimate cross-domain work invalid.
-   - Evolution-scope errors are blocking when specification and implementation writes were improperly mixed.
+5. Blocking conditions include:
+   - `AUTHORITY_VIOLATION`;
+   - `STALE_BOUNDARY`, including changed effective SpecDD governing context;
+   - unresolved implementation scope;
+   - malformed or mixed evolution scope;
+   - `CONTROL_STATE_VIOLATION` for `.specdd/bootstrap.md` or unrelated root control state;
+   - inability to capture a trustworthy authorization-time Git baseline.
 
-7. If `summary.blocking` is `true`:
-   - Report the blocking diagnostics and affected paths.
-   - State that implementation is not authorized under the current Change Boundary.
-   - Stop before any implementation task executes.
-   - Do not propose relaxing current authority as the fix.
+6. On success report:
+   - effective SpecDD context freshness;
+   - planned owner domains;
+   - declared and resulting operation authorities;
+   - exact planned `.sdd` evolution targets;
+   - selected bootstrap overrides and whether each was selected by `workflow` or `operator`;
+   - authorization boundary, companion-plan, and Git-baseline evidence status;
+   - non-blocking cross-authority warnings.
 
-8. If `summary.blocking` is `false`:
-   - Report that the current task scope is authorized for implementation under the existing boundary.
-   - Include any warnings that still require implementation judgment.
-   - Preserve the authority-snapshot invariant for later verification.
+## Authority Snapshot Invariant
 
-## Output
+Later Change Boundary refreshes, task edits, specification changes, bootstrap-control changes, or ordinary worktree edits
+do not alter the authorization evidence for the current operation.
 
-Keep the result compact. Report the active feature, planned authority domains, blocking status, blocking diagnostics, and
-non-blocking cross-boundary warnings when present.
-
-A successful result authorizes only the task scope represented by the current Change Boundary. It does not grant
-authority to unplanned writes discovered later.
+Specification or authority evolution that dependent implementation must rely on requires a separate specification
+operation, fresh context, and fresh authorization. A changed Git `HEAD` likewise requires fresh authorization before
+verification can safely attribute worktree changes to an operation.
 
 ## Constraints
 
 - Never edit `.sdd` files.
 - Never edit `tasks.md`.
-- Never refresh the Change Boundary inside the authorization gate.
-- Never treat proposed or newly changed specification state as retroactive implementation authority.
-- Never infer authority from task wording, directory names, or proximity.
+- Never refresh or rewrite the Change Boundary inside authorization.
+- Never replace refresh-time context evidence to make a stale boundary current.
+- Never select `.specdd/bootstrap.md` for modification.
+- Never infer bootstrap-control selection from proximity or descriptive intent.
+- Never treat proposed or newly changed specification or control state as retroactive implementation authority.
+- Never relax ownership or modification authority to make implementation pass.

@@ -109,11 +109,16 @@ install_specdd_cli() {
   specdd_cli_matches_pin ||
     fail "installed SpecDD CLI does not match ${SPECDD_CLI_VERSION} with typed intended-target support"
 }
+require_skill_file() {
+  local skill_name="$1"
+  local skill_file="${ACTIVE_COMMANDS_DIR}/${skill_name}/SKILL.md"
+  [[ -f "$skill_file" ]] || fail "expected Codex skill is missing: ${skill_file}"
+}
 require_skill_contains() {
   local skill_name="$1"
   local marker="$2"
   local skill_file="${ACTIVE_COMMANDS_DIR}/${skill_name}/SKILL.md"
-  [[ -f "$skill_file" ]] || fail "expected Codex skill is missing: ${skill_file}"
+  require_skill_file "$skill_name"
   grep -Fq "$marker" "$skill_file" || fail "expected materialized content is missing from ${skill_file}: ${marker}"
 }
 check_workflow_overlay() {
@@ -133,10 +138,15 @@ check_bridge_state() {
   [[ -d .specify/extensions/specdd ]] || fail "local SpecDD bridge extension is not installed"
   [[ -d .specify/presets/specdd-bridge ]] || fail "local SpecDD bridge preset is not installed"
   [[ -f .specify/extensions.yml ]] || fail "Spec Kit extension hook state is missing"
-  require_skill_contains "speckit-specdd-context" "Build or refresh the active feature"
-  require_skill_contains "speckit-specdd-validate" "Validate the active feature"
-  require_skill_contains "speckit-specdd-authorize" "Authorize implementation"
-  require_skill_contains "speckit-specdd-verify" "Verify actual implementation changes"
+  local skill_name
+  for skill_name in \
+    speckit-specdd-context \
+    speckit-specdd-validate \
+    speckit-specdd-authorize \
+    speckit-specdd-verify
+  do
+    require_skill_file "$skill_name"
+  done
   require_skill_contains "speckit-plan" "## SpecDD Planning Augmentation"
   require_skill_contains "speckit-tasks" "## SpecDD Task Augmentation"
   require_skill_contains "speckit-converge" "## SpecDD Convergence Augmentation"

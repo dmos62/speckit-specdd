@@ -9,16 +9,18 @@ Owns:
 References:
   ../../specdd/commands/context.sdd
   ../../specdd/commands/validate.sdd
+  ../../specdd/commands/authorize.sdd
 
 Must:
   Task generation preserves Spec Kit user-story grouping and checklist syntax.
   Non-`.sdd` task write sets prefer one primary SpecDD authority when work is naturally decomposable.
-  Legitimate cross-domain contract work remains representable when current authority permits every write.
+  Legitimate coordinated cross-domain work remains representable under its participating owner domains.
+  A task that intentionally uses one non-owning authority declares `SPECDD_AUTHORITY:` in ordinary task text and is valid only when that authority owns or has `Can modify` permission for every implementation target.
   Spec evolution and authority evolution remain distinct from ordinary implementation work.
   Deliberate evolution uses `SPEC_EVOLUTION_REQUIRED:` or `AUTHORITY_EVOLUTION_REQUIRED:` in ordinary task text without adding custom bracket labels.
   Evolution tasks name only `.sdd` write targets and remain separate from ordinary implementation writes.
-  Each deliberate evolution task is followed by a separate Change Boundary refresh before dependent implementation continues.
+  Each deliberate evolution task is followed by separate Change Boundary refresh and authorization before dependent implementation continues.
   Task-stage validation runs before task generation reports completion.
 
 Done when:
-  The composed task command preserves upstream grouping while exposing authority-local work, deliberate evolution, and validation guidance.
+  The composed task command preserves upstream grouping while exposing owner-local work, coordinated multi-owner work, explicitly permitted cross-owned work, deliberate evolution, fresh authorization requirements, and validation guidance.

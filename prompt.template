@@ -11,13 +11,13 @@ General `files.include` policy: we want to include the maximum of files that can
 Edit `dev-scripts.include` to change which script outputs are made available to the next programming iteration: adjust this as is appropriate. Note that script calls (can be multiple, one per line) should be wrapped in `@cli! bash -lic "{script}"`, for proper path/environment setup.
 @file dev-scripts.include
 
-@comment
-
 Fix errors, failed tests, if there are any. If not, work on the TODO.
 
 Unless there are significant regressions that should be focused on instead, do the first large task in `TODO.md`. If there are no large tasks, do a group of smaller ones. Record in the TODO whatever information is relevant for the other steps. When step is done, delete it from the TODO. When all steps are done, the TODO should be empty.
 
 ATTENTION: don't put triple-backtick-fenced code blocks in internal docs/TODOs: use some non-markdown fencing. If you notice such fencing, proactively replace it with non-markdown fencing.
+
+@comment
 @endcomment
 
 @#If another repo needs to make changes to restore/improve/enable compatibility between the repos, put that information in `TODO-{repo-name}.md` (replacing {repo-name} with the name of the repo): it has to contain everything the other repo needs to know about what this repo knows: the implementor will only see this file and the other repo. If work required in `TODO-{repo-name}.md` is done or not necessary anymore, delete it: if no work is required, it should be deleted. This is effectively sending a message to the other repo: it might respond via your `TODO.md`. Directly editing files outside this repo is impossible.
@@ -32,9 +32,9 @@ Be proactive about getting rid of unnecessary code/text and refactoring code for
 
 You must split code and documentation files into small files, so that they don't exceed 250 lines. We need focused, highly orthogonal files.
 
-For some reason the dev-scripts are failing when executed via the harness, but succeed when run regularly. Note, I'm in Windows running via mingw64, bash. The `bash -lic ""` wrapping was useful previously. Normally the harness works well. Can you examine what the problem might be?
+Note, recently moved from a Windows+mingw64 environment to WSL2. This may affect some things, cause issues.
 
-@#llmformat
+@llmformat
 
 @#Let's discuss.
 

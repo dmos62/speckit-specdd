@@ -8,13 +8,15 @@ Owns:
 
 References:
   ../../specdd/commands/verify.sdd
+  ../../specdd/commands/authorize.sdd
 
 Must:
-  Convergence verifies actual changes against the planned Change Boundary before reporting a clean result.
+  Convergence verifies actual changes against the immutable authorization snapshot before reporting a clean result.
   Feature gaps remain distinct from deterministic SpecDD system and authority findings.
   Convergence recognizes `SPECDD_VIOLATION`, `SPECDD_DRIFT`, `MISSING_SPEC_EVOLUTION`, and `AUTHORITY_VIOLATION`.
   Blocking SpecDD authority or lint findings prevent a clean converged result.
+  Current feature Change Boundary state does not replace authorization evidence from before implementation.
   Changed `.sdd` files never retroactively authorize implementation writes from the same operation.
 
 Done when:
-  The composed convergence command retains upstream append-only behavior and includes SpecDD verification findings.
+  The composed convergence command retains upstream append-only behavior and includes SpecDD verification findings against historical authorization evidence.
