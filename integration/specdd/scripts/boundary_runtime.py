@@ -10,6 +10,7 @@ from typing import Mapping, Sequence
 
 from boundary_types import BoundaryError, RunCommand
 
+PINNED_SPECDD_CLI_VERSION = "1.2.0"
 _INTENDED_TARGET_FLAGS = ("--file", "--folder", "--sdd-file")
 
 
@@ -84,6 +85,22 @@ def specdd_resolve_supports_intended_targets(
         )
     output = result.stdout + "\n" + result.stderr
     return all(flag in output for flag in _INTENDED_TARGET_FLAGS)
+
+
+def validate_intended_target_capabilities(
+    cli_version: str,
+    supported: bool,
+) -> None:
+    if supported or cli_version != PINNED_SPECDD_CLI_VERSION:
+        return
+
+    flags = ", ".join(_INTENDED_TARGET_FLAGS)
+    raise BoundaryError(
+        f"SpecDD CLI {PINNED_SPECDD_CLI_VERSION} is installed but its "
+        "resolver does not expose the complete typed intended-target flag "
+        f"set ({flags}). The pinned SpecDD CLI installation is invalid; "
+        "run `bash scripts/bootstrap.sh` to repair it."
+    )
 
 
 def _package_version(path: Path) -> str | None:

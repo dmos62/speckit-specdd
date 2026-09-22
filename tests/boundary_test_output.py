@@ -31,7 +31,7 @@ class BoundaryOutputTests(unittest.TestCase):
         ):
             boundary.validate_boundary(sample, schema)
 
-    def test_intended_target_shapes_are_retained_when_resolver_lacks_support(self):
+    def test_older_non_pinned_resolver_retains_unsupported_intended_targets(self):
         schema = boundary.load_schema(REPO_ROOT)
         intended = (
             "src/exact.ts",
@@ -73,6 +73,28 @@ class BoundaryOutputTests(unittest.TestCase):
                 self.assertNotIn(
                     "INTENDED_TARGET_UNSUPPORTED",
                     records[path]["message"],
+                )
+
+    def test_malformed_pinned_resolver_is_infrastructure_failure(self):
+        schema = boundary.load_schema(REPO_ROOT)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            target = root / "src" / "existing.ts"
+            target.parent.mkdir(parents=True)
+            target.touch()
+
+            with self.assertRaisesRegex(
+                boundary.BoundaryError,
+                r"SpecDD CLI 1\.2\.0.*pinned SpecDD CLI installation is invalid",
+            ):
+                boundary.build_change_boundary(
+                    root,
+                    ("src/existing.ts",),
+                    feature="sample",
+                    schema=schema,
+                    cli_version="1.2.0",
+                    specdd_framework_version="1.5",
+                    intended_targets_supported=False,
                 )
 
     def test_validation_surfaces_intended_target_unsupported_boundary_code(self):

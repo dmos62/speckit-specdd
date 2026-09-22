@@ -29,6 +29,10 @@ node_major_version() {
 speckit_matches_pin() {
   command -v specify >/dev/null 2>&1 && specify --version 2>&1 | grep -Eq "(^|[^0-9])${SPECKIT_VERSION//./\\.}([^0-9]|$)"
 }
+specdd_cli_package_matches_pin() {
+  command -v specdd >/dev/null 2>&1 &&
+    npm list --global --depth=0 "specdd@${SPECDD_CLI_VERSION}" >/dev/null 2>&1
+}
 specdd_resolve_supports_intended_targets() {
   command -v specdd >/dev/null 2>&1 || return 1
   local help flag
@@ -38,8 +42,7 @@ specdd_resolve_supports_intended_targets() {
   done
 }
 specdd_cli_matches_pin() {
-  command -v specdd >/dev/null 2>&1 &&
-    npm list --global --depth=0 "specdd@${SPECDD_CLI_VERSION}" >/dev/null 2>&1 &&
+  specdd_cli_package_matches_pin &&
     specdd_resolve_supports_intended_targets
 }
 specdd_framework_version() {
@@ -106,8 +109,10 @@ install_specdd_cli() {
   fi
   rm -rf "$checkout"
   hash -r
-  specdd_cli_matches_pin ||
-    fail "installed SpecDD CLI does not match ${SPECDD_CLI_VERSION} with typed intended-target support"
+  specdd_cli_package_matches_pin ||
+    fail "installed SpecDD CLI does not match required package version ${SPECDD_CLI_VERSION}"
+  specdd_resolve_supports_intended_targets ||
+    fail "installed SpecDD CLI ${SPECDD_CLI_VERSION} does not expose the complete typed intended-target flag set (--file, --folder, --sdd-file)"
 }
 require_skill_file() {
   local skill_name="$1"
@@ -167,8 +172,10 @@ check_initialized_state() {
   command -v specify >/dev/null 2>&1 || fail "Spec Kit CLI 'specify' is not installed; run: bash scripts/bootstrap.sh"
   command -v specdd >/dev/null 2>&1 || fail "SpecDD CLI 'specdd' is not installed; run: bash scripts/bootstrap.sh"
   speckit_matches_pin || fail "Spec Kit ${SPECKIT_VERSION} is required; run: bash scripts/bootstrap.sh"
-  specdd_cli_matches_pin || fail \
-    "SpecDD CLI ${SPECDD_CLI_VERSION} with typed intended-target support is required; bootstrap apply installs ${SPECDD_CLI_REPOSITORY}#${SPECDD_CLI_REF}"
+  specdd_cli_package_matches_pin || fail \
+    "SpecDD CLI ${SPECDD_CLI_VERSION} is required; bootstrap apply installs ${SPECDD_CLI_REPOSITORY}#${SPECDD_CLI_REF}"
+  specdd_resolve_supports_intended_targets || fail \
+    "SpecDD CLI ${SPECDD_CLI_VERSION} is installed but its resolver does not expose the complete typed intended-target flag set (--file, --folder, --sdd-file); the pinned SpecDD CLI installation is invalid; run bash scripts/bootstrap.sh to repair it"
   local active_integration framework_version
   active_integration="$(spec_kit_active_integration || true)"
   [[ "$active_integration" == "$ACTIVE_INTEGRATION" ]] ||

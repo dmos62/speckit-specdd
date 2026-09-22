@@ -44,6 +44,7 @@ Must:
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport through the pinned SpecDD CLI behavior.
   Intended-target projection covers exact ownership, directory ownership, glob ownership, ambiguous ownership, and absent authority without local `.sdd` parsing.
   Compatibility tests keep a non-pinned resolver without typed intended-target support conservative with `INTENDED_TARGET_UNSUPPORTED`.
+  A pinned SpecDD CLI `1.2.0` without complete typed intended-target support fails as infrastructure/toolchain state rather than producing compatibility unresolved records.
   Effective-context tests prove ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, and governing-chain changes alter the deterministic context identity.
   Authorization tests prove changed effective SpecDD context blocks snapshot creation while failed reauthorization preserves prior immutable evidence.
   Tests distinguish missing external executables from resolver, lint, and authority diagnostics.

@@ -10,9 +10,11 @@ from typing import Any, Iterable, Mapping
 
 from boundary_paths import normalize_target
 from boundary_runtime import (
+    PINNED_SPECDD_CLI_VERSION,
     framework_version,
     specdd_cli_version,
     specdd_resolve_supports_intended_targets,
+    validate_intended_target_capabilities,
 )
 from boundary_schema_projection import _generation_metadata, _unresolved_record
 from boundary_schema_validation import validate_boundary
@@ -77,11 +79,22 @@ def build_change_boundary(
     has_missing = any(
         not target.absolute_path.exists() for target in normalized.values()
     )
-    if has_missing and intended_targets_supported is None:
+    if (
+        intended_targets_supported is None
+        and (
+            has_missing
+            or cli_version == PINNED_SPECDD_CLI_VERSION
+        )
+    ):
         intended_targets_supported = specdd_resolve_supports_intended_targets(
             root,
             executable,
             runner,
+        )
+    if intended_targets_supported is not None:
+        validate_intended_target_capabilities(
+            cli_version,
+            intended_targets_supported,
         )
 
     targets: list[dict[str, Any]] = []

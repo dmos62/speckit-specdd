@@ -173,7 +173,7 @@ class ResolverProjectionTests(unittest.TestCase):
             )
             self.assertFalse({"--file", "--folder", "--sdd-file"} & set(calls[0]))
 
-    def test_intended_boundary_projects_owner_shapes_and_unresolved_cases(self):
+    def test_capable_pinned_resolver_projects_intended_owner_shapes(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             (root / "src" / "owned").mkdir(parents=True)
