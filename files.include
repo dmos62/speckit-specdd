@@ -51,9 +51,9 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Intended-path resolution is blocked on an upstream SpecDD CLI release.
-@# Keep the self-contained upstream handoff, TODO, boundary/resolver implementation, focused tests, and governing specs.
-@# User-facing design prose and downstream command guidance can be reintroduced once the released resolver is actionable.
+@# Intended-path resolution is active against capability-detected pre-release CLI support.
+@# Keep the upstream handoff, TODO, boundary/resolver implementation, focused tests, and governing specs.
+@# User-facing design prose stays out of the active context until released-package finalization needs it.
 @globexclude README.md
 @globexclude docs/change-boundary.md
 @globexclude docs/development.md
@@ -68,7 +68,8 @@
 @globexclude integration/specdd-preset/commands/plan.md
 @globexclude integration/specdd-preset/commands/tasks.md
 
-@# Downstream validation/workflow suites are inactive until intended-target resolver transport exists.
+@# Larger downstream suites remain excluded while released-package finalization is pending.
+@# Focused intended-target ownership, permission, and authorization coverage lives in the boundary tests.
 @globexclude tests/test_change_boundary_schema.py
 @globexclude tests/boundary_test_paths.py
 @globexclude tests/test_workflow_permissions.py
@@ -78,7 +79,7 @@
 @globexclude tests/validation_test_support.py
 @globexclude tests/validation_test_tasks.py
 
-@# Actual-write verification implementation and command guidance are stable and outside the blocked intended-path focus.
+@# Actual-write verification implementation and command guidance are stable and outside the intended-path focus.
 @globexclude integration/specdd/scripts/verification.py
 @globexclude integration/specdd/scripts/verification_cli.py
 @globexclude integration/specdd/scripts/verification_engine.py

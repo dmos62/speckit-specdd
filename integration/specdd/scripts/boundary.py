@@ -35,6 +35,7 @@ from boundary_paths import (  # noqa: E402,F401
     _resolve_specdd_path,
     _windows_absolute,
     discover_repository_root,
+    intended_target_flag,
     normalize_resolver_path,
     normalize_target,
     resolve_root,
@@ -45,6 +46,7 @@ from boundary_runtime import (  # noqa: E402,F401
     _run,
     framework_version,
     specdd_cli_version,
+    specdd_resolve_supports_intended_targets,
 )
 from boundary_schema import (  # noqa: E402,F401
     ANNOTATION_SCHEMA_KEYS,

@@ -1,32 +1,25 @@
 # Implementation TODO
 
-Active work below is derived from the current bridge limitation.
+Current bridge hardening is complete. The intended-path resolver transport is now implemented on the pre-release SpecDD
+CLI fork and the development host has been verified with Node.js 22, Yarn 1.22.22, the forked `specdd@1.1.1`, all three
+typed resolve flags, the missing-target smoke tests, and `bash scripts/bootstrap.sh --check`.
 
-The v0.1 authority-hardening baseline is complete. Current bootstrap, SpecDD lint, and focused Change Boundary tests pass.
+The bridge now capability-detects typed intended-target support. When the installed resolver exposes `--file`,
+`--folder`, and `--sdd-file`, missing targets are resolved through the SpecDD CLI. The public `1.1.1` behavior remains
+conservative: missing targets retain `INTENDED_TARGET_UNSUPPORTED` rather than being locally inferred.
 
-## P2 — Intended-path resolver support
+## P2 — Released intended-path resolver finalization
 
-- [ ] Integrate resolver-backed intended-path authority after upstream SpecDD CLI support is released.
-  - A pre-release implementation is available at `https://github.com/dmos62/specdd-cli` on branch
-    `feature/resolve-intended-targets`.
-  - `HUMAN-REQUEST.md` defines the local usage and development setup needed to exercise that fork before publication.
-  - The fork retains package version `1.1.1`; do not change the bridge compatibility pin solely to distinguish the fork.
-    Verify the intended-target flags and behavior directly.
-  - Current published SpecDD CLI as of 2026-09-21 is `1.1.1`.
-  - The upstream implementation handoff is `HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md`. It remains the acceptance reference
-    until the functionality is released upstream.
-  - Required upstream interface: mutually exclusive `--file`, `--folder`, and `--sdd-file` flags that allow non-existent
-    targets to be resolved without changing unflagged existing-target behavior.
-  - Do not emulate intended-target resolution locally through `Owns`/`Can modify` parsing, temporary probe files, or
-    undocumented CLI internals.
-  - When the upstream feature is published, deliberately update the compatibility pin before depending on the released
-    version.
-  - Replace `INTENDED_TARGET_UNSUPPORTED` fallback handling with resolver-backed intended-target resolution while
-    preserving current target normalization and Change Boundary semantic validation.
-  - Cover exact ownership, directory ownership, glob ownership, `Can modify`, ambiguous ownership, absent authority,
-    ordinary files, directories, and `.sdd` intended targets as applicable to bridge behavior.
-  - Preserve `.sdd` evolution-path and root bootstrap-control exclusion from implementation boundaries.
-  - Prove task-stage validation and pre-implementation authorization can carry resolver-backed intended targets without
-    weakening the authority-snapshot invariant.
-  - Remove `INTENDED_TARGET_UNSUPPORTED` behavior and documentation only after released-CLI tests establish semantic
-    parity.
+- [ ] Finalize the intended-path integration against a published upstream SpecDD CLI release.
+  - The pre-release implementation remains at `https://github.com/dmos62/specdd-cli` on branch
+    `feature/resolve-intended-targets` and intentionally reports package version `1.1.1`.
+  - `HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md` remains the upstream acceptance reference until publication.
+  - After release, verify `npm view specdd version`, installed `specdd resolve --help`, and intended-target resolution
+    using the published package rather than the fork.
+  - Deliberately update the repository compatibility pin to the released version before making typed intended-target
+    support mandatory.
+  - Run the full boundary, validation, workflow, verification, preset, bootstrap, and SpecDD lint suites against the
+    released package.
+  - Remove `INTENDED_TARGET_UNSUPPORTED` capability fallback behavior only after published-package parity is proven.
+  - Update user-facing resolver and Change Boundary documentation for the released behavior, then remove obsolete
+    pre-release handoff material.

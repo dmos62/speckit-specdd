@@ -5,9 +5,11 @@ Purpose:
 
 Owns:
   ./service.ts
+  ./future-service.ts
 
 Can modify:
   ../users/identity-contract.ts
+  ../users/future-identity-contract.ts
 
 Must:
   External identity lookup uses @ExternalIdentityLookup.

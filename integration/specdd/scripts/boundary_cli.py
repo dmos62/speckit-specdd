@@ -20,14 +20,18 @@ def parse_args(
     parser = argparse.ArgumentParser(
         description=(
             "Project repository targets into a Change Boundary v1 document. "
-            "Intended non-existent targets are retained as unresolved when "
-            "the pinned SpecDD resolver cannot authorize them."
+            "When the installed SpecDD resolver exposes typed intended-target "
+            "support, non-existent targets are resolved without probe files."
         )
     )
     parser.add_argument(
         "targets",
         nargs="+",
-        help="Repository-relative or absolute existing or intended target paths",
+        help=(
+            "Existing or intended target paths; missing paths default to "
+            "ordinary files, a trailing separator marks a folder, and "
+            "a .sdd suffix marks a specification target"
+        ),
     )
     parser.add_argument(
         "--root",

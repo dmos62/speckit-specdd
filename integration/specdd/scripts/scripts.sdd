@@ -8,7 +8,7 @@ Purpose:
 Structure:
   ./boundary_schema.py: Change Boundary schema loading and reusable JSON Schema value checks
   ./boundary_schema_validation.py: Recursive shape validation and deterministic cross-field consistency
-  ./cli_output.py: Shared JSON CLI output and diagnostic exit-threshold handling
+  ./cli_output.py: Shared JSON output, boundary-context Git metadata persistence, and diagnostic exit-threshold handling
   ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
   ./workflow_gate_state.py: Active-feature, boundary-context, and workflow-artifact state helpers
   ./validation_authority.py: Pure task ownership and operation-authority projection
@@ -45,6 +45,10 @@ References:
 Must:
   SpecDD resolution comes from the installed SpecDD CLI.
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
+  Existing resolver targets preserve unflagged `specdd resolve` behavior.
+  When the installed resolver exposes `--file`, `--folder`, and `--sdd-file`, intended targets use those typed resolver paths without filesystem probes or local resolution emulation.
+  Missing `.sdd` paths use `--sdd-file`, missing paths with a trailing separator use `--folder`, and other missing paths use `--file`.
+  When the pinned resolver lacks typed intended-target support, intended targets remain conservative unresolved records with `INTENDED_TARGET_UNSUPPORTED`.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Change Boundary validation rejects cross-field inconsistency before generated or loaded boundary state can influence validation, authorization, or verification.
@@ -53,6 +57,7 @@ Must:
   Authorization fresh-resolves boundary targets and blocks when effective SpecDD context fingerprints or resolver generation identity differ from refresh-time evidence.
   Validation consumes Change Boundary ownership projection and exact task paths without parsing `.sdd` source.
   Validation derives non-owning modification permission for explicit `SPECDD_AUTHORITY:` tasks from fresh resolved `Can modify` context while preserving each target's owning authority.
+  Validation may fresh-resolve an intended owner-local target when it is the context anchor for declared task authority.
   Validation preserves task order, task IDs, user-story labels, and explicit SpecDD evolution classifications in its analysis output.
   Validation distinguishes zero-authority, single-authority, and multi-authority task write sets.
   Validation CLI callers may request nonzero process status when deterministic `error` or `blocking` diagnostics are present.

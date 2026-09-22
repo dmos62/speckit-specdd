@@ -5,6 +5,7 @@ Purpose:
 
 Owns:
   ./identity-contract.ts
+  ./future-identity-contract.ts
   ./repository.ts
   @ExternalIdentityLookup
 

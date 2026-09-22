@@ -15,7 +15,9 @@ def discover_repository_root(start: str | os.PathLike[str] | None = None) -> Pat
     try:
         result = subprocess.run(
             ["git", "-C", str(start_path), "rev-parse", "--show-toplevel"],
-            check=False, capture_output=True, text=True,
+            check=False,
+            capture_output=True,
+            text=True,
         )
     except FileNotFoundError:
         result = None
@@ -32,7 +34,8 @@ def discover_repository_root(start: str | os.PathLike[str] | None = None) -> Pat
 def resolve_root(explicit_root: str | os.PathLike[str] | None) -> Path:
     root = (
         Path(explicit_root).expanduser().resolve()
-        if explicit_root else discover_repository_root()
+        if explicit_root
+        else discover_repository_root()
     )
     if not root.is_dir():
         raise BoundaryError(f"Repository root is not a directory: {root}")
@@ -92,6 +95,16 @@ def normalize_target(root: Path, raw: str) -> Target:
             f"Target must identify a path inside the repository: {raw}"
         )
     return Target(raw=raw, path=normalized, absolute_path=absolute)
+
+
+def intended_target_flag(target: Target) -> str | None:
+    if target.absolute_path.exists():
+        return None
+    if target.path.lower().endswith(".sdd"):
+        return "--sdd-file"
+    if target.raw.strip().endswith(("/", "\\")):
+        return "--folder"
+    return "--file"
 
 
 def normalize_resolver_path(root: Path, raw: str, *, spec: bool = False) -> str:
@@ -171,9 +184,11 @@ def _expand_braces(pattern: str) -> list[str]:
         return [pattern]
     results: list[str] = []
     for replacement in match.group(1).split(","):
-        results.extend(_expand_braces(
-            pattern[:match.start()] + replacement + pattern[match.end():]
-        ))
+        results.extend(
+            _expand_braces(
+                pattern[:match.start()] + replacement + pattern[match.end():]
+            )
+        )
     return results
 
 

@@ -84,10 +84,6 @@ def _authority_context(
     specs = cache.get(context_path)
     if specs is None:
         target = normalize_target(root, context_path)
-        if not target.absolute_path.exists():
-            raise ValidationError(
-                "Task SpecDD authority context does not exist: " + context_path
-            )
         specs, error = resolve_target(
             root,
             target,
