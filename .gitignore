@@ -22,3 +22,5 @@ specs/*/.specdd/boundary.json
 .specdd/bootstrap.local.md
 .specify/extensions/specdd/
 .specify/extensions/.cache/
+
+*.swp
