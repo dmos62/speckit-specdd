@@ -41,14 +41,14 @@ References:
 Must:
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Adapter tests preserve path normalization, resolver-backed authority derivation, deterministic output, and schema validation coverage.
-  Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport when supported by the installed SpecDD CLI.
+  Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport through the pinned SpecDD CLI behavior.
   Intended-target projection covers exact ownership, directory ownership, glob ownership, ambiguous ownership, and absent authority without local `.sdd` parsing.
-  When the installed resolver lacks typed intended-target support, missing targets remain unresolved with `INTENDED_TARGET_UNSUPPORTED`.
+  Compatibility tests keep a non-pinned resolver without typed intended-target support conservative with `INTENDED_TARGET_UNSUPPORTED`.
   Effective-context tests prove ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, and governing-chain changes alter the deterministic context identity.
   Authorization tests prove changed effective SpecDD context blocks snapshot creation while failed reauthorization preserves prior immutable evidence.
   Tests distinguish missing external executables from resolver, lint, and authority diagnostics.
   The real two-domain fixture exercises deterministic ownership projection when the SpecDD CLI is available.
-  The real two-domain fixture proves resolver-backed intended targets can carry non-owning `Can modify` permission through implementation-stage validation and authorization when typed resolver support is available.
+  The real two-domain fixture proves resolver-backed intended targets can carry non-owning `Can modify` permission through implementation-stage validation and authorization under the pinned resolver.
   Validation tests cover owner-local, coordinated multi-owner, explicitly permitted cross-owned, and rejected cross-owned tasks.
   Task parsing treats `SPECDD_AUTHORITY:` as operation metadata rather than a `.sdd` write target.
   Explicit `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED` intent remains visible without granting authority.

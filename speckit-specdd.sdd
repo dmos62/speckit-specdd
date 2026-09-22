@@ -28,7 +28,7 @@ Must:
   Spec Kit remains authoritative for the change lifecycle and SpecDD remains authoritative for persistent system semantics.
   Bridge-derived state remains reconstructible from canonical Spec Kit and SpecDD artifacts.
   Integration source remains separate from generated or installed upstream state.
-  Compatibility pins stay at Spec Kit `1.0.7`, SpecDD CLI `1.1.1`, and SpecDD framework `1.5` until a deliberate compatibility task changes them.
+  Compatibility pins stay at Spec Kit `1.0.7`, SpecDD CLI `1.2.0`, and SpecDD framework `1.5` until a deliberate compatibility task changes them.
 
 Must not:
   Patch files under `.specify/`, `.specify-agent/`, or `.specdd/` to implement bridge behavior.

@@ -46,9 +46,9 @@ Must:
   SpecDD resolution comes from the installed SpecDD CLI.
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
   Existing resolver targets preserve unflagged `specdd resolve` behavior.
-  When the installed resolver exposes `--file`, `--folder`, and `--sdd-file`, intended targets use those typed resolver paths without filesystem probes or local resolution emulation.
+  The pinned SpecDD CLI exposes `--file`, `--folder`, and `--sdd-file`; intended targets use those typed resolver paths without filesystem probes or local resolution emulation.
   Missing `.sdd` paths use `--sdd-file`, missing paths with a trailing separator use `--folder`, and other missing paths use `--file`.
-  When the pinned resolver lacks typed intended-target support, intended targets remain conservative unresolved records with `INTENDED_TARGET_UNSUPPORTED`.
+  When a non-pinned resolver lacks typed intended-target support, intended targets remain conservative unresolved records with `INTENDED_TARGET_UNSUPPORTED`.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Change Boundary validation rejects cross-field inconsistency before generated or loaded boundary state can influence validation, authorization, or verification.

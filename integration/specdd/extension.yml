@@ -16,7 +16,7 @@ requires:
   speckit_version: "==1.0.7"
   tools:
     - name: specdd
-      version: "==1.1.1"
+      version: "==1.2.0"
       required: true
 
 provides:
@@ -32,7 +32,7 @@ provides:
       description: "Authorize implementation against the active feature's existing SpecDD authority snapshot."
     - name: speckit.specdd.verify
       file: commands/verify.md
-      description: "Verify actual implementation changes against the planned SpecDD authority snapshot."
+      description: "Verify actual implementation writes against the planned SpecDD authority snapshot."
 
 hooks:
   after_plan:

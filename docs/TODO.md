@@ -1,25 +1,23 @@
 # Implementation TODO
 
-Current bridge hardening is complete. Intended-path resolver transport is implemented on the temporary SpecDD CLI fork
-and the development integration remains capability-detected. The fork at
-`https://github.com/dmos62/specdd-cli`, branch `feature/resolve-intended-targets`, now reports package version `1.2.0`.
+The bridge now targets the fork-backed SpecDD CLI `1.2.0` with typed intended-target resolution enabled. Repository
+bootstrap builds and installs `https://github.com/dmos62/specdd-cli.git` from branch
+`feature/resolve-intended-targets` when the active CLI does not satisfy the version and resolver-capability checks.
 
-The repository compatibility pin intentionally remains on the published `specdd@1.1.1` until an upstream release
-containing intended-target resolution is available. `HUMAN-REQUEST.md` documents how to link and develop against the
-temporary `1.2.0` fork without treating that local package version as a published compatibility release.
+The compatibility fallback for older resolvers remains intentionally conservative for non-pinned environments. The
+supported development path is the pinned fork until equivalent behavior is available from a published upstream package.
 
-## P2 — Released intended-path resolver finalization
+## P2 — Migrate from the fork to a published upstream release
 
-- [ ] Finalize the intended-path integration against a published upstream SpecDD CLI release.
-  - The pre-release implementation remains at `https://github.com/dmos62/specdd-cli` on branch
-    `feature/resolve-intended-targets` and currently reports package version `1.2.0`.
-  - `HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md` remains the upstream acceptance reference until publication.
-  - After release, verify `npm view specdd version`, installed `specdd resolve --help`, and intended-target resolution
-    using the published package rather than the fork.
-  - Deliberately update the repository compatibility pin to the released version before making typed intended-target
-    support mandatory.
+- [ ] Replace the temporary fork source with a published upstream SpecDD CLI release once intended-target resolution is
+  available there.
+  - Verify `npm view specdd version`, installed `specdd resolve --help`, and intended-target resolution using the
+    published package.
+  - Deliberately change the repository CLI source and version pin together; do not silently substitute a published
+    package that lacks `--file`, `--folder`, and `--sdd-file`.
   - Run the full boundary, validation, workflow, verification, preset, bootstrap, and SpecDD lint suites against the
     released package.
-  - Remove `INTENDED_TARGET_UNSUPPORTED` capability fallback behavior only after published-package parity is proven.
-  - Update user-facing resolver and Change Boundary documentation for the released behavior, then remove obsolete
-    pre-release handoff material.
+  - Remove `INTENDED_TARGET_UNSUPPORTED` compatibility fallback behavior only after published-package parity is proven
+    and older external resolver compatibility is no longer useful.
+  - Update user-facing resolver, development, and Change Boundary documentation for the published behavior.
+  - Remove `HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md` after the published release satisfies its acceptance contract.

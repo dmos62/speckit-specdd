@@ -1,6 +1,6 @@
 Spec: Repository Bootstrap
 
-Platform: Bash/Spec Kit 1.0.7/SpecDD CLI 1.1.1
+Platform: Bash/Spec Kit 1.0.7/SpecDD CLI 1.2.0
 
 Purpose:
   Reproduce the pinned development toolchain and activate a registrar-backed Spec Kit integration that materializes the local SpecDD bridge.
@@ -14,7 +14,9 @@ References:
   ../integration/specdd-preset/specdd-preset.sdd
 
 Must:
-  Bootstrap preserves the pinned Spec Kit, SpecDD CLI, and SpecDD framework versions.
+  Bootstrap preserves the pinned Spec Kit, fork-backed SpecDD CLI, and SpecDD framework versions.
+  The SpecDD CLI is built and installed from `https://github.com/dmos62/specdd-cli.git` branch `feature/resolve-intended-targets` when the active executable does not satisfy the pin.
+  SpecDD CLI validation requires package version `1.2.0` and resolver support for `--file`, `--folder`, and `--sdd-file`.
   The active Spec Kit integration is `codex` so extension and preset commands can be registered under pinned Spec Kit `1.0.7`.
   Existing initialized repositories change active integration through supported Spec Kit integration commands.
   The local bridge extension and preset are installed from canonical repository source before verification.
@@ -26,4 +28,4 @@ Must not:
   Patch generated Spec Kit commands, installed extension state, installed preset state, workflow-overlay state, or SpecDD framework files directly.
 
 Done when:
-  Bootstrap apply followed by check succeeds with the bridge and structural workflow gates available through the active Codex integration.
+  Bootstrap apply followed by check succeeds with the fork-backed SpecDD CLI, bridge, and structural workflow gates available through the active Codex integration.

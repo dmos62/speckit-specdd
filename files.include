@@ -51,9 +51,9 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Intended-path resolution is active against capability-detected pre-release CLI support.
+@# Intended-path resolution is active against the fork-backed SpecDD CLI 1.2.0 pin.
 @# Keep the upstream handoff, TODO, boundary/resolver implementation, focused tests, and governing specs.
-@# User-facing design prose stays out of the active context until released-package finalization needs it.
+@# User-facing design prose stays out of the active context until published-package migration needs it.
 @globexclude README.md
 @globexclude docs/change-boundary.md
 @globexclude docs/development.md
@@ -68,7 +68,7 @@
 @globexclude integration/specdd-preset/commands/plan.md
 @globexclude integration/specdd-preset/commands/tasks.md
 
-@# Larger downstream suites remain excluded while released-package finalization is pending.
+@# Larger downstream suites remain excluded while published-package migration is pending.
 @# Focused intended-target ownership, permission, and authorization coverage lives in the boundary tests.
 @globexclude tests/test_change_boundary_schema.py
 @globexclude tests/boundary_test_paths.py

@@ -21,7 +21,7 @@ class BoundaryOutputTests(unittest.TestCase):
             "crossBoundary": True,
             "unresolved": [],
         }
-        metadata = boundary._generation_metadata(schema, "1.1.1", "1.5")
+        metadata = boundary._generation_metadata(schema, "1.2.0", "1.5")
         if metadata is not None:
             sample[metadata[0]] = metadata[1]
 
@@ -169,11 +169,11 @@ class BoundaryOutputTests(unittest.TestCase):
             (
                 "generation",
                 {
-                    "specddCliVersion": "1.1.1",
+                    "specddCliVersion": "1.2.0",
                     "specddFrameworkVersion": "1.5",
                 },
             ),
-            boundary._generation_metadata(schema, "1.1.1", "1.5"),
+            boundary._generation_metadata(schema, "1.2.0", "1.5"),
         )
 
     def test_feature_boundary_is_ignored_and_untracked(self):

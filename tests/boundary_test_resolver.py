@@ -209,7 +209,7 @@ class ResolverProjectionTests(unittest.TestCase):
                 feature="sample",
                 schema=boundary.load_schema(REPO_ROOT),
                 runner=runner,
-                cli_version="1.1.1",
+                cli_version="1.2.0",
                 specdd_framework_version="1.5",
                 intended_targets_supported=True,
             )

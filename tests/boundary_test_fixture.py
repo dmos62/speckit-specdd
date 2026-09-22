@@ -76,7 +76,7 @@ class RealFixtureIntegrationTests(unittest.TestCase):
         )
 
         rendered = json.dumps(payload, sort_keys=True)
-        self.assertIn("1.1.1", rendered)
+        self.assertIn("1.2.0", rendered)
         self.assertIn("1.5", rendered)
 
     def test_missing_target_uses_resolver_when_supported(self):
@@ -100,7 +100,10 @@ class RealFixtureIntegrationTests(unittest.TestCase):
             self.assertIn("No primary authority", message)
         else:
             self.assertIn("INTENDED_TARGET_UNSUPPORTED", message)
-            self.assertIn("SpecDD CLI 1.1.1", message)
+            self.assertIn(
+                f"SpecDD CLI {boundary.specdd_cli_version(FIXTURE_ROOT, 'specdd')}",
+                message,
+            )
 
     def test_intended_targets_flow_through_permission_and_authorization(self):
         if not FIXTURE_ROOT.is_dir():
