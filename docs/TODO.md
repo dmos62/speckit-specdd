@@ -10,23 +10,11 @@ Work in the order below unless a newly discovered correctness issue requires rep
 
 The provider-neutral core package is established under `src/boundary/`, with separate repository/path, contract, target-context, authorization, verification, and CLI boundaries. Provider-specific implementations remain outside that package.
 
-### P5.2 — Implement native contract parsing
-
-- [ ] Discover canonical `contracts/**/*.contract.md`.
-- [ ] Implement `boundary.contract/v1` frontmatter.
-- [ ] Support only:
-  - exact repository-relative scopes;
-  - subtree scopes ending in `/**`.
-- [ ] Reject catch-all `**` and arbitrary glob syntax.
-- [ ] Parse recognized semantic sections:
-  - Purpose;
-  - Invariants;
-  - Prohibitions;
-  - Interfaces.
-- [ ] Preserve source provenance and deterministic content identities.
+Native v1 parsing is available through `boundary.contracts.load_contracts`. It deterministically discovers canonical contract files, validates exact and subtree scope syntax, extracts recognized semantic sections, preserves canonical source paths, and assigns LF-normalized SHA-256 content identities.
 
 ### P5.3 — Implement ownership and additive applicability
 
+- [ ] Build deterministic `ContractGraph` indexes from parsed native contracts.
 - [ ] Make every `owns` scope also an applicability scope.
 - [ ] Apply `applies_to` as additional non-ownership scope.
 - [ ] Select the most-specific matching owner for nested ownership.

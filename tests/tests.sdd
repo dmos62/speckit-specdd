@@ -7,6 +7,7 @@ Purpose:
 
 Owns:
   ./test_boundary_core_layout.py
+  ./test_native_contract_parsing.py
   ./test_boundary.py
   ./boundary_test_support.py
   ./boundary_test_paths.py
@@ -45,6 +46,7 @@ References:
 
 Must:
   Native core layout tests keep repository/path, contract, target-context, authorization, verification, and CLI boundaries importable from ./src/boundary without provider-specific implementation names.
+  Native contract parsing tests cover deterministic discovery under contracts/, boundary.contract/v1 frontmatter, exact and subtree scope grammar, recognized semantic-section extraction, source provenance, and deterministic content identities.
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Adapter tests preserve path normalization, resolver-backed authority derivation, deterministic output, and schema validation coverage.
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport whenever the active SpecDD provider exposes the complete intended-target capability.
