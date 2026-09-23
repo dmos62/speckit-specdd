@@ -42,3 +42,4 @@ class ContractGraph:
     ownership_scopes: tuple[ScopeClaim, ...] = ()
     applicability_scopes: tuple[ScopeClaim, ...] = ()
     dependency_edges: tuple[tuple[str, str], ...] = ()
+    contracts_by_id: tuple[tuple[str, Contract], ...] = ()

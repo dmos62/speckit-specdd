@@ -12,17 +12,7 @@ The provider-neutral core package is established under `src/boundary/`, with sep
 
 Native v1 parsing is available through `boundary.contracts.load_contracts`. It deterministically discovers canonical contract files, validates exact and subtree scope syntax, extracts recognized semantic sections, preserves canonical source paths, and assigns LF-normalized SHA-256 content identities.
 
-### P5.3 — Implement ownership and additive applicability
-
-- [ ] Build deterministic `ContractGraph` indexes from parsed native contracts.
-- [ ] Make every `owns` scope also an applicability scope.
-- [ ] Apply `applies_to` as additional non-ownership scope.
-- [ ] Select the most-specific matching owner for nested ownership.
-- [ ] Keep all broader matching contracts applicable.
-- [ ] Reject ambiguous incomparable/equally specific ownership.
-- [ ] Resolve missing intended paths without filesystem-dependent semantics.
-- [ ] Implement direct contract dependencies and dependency-interface projection.
-- [ ] Do not implement override, exception, `Can modify`, or synthetic operation-authority semantics.
+Native `ContractGraph` construction now builds deterministic contract-ID, ownership, applicability, and dependency indexes; validates direct dependency references and ownership ambiguity; and resolves filesystem-independent target context with additive applicability, most-specific ownership, semantic provenance, and direct dependency interfaces.
 
 ### P5.4 — Implement native contract validation and inspection
 
@@ -30,7 +20,7 @@ Native v1 parsing is available through `boundary.contracts.load_contracts`. It d
 - [ ] Add `boundary inspect <target...>`.
 - [ ] Produce compact agent-oriented effective context with provenance.
 - [ ] Keep projections transient; do not create feature-local boundary files.
-- [ ] Add focused tests for exact ownership, nested ownership, applicability overlap, ambiguity, missing intended paths, dependency interfaces, and deterministic output.
+- [ ] Add CLI-focused tests for structural diagnostics, multi-target inspection, and stable output.
 
 Done when:
   Native Boundary contracts can deterministically resolve existing and intended targets without SpecDD, filesystem probes, or persisted Change Boundary state.

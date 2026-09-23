@@ -3,8 +3,6 @@
 @glob docs/spec.md
 @glob docs/spec-architecture.md
 @glob docs/spec-contracts.md
-@glob docs/spec.sdd
-@glob speckit-specdd.sdd
 @glob src/boundary/**/*.py
 @glob tests/test_boundary_core_layout.py
 @glob tests/test_native_contract*.py

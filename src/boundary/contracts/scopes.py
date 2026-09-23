@@ -1,4 +1,4 @@
-"""Boundary v1 contract-scope validation."""
+"""Boundary v1 contract-scope validation and matching."""
 
 from boundary.repository import RepositoryPathError, normalize_repo_path
 
@@ -36,6 +36,55 @@ def normalize_contract_scope(value: str) -> str:
         raise ContractScopeError(str(exc)) from exc
 
     if normalized != path_value:
-        raise ContractScopeError("contract scope must use canonical repository syntax")
+        raise ContractScopeError(
+            "contract scope must use canonical repository syntax"
+        )
 
     return f"{normalized}{_SUBTREE_SUFFIX}" if is_subtree else normalized
+
+
+def scope_matches(scope: str, target_path: str) -> bool:
+    """Return whether a canonical scope contains a repository target."""
+
+    target = normalize_repo_path(target_path)
+    if not scope.endswith(_SUBTREE_SUFFIX):
+        return scope == target
+
+    root = scope[: -len(_SUBTREE_SUFFIX)]
+    return target == root or target.startswith(f"{root}/")
+
+
+def scope_strictly_contains(outer: str, inner: str) -> bool:
+    """Return whether one canonical scope is a strict superset of another."""
+
+    if not outer.endswith(_SUBTREE_SUFFIX):
+        return False
+
+    outer_root = outer[: -len(_SUBTREE_SUFFIX)]
+    if inner.endswith(_SUBTREE_SUFFIX):
+        inner_root = inner[: -len(_SUBTREE_SUFFIX)]
+        return inner_root.startswith(f"{outer_root}/")
+
+    return scope_matches(outer, inner)
+
+
+def scopes_overlap(left: str, right: str) -> bool:
+    """Return whether two canonical Boundary scopes share at least one target."""
+
+    left_subtree = left.endswith(_SUBTREE_SUFFIX)
+    right_subtree = right.endswith(_SUBTREE_SUFFIX)
+
+    if not left_subtree and not right_subtree:
+        return left == right
+    if left_subtree and not right_subtree:
+        return scope_matches(left, right)
+    if right_subtree and not left_subtree:
+        return scope_matches(right, left)
+
+    left_root = left[: -len(_SUBTREE_SUFFIX)]
+    right_root = right[: -len(_SUBTREE_SUFFIX)]
+    return (
+        left_root == right_root
+        or left_root.startswith(f"{right_root}/")
+        or right_root.startswith(f"{left_root}/")
+    )

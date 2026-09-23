@@ -2,7 +2,8 @@
 
 from pathlib import Path
 
-from .model import Contract
+from .graph import build_contract_graph
+from .model import Contract, ContractGraph
 from .parser import parse_contract
 
 
@@ -33,3 +34,9 @@ def load_contracts(repository_root: str | Path) -> tuple[Contract, ...]:
         source = (root / source_path).read_text(encoding="utf-8")
         contracts.append(parse_contract(source, source_path))
     return tuple(contracts)
+
+
+def load_contract_graph(repository_root: str | Path) -> ContractGraph:
+    """Load canonical contracts and build their deterministic in-memory graph."""
+
+    return build_contract_graph(load_contracts(repository_root))

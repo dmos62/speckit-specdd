@@ -11,6 +11,7 @@ class ProvenancedText:
     contract_id: str
     source_path: str
     section: str
+    content_identity: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,3 +25,4 @@ class TargetContext:
     invariants: tuple[ProvenancedText, ...] = ()
     prohibitions: tuple[ProvenancedText, ...] = ()
     dependency_interfaces: tuple[ProvenancedText, ...] = ()
+    interfaces: tuple[ProvenancedText, ...] = ()
