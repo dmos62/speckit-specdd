@@ -247,4 +247,4 @@ class BoundaryOutputTests(unittest.TestCase):
                 "Required SpecDD CLI executable was not found",
             ) as raised:
                 boundary._locate_executable("specdd-missing")
-        self.assertIn("bash scripts/bootstrap.sh", str(raised.exception))
+        self.assertTrue("Install or repair the SpecDD provider required by this bridge" in str(raised.exception) and "scripts/bootstrap.sh" not in str(raised.exception))

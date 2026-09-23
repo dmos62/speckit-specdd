@@ -62,6 +62,14 @@
 @globexclude docs/spec-v0.1.md
 @globexclude docs/architecture-exploration-guidance.md
 
+@# P5 is provider-neutral native contract work. Legacy bridge runtime,
+@# packaging, and operational guides remain baseline code rather than design inputs.
+@globexclude integration/specdd/**
+@globexclude integration/specdd-preset/**
+@globexclude scripts/**
+@globexclude docs/change-boundary.md
+@globexclude docs/development.md
+
 @# Provider-upstream request history is not useful for the native Boundary migration.
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
@@ -69,31 +77,33 @@
 @# task explicitly converts or compares those contracts.
 @globexclude tests/fixtures/specdd-two-domain/**
 
-@# P4 currently needs the four stale-test areas: boundary infrastructure
-@# failure messaging, preset install/distribution workflow assertions, and
-@# verification Git infrastructure failure messaging. Keep only the directly
-@# useful test modules/support files in iteration context; reinclude focused
-@# native-contract/authorization tests as those P5/P6 tasks begin.
+@# Existing bridge tests are baseline coverage rather than P5 design inputs.
+@# Reinclude a focused legacy test only when a native parity or migration task needs it.
 @globexclude tests/boundary_test_fixture.py
+@globexclude tests/boundary_test_output.py
 @globexclude tests/boundary_test_ownership.py
 @globexclude tests/boundary_test_paths.py
 @globexclude tests/boundary_test_resolver.py
-
+@globexclude tests/boundary_test_support.py
+@globexclude tests/preset_test_distribution.py
+@globexclude tests/preset_test_install.py
+@globexclude tests/preset_test_install_support.py
 @globexclude tests/preset_test_source.py
-
+@globexclude tests/preset_test_support.py
+@globexclude tests/test_boundary.py
 @globexclude tests/test_change_boundary_schema.py
+@globexclude tests/test_preset.py
 @globexclude tests/test_validation.py
+@globexclude tests/test_verification.py
 @globexclude tests/test_workflow.py
 @globexclude tests/test_workflow_permissions.py
-
 @globexclude tests/validation_test_engine.py
 @globexclude tests/validation_test_fixture.py
 @globexclude tests/validation_test_support.py
 @globexclude tests/validation_test_tasks.py
-
 @globexclude tests/verification_test_engine.py
 @globexclude tests/verification_test_fixture.py
-
+@globexclude tests/verification_test_git.py
 @globexclude tests/workflow_test_gate.py
 @globexclude tests/workflow_test_source.py
 @endfilegroup

@@ -4,6 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from preset_test_install_support import (
+    assert_resolved_workflow,
+    installed_overlay_text,
+)
 from preset_test_support import (
     INSTALLER_PATH,
     INSTALLED_RUNTIME_PATH,
@@ -50,6 +54,9 @@ class DistributionInstallTests(unittest.TestCase):
         )
         require_success(self, overlay)
         self.assertIn("specdd-bridge", overlay.stdout)
+        overlay_text = installed_overlay_text(root)
+        self.assertIn(str(INSTALLED_RUNTIME_PATH), overlay_text)
+        self.assertNotIn("integration/specdd/scripts/workflow_gate.py", overlay_text)
 
     def _install_remote_archive(
         self,
@@ -146,21 +153,7 @@ class DistributionInstallTests(unittest.TestCase):
                 "speckit",
             )
             require_success(self, resolved)
-            for step in (
-                "specdd-context",
-                "specdd-task-validation",
-                "specdd-authorize",
-                "specdd-verify",
-            ):
-                self.assertIn(step, resolved.stdout)
-            self.assertIn(
-                str(INSTALLED_RUNTIME_PATH),
-                resolved.stdout,
-            )
-            self.assertNotIn(
-                "integration/specdd/scripts/workflow_gate.py",
-                resolved.stdout,
-            )
+            assert_resolved_workflow(self, resolved.stdout)
 
             context = run_installed_gate(root, feature_dir, "context")
             require_success(self, context)

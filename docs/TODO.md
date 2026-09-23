@@ -6,23 +6,6 @@ The current executable baseline still uses Spec Kit `1.0.10`, Codex, SpecDD fram
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
-## P4 — Restore a trustworthy current baseline
-
-Complete the already identified current-implementation repairs before using the test suite as a migration signal.
-
-- [ ] Remove stale tests that expect downstream dependency failures to instruct users to run this repository's development bootstrap.
-  - Missing SpecDD-provider tests assert explicit provider/dependency failure plus provider repair guidance.
-  - Missing Git tests assert explicit Git dependency failure plus Git installation/repair guidance.
-  - Do not restore development-only bootstrap remediation text to runtime errors.
-- [ ] Update workflow installation/distribution tests for Spec Kit `1.0.10` resolver output.
-  - Assert overlay attribution and structural step order from `specify workflow resolve`.
-  - Inspect installed overlay/runtime materialization when exact shell paths must be tested.
-  - Preserve the isolated-consumer lifecycle execution test as runtime-path proof.
-- [ ] Run the full suite and return the current SpecDD-backed baseline to green.
-
-Done when:
-  The existing implementation passes without reintroducing development-repository assumptions into downstream behavior.
-
 ## P5 — Introduce the native Boundary contract engine
 
 Build the native persistent-contract model before mechanically renaming the old bridge.

@@ -247,4 +247,4 @@ class VerificationGitTests(unittest.TestCase):
 
             with self.assertRaisesRegex(verification.VerificationError, "Required Git executable was not found") as raised:
                 verification.collect_git_changes(Path(temporary).resolve(), runner=missing_git)
-        self.assertIn("bash scripts/bootstrap.sh --check", str(raised.exception))
+        self.assertTrue("Install Git before verification" in str(raised.exception) and "scripts/bootstrap.sh" not in str(raised.exception))

@@ -25,6 +25,7 @@ Owns:
   ./verification_test_fixture.py
   ./test_preset.py
   ./preset_test_support.py
+  ./preset_test_install_support.py
   ./preset_test_source.py
   ./preset_test_install.py
   ./preset_test_distribution.py
