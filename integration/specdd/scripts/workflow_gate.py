@@ -20,7 +20,6 @@ from boundary_schema_validation import validate_boundary  # noqa: E402
 from boundary_types import BoundaryError  # noqa: E402
 from validation_cli import _result_exit_code as validation_exit_code, main as validation_main  # noqa: E402
 from validation_engine import SEVERITIES, validate_feature  # noqa: E402
-from validation_permissions import project_task_modification_permissions, requires_permission_projection  # noqa: E402
 from validation_tasks import parse_tasks_file  # noqa: E402
 from validation_types import TaskRecord, ValidationError, diagnostic  # noqa: E402
 from verification_cli import main as verification_main  # noqa: E402
@@ -46,6 +45,8 @@ from workflow_gate_state import (  # noqa: E402,F401
     _specdd_context_diagnostics,
     _task_targets,
 )
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run structural SpecDD context, task validation, authorization, or verification."
@@ -139,15 +140,11 @@ def _authorize(
     validate_boundary(boundary, schema)
     context_findings = _specdd_context_diagnostics(root, boundary, schema)
     tasks = parse_tasks_file(root, task_path)
-    permissions = {}
-    if not context_findings and requires_permission_projection(boundary, tasks):
-        permissions = project_task_modification_permissions(root, boundary, tasks)
     result = validate_feature(
         boundary,
         tasks,
         stage="implementation",
         expected_feature=feature,
-        task_permissions=permissions,
     )
     result["specddContextFresh"] = not context_findings
     _extend_diagnostics(result, context_findings)

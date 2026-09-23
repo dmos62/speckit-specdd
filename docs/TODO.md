@@ -10,16 +10,6 @@ Work in the order below unless a newly discovered correctness issue requires rep
 
 ## P6 — Replace the current authorization model
 
-### P6.1 — Make write scope explicit
-
-- [ ] Define the change-adapter structured write-set contract.
-- [ ] Teach the Spec Kit adapter to read explicit `Writes:` task metadata.
-- [ ] Keep task IDs/order/user-story grouping intact.
-- [ ] Stop using incidental task prose paths for authorization.
-- [ ] Permit heuristic path discovery only for advisory planning/inspection.
-- [ ] Remove `SPECDD_AUTHORITY:` from the target model instead of renaming it.
-- [ ] Represent legitimate multi-owner work directly through target owners.
-
 ### P6.2 — Authorize directly from fresh canonical inputs
 
 - [ ] Remove authorization dependence on feature `boundary.json`.

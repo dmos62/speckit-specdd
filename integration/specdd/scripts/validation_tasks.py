@@ -3,8 +3,14 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from boundary_paths import normalize_target
 from boundary_types import BoundaryError
+from validation_task_paths import (
+    extract_repository_targets,
+    inline_code_matches,
+    is_specdd_control_path,
+    mask_ranges,
+    normalize_task_target,
+)
 from validation_types import (
     EVOLUTION_CLASSIFICATIONS,
     TaskRecord,
@@ -15,188 +21,137 @@ from validation_types import (
 _TASK_RE = re.compile(r"^\s*-\s+\[(?: |x|X|-|!|\?)\]\s+(?P<body>.+?)\s*$")
 _TASK_ID_RE = re.compile(r"^(?P<id>T\d+)\b")
 _STORY_RE = re.compile(r"\[(?P<story>US\d+)\]")
-_INLINE_CODE_RE = re.compile(r"`([^`\r\n]+)`")
-_URL_RE = re.compile(r"\b[A-Za-z][A-Za-z0-9+.-]*://[^\s`]+")
-_SLASH_PATH_RE = re.compile(
-    r"(?P<path>(?:\.{1,2}[\\/]|[\\/])?[A-Za-z0-9_.-]+"
-    r"(?:[\\/][A-Za-z0-9_.@+{}\[\]*?-]+)+[\\/]?)"
-)
+_WRITES_RE = re.compile(r"^[ \t]+Writes:[ \t]*(?P<body>.*?)\s*$")
 _EVOLUTION_RE = re.compile(
     r"\b(?:" + "|".join(EVOLUTION_CLASSIFICATIONS) + r")\b"
 )
-_OPERATION_AUTHORITY_RE = re.compile(
-    r"\bSPECDD_AUTHORITY:\s*`(?P<path>[^`\r\n]+)`"
-)
-_ROOT_FILE_SUFFIXES = {
-    ".js", ".json", ".jsx", ".lock", ".md", ".ps1", ".py", ".sdd",
-    ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
-}
-_PATTERN_WILDCARDS = "*?"
-_PATTERN_GROUPING = "[]{}"
 
 
-def is_specdd_control_path(path: str) -> bool:
-    return path.startswith(".specdd/") and not path.lower().endswith(".sdd")
-
-
-def _clean_token(value: str) -> str:
-    token = value.strip().strip("\"'()<>,;:").rstrip(".")
-    if token.endswith("]") and "[" not in token[:-1]:
-        token = token[:-1]
-    if token.endswith("}") and "{" not in token[:-1]:
-        token = token[:-1]
-    return token
-
-
-def _mask_ranges(text: str, ranges: list[tuple[int, int]]) -> str:
-    masked = list(text)
-    for start, end in ranges:
-        masked[start:end] = " " * (end - start)
-    return "".join(masked)
-
-
-def _inline_path_candidate(value: str) -> bool:
-    return bool(
-        value
-        and not _URL_RE.fullmatch(value)
-        and (
-            "/" in value
-            or "\\" in value
-            or Path(value).suffix.lower() in _ROOT_FILE_SUFFIXES
-        )
-    )
-
-
-def _raw_targets(text: str) -> list[tuple[str, bool]]:
-    candidates: list[tuple[int, str, bool]] = []
-    inline_matches = list(_INLINE_CODE_RE.finditer(text))
-    masked = _mask_ranges(
-        text,
-        [
-            *(match.span() for match in inline_matches),
-            *(match.span() for match in _URL_RE.finditer(text)),
-        ],
-    )
-    for match in _SLASH_PATH_RE.finditer(masked):
-        value = _clean_token(match.group("path"))
-        if value:
-            candidates.append((match.start(), value, False))
-    for match in inline_matches:
-        value = _clean_token(match.group(1))
-        if _inline_path_candidate(value):
-            candidates.append((match.start(), value, True))
-    candidates.sort(key=lambda item: item[0])
-    values: dict[str, bool] = {}
-    for _, value, literal in candidates:
-        values[value] = values.get(value, False) or literal
-    return list(values.items())
-
-
-def _normalize_task_target(root: Path, raw: str, *, literal: bool) -> str:
-    candidate = raw.replace("\\", "/")
-    if candidate.startswith("/") and not candidate.startswith("//"):
-        candidate = candidate[1:]
-    if any(character in candidate for character in _PATTERN_WILDCARDS):
-        raise BoundaryError(f"Task target must be an exact path: {raw}")
-    if not literal and any(
-        character in candidate for character in _PATTERN_GROUPING
-    ):
-        raise BoundaryError(f"Task target must be an exact path: {raw}")
-    return normalize_target(root, candidate).path
-
-
-def extract_repository_targets(
+def _parse_writes(
     root: Path,
-    text: str,
-) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
-    targets: list[str] = []
-    spec_targets: list[str] = []
-    invalid_targets: list[str] = []
-    for raw, literal in _raw_targets(text):
-        try:
-            normalized = _normalize_task_target(root, raw, literal=literal)
-        except BoundaryError:
-            invalid_targets.append(raw)
-            continue
-        collection = spec_targets if normalized.lower().endswith(".sdd") else targets
-        if normalized not in collection:
-            collection.append(normalized)
-    return (
-        tuple(targets),
-        tuple(spec_targets),
-        tuple(dict.fromkeys(invalid_targets)),
-    )
-
-
-def _operation_authority(
-    root: Path,
-    body: str,
-) -> tuple[str | None, tuple[str, ...], str]:
-    matches = list(_OPERATION_AUTHORITY_RE.finditer(body))
-    if not matches:
-        return None, (), body
-    normalized: list[str] = []
+    value: str,
+) -> tuple[
+    tuple[str, ...],
+    tuple[str, ...],
+    tuple[str, ...],
+    tuple[str, ...],
+    tuple[str, ...],
+]:
+    matches = inline_code_matches(value)
+    errors: list[str] = []
     invalid: list[str] = []
+    ordinary: list[str] = []
+    specs: list[str] = []
+    controls: list[str] = []
+
+    if not value.strip():
+        return (), (), (), (), ("Writes metadata must declare at least one path",)
+    if not matches:
+        return (), (), (), (), ("Writes metadata must use backticked exact paths",)
+
+    remainder = mask_ranges(value, [match.span() for match in matches])
+    if remainder.replace(",", "").strip():
+        errors.append(
+            "Writes metadata must contain only comma-separated backticked paths"
+        )
+
+    seen: set[str] = set()
     for match in matches:
-        raw = _clean_token(match.group("path"))
+        raw = match.group(1).strip()
         try:
-            value = _normalize_task_target(root, raw, literal=True)
+            normalized = normalize_task_target(root, raw, literal=True)
         except BoundaryError:
             invalid.append(raw or "<empty>")
             continue
-        if not value.lower().endswith(".sdd"):
-            invalid.append(raw)
+        if normalized in seen:
+            errors.append(f"duplicate declared write target: {normalized}")
+            continue
+        seen.add(normalized)
+        if is_specdd_control_path(normalized):
+            controls.append(normalized)
+        elif normalized.lower().endswith(".sdd"):
+            specs.append(normalized)
         else:
-            normalized.append(value)
-    distinct = list(dict.fromkeys(normalized))
-    authority = distinct[0] if len(distinct) == 1 else None
-    if len(distinct) > 1:
-        invalid.extend(distinct)
+            ordinary.append(normalized)
     return (
-        authority,
-        tuple(dict.fromkeys(invalid)),
-        _mask_ranges(body, [match.span() for match in matches]),
+        tuple(ordinary),
+        tuple(specs),
+        tuple(controls),
+        tuple(invalid),
+        tuple(errors),
     )
 
 
 def parse_tasks(root: Path, text: str) -> list[TaskRecord]:
     tasks: list[TaskRecord] = []
-    for line in text.splitlines():
-        match = _TASK_RE.match(line)
-        if match is None:
-            continue
-        body = match.group("body")
-        task_id_match = _TASK_ID_RE.match(body)
-        story_match = _STORY_RE.search(body)
-        authority, invalid_authorities, target_text = _operation_authority(
-            root, body
-        )
-        raw_targets, spec_targets, invalid_targets = extract_repository_targets(
-            root, target_text
-        )
-        control_targets = tuple(
-            path for path in raw_targets if is_specdd_control_path(path)
-        )
-        targets = tuple(
-            path for path in raw_targets if not is_specdd_control_path(path)
-        )
+    current: dict[str, object] | None = None
+    metadata_open = False
+
+    def flush() -> None:
+        nonlocal current
+        if current is None:
+            return
         tasks.append(
             TaskRecord(
                 order=len(tasks),
-                task_id=task_id_match.group("id") if task_id_match else None,
-                story=story_match.group("story") if story_match else None,
-                text=body,
-                targets=targets,
-                spec_targets=spec_targets,
-                invalid_targets=invalid_targets,
-                control_targets=control_targets,
-                evolution_markers=tuple(
-                    dict.fromkeys(_EVOLUTION_RE.findall(body))
-                ),
-                operation_authority=authority,
-                invalid_operation_authorities=invalid_authorities,
+                task_id=current["task_id"],
+                story=current["story"],
+                text=current["text"],
+                targets=tuple(current["targets"]),
+                spec_targets=tuple(current["spec_targets"]),
+                invalid_targets=tuple(current["invalid_targets"]),
+                control_targets=tuple(current["control_targets"]),
+                evolution_markers=tuple(current["evolution_markers"]),
+                writes_declared=bool(current["writes_declared"]),
+                write_metadata_errors=tuple(current["write_metadata_errors"]),
             )
         )
+        current = None
+
+    for line in text.splitlines():
+        task_match = _TASK_RE.match(line)
+        if task_match is not None:
+            flush()
+            body = task_match.group("body")
+            task_id_match = _TASK_ID_RE.match(body)
+            story_match = _STORY_RE.search(body)
+            current = {
+                "task_id": task_id_match.group("id") if task_id_match else None,
+                "story": story_match.group("story") if story_match else None,
+                "text": body,
+                "targets": [],
+                "spec_targets": [],
+                "invalid_targets": [],
+                "control_targets": [],
+                "evolution_markers": list(dict.fromkeys(_EVOLUTION_RE.findall(body))),
+                "writes_declared": False,
+                "write_metadata_errors": [],
+            }
+            metadata_open = True
+            continue
+
+        if current is None or not metadata_open:
+            continue
+        writes_match = _WRITES_RE.match(line)
+        if writes_match is not None:
+            if current["writes_declared"]:
+                current["write_metadata_errors"].append("duplicate Writes metadata")
+                continue
+            current["writes_declared"] = True
+            ordinary, specs, controls, invalid, errors = _parse_writes(
+                root,
+                writes_match.group("body"),
+            )
+            current["targets"].extend(ordinary)
+            current["spec_targets"].extend(specs)
+            current["control_targets"].extend(controls)
+            current["invalid_targets"].extend(invalid)
+            current["write_metadata_errors"].extend(errors)
+            continue
+        if line.strip():
+            metadata_open = False
+
+    flush()
     return tasks
 
 
@@ -246,7 +201,7 @@ def project_evolution(
             diagnostic(
                 "EVOLUTION_SPEC_TARGET_REQUIRED",
                 severity,
-                "SpecDD evolution must name at least one .sdd target.",
+                "SpecDD evolution must name at least one .sdd target in Writes metadata.",
                 evolutionClassification=classification,
                 **task_fields(task),
             )
@@ -261,3 +216,12 @@ def project_evolution(
 
 def parse_tasks_file(root: Path, path: Path) -> list[TaskRecord]:
     return parse_tasks(root, path.read_text(encoding="utf-8"))
+
+
+__all__ = [
+    "extract_repository_targets",
+    "is_specdd_control_path",
+    "parse_tasks",
+    "parse_tasks_file",
+    "project_evolution",
+]

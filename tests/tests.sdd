@@ -3,7 +3,7 @@ Spec: Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard the provider-neutral core boundaries and the bridge's authority projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
+  Guard the provider-neutral core boundaries and the bridge's explicit write scope, ownership projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
 
 Owns:
   ./test_boundary_core_layout.py
@@ -11,6 +11,7 @@ Owns:
   ./test_native_contract_graph.py
   ./test_native_contract_context.py
   ./test_native_contract_cli.py
+  ./test_authorization_model.py
   ./test_boundary.py
   ./boundary_test_support.py
   ./boundary_test_paths.py
@@ -35,7 +36,6 @@ Owns:
   ./preset_test_install.py
   ./preset_test_distribution.py
   ./test_workflow.py
-  ./test_workflow_permissions.py
   ./workflow_test_source.py
   ./workflow_test_gate.py
 
@@ -52,23 +52,25 @@ Must:
   Native contract parsing tests cover deterministic discovery under contracts/, boundary.contract/v1 frontmatter, exact and subtree scope grammar, recognized semantic-section extraction, source provenance, and deterministic content identities.
   Native contract graph/context tests cover deterministic indexes, exact and nested ownership, additive applicability, ambiguity rejection, missing intended targets, direct dependency interfaces, semantic provenance, and deterministic projection.
   Native CLI tests cover contract-check diagnostics, multi-target inspection of absent intended targets, stable provenance-rich output, and absence of persisted projections.
+  Native authorization-model tests cover canonical explicit task writes, task identity/order preservation, duplicate rejection, and ordered change-level write projection.
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
-  Adapter tests preserve path normalization, resolver-backed authority derivation, deterministic output, and schema validation coverage.
+  Adapter tests preserve path normalization, resolver-backed ownership derivation, deterministic output, and schema validation coverage.
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport whenever the active SpecDD provider exposes the complete intended-target capability.
   Intended-target projection covers exact file ownership, existing directory ownership, glob ownership, ambiguous ownership, absent authority, and exact missing ownership paths whose file-versus-directory shape is unknowable.
-  Exact-file, existing-directory, and glob-owned target authority remains stable before and after target creation when typed intended-target transport is available.
+  Exact-file, existing-directory, and glob-owned target ownership remains stable before and after target creation when typed intended-target transport is available.
   Compatibility tests keep any resolver without complete typed intended-target support conservative with `INTENDED_TARGET_UNSUPPORTED`, independent of package version.
   Existing-target compatibility remains available without requiring typed intended-target capability.
   Effective-context tests prove ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, and governing-chain changes alter the deterministic context identity.
   Authorization tests prove changed effective SpecDD context blocks snapshot creation while failed reauthorization preserves prior immutable evidence.
-  Tests distinguish missing external executables from resolver, lint, and authority diagnostics.
+  Tests distinguish missing external executables from resolver, lint, and ownership diagnostics.
   The real two-domain fixture exercises deterministic ownership projection when the SpecDD CLI is available.
-  The real two-domain fixture proves resolver-backed intended targets can carry non-owning `Can modify` permission through implementation-stage validation and authorization when the active provider exposes typed intended-target resolution.
-  Validation tests cover owner-local, coordinated multi-owner, explicitly permitted cross-owned, and rejected cross-owned tasks.
-  Task parsing treats `SPECDD_AUTHORITY:` as operation metadata rather than a `.sdd` write target.
-  Explicit `SPEC_EVOLUTION_REQUIRED` and `AUTHORITY_EVOLUTION_REQUIRED` intent remains visible without granting authority.
+  The real two-domain fixture proves intended targets flow through explicit `Writes:` metadata and implementation-stage validation when typed intended-target resolution is available.
+  Task parsing accepts implementation scope only from dedicated indented `Writes:` metadata and ignores incidental path-looking prose for authorization.
+  Advisory path extraction remains covered separately for planning use.
+  Task parsing preserves task order, task IDs, user-story labels, literal filenames, and explicit SpecDD evolution classifications.
+  Validation tests cover owner-local and coordinated multi-owner tasks without synthetic task-level authority.
+  Malformed, duplicate, invalid, stale, unresolved, or conflicting declared writes fail at the appropriate lifecycle strictness.
   Evolution tests keep `.sdd` work separate from ordinary implementation writes and require fresh resolution before dependent implementation.
-  Implementation-stage validation blocks unknown, conflicting, or unpermitted authority.
   Successful authorization stores its snapshot outside the worktree in Git metadata.
   A later feature boundary refresh or failed reauthorization does not mutate the previous authorization snapshot.
   Git verification separates implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.

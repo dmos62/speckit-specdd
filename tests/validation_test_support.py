@@ -34,8 +34,8 @@ def task(
     targets=(),
     spec_targets=(),
     invalid_targets=(),
-    operation_authority=None,
-    invalid_operation_authorities=(),
+    writes_declared=True,
+    write_metadata_errors=(),
 ):
     return validation.TaskRecord(
         order=0,
@@ -45,21 +45,6 @@ def task(
         targets=tuple(targets),
         spec_targets=tuple(spec_targets),
         invalid_targets=tuple(invalid_targets),
-        operation_authority=operation_authority,
-        invalid_operation_authorities=tuple(invalid_operation_authorities),
+        writes_declared=writes_declared,
+        write_metadata_errors=tuple(write_metadata_errors),
     )
-
-
-def permitted_cross_owned_task():
-    auth = "src/auth/auth.sdd"
-    users = "src/users/users.sdd"
-    users_path = "src/users/repository.ts"
-    return {
-        0: {
-            users_path: {
-                "owner": users,
-                "allowedAuthorities": [users, auth],
-                "canModifySources": {auth: [auth]},
-            },
-        }
-    }

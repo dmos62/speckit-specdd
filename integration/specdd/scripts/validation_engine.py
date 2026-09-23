@@ -39,7 +39,7 @@ def _task_classification(
     unresolved_targets: Sequence[str],
     authorities: Sequence[str],
 ) -> str:
-    if task.invalid_operation_authorities:
+    if task.write_metadata_errors:
         return "UNRESOLVED"
     if task.evolution_markers:
         return (
@@ -66,7 +66,6 @@ def validate_feature(
     *,
     stage: str,
     expected_feature: str | None = None,
-    task_permissions: Mapping[int, Mapping[str, Mapping[str, Any]]] | None = None,
 ) -> dict[str, Any]:
     if stage not in VALID_STAGES:
         raise ValidationError(
@@ -99,7 +98,6 @@ def validate_feature(
     )
     diagnostics.extend(boundary_diagnostics)
     represented = set(resolved) | set(unresolved_by_path)
-    permission_projection = task_permissions or {}
     task_results: list[dict[str, Any]] = []
     implementation_unknown: list[str] = []
 
@@ -109,29 +107,28 @@ def validate_feature(
             resolved,
             unresolved_by_path,
             represented,
-            permission_projection.get(task.order, {}),
         )
         unknown = authority.pop("unknown")
         missing = authority.pop("missing")
         authorities = authority["authorities"]
 
+        if task.write_metadata_errors:
+            diagnostics.append(
+                diagnostic(
+                    "INVALID_WRITE_DECLARATION",
+                    _scope_severity(stage),
+                    "Task Writes metadata is malformed or duplicated.",
+                    writeErrors=list(task.write_metadata_errors),
+                    **task_fields(task),
+                )
+            )
         if task.invalid_targets:
             diagnostics.append(
                 diagnostic(
                     "UNRESOLVED_TARGET",
                     _unresolved_severity(stage),
-                    "Task contains invalid repository target paths.",
+                    "Task Writes metadata contains invalid repository paths.",
                     targets=list(task.invalid_targets),
-                    **task_fields(task),
-                )
-            )
-        if task.invalid_operation_authorities:
-            diagnostics.append(
-                diagnostic(
-                    "AUTHORITY_VIOLATION",
-                    _scope_severity(stage),
-                    "Task has invalid or conflicting SPECDD_AUTHORITY annotations.",
-                    declaredAuthorities=list(task.invalid_operation_authorities),
                     **task_fields(task),
                 )
             )
@@ -140,43 +137,8 @@ def validate_feature(
                 diagnostic(
                     "STALE_BOUNDARY",
                     _scope_severity(stage),
-                    "Task write targets are absent from the current boundary.",
+                    "Declared task writes are absent from the current boundary.",
                     targets=missing,
-                    **task_fields(task),
-                )
-            )
-        if len(authorities) > 1:
-            diagnostics.append(
-                diagnostic(
-                    "MULTI_AUTHORITY_TASK",
-                    "warning",
-                    "Task write targets are owned by multiple SpecDD authorities.",
-                    targets=list(task.targets),
-                    **authority,
-                    **task_fields(task),
-                )
-            )
-
-        unresolved_scope = bool(
-            unknown
-            or missing
-            or task.invalid_targets
-            or task.invalid_operation_authorities
-        )
-        if (
-            task.operation_authority is not None
-            and authorities
-            and not authority["operationAuthorities"]
-            and not unresolved_scope
-        ):
-            diagnostics.append(
-                diagnostic(
-                    "AUTHORITY_VIOLATION",
-                    _scope_severity(stage),
-                    "Declared task authority does not own or have Can modify "
-                    "permission for every write target.",
-                    targets=list(task.targets),
-                    **authority,
                     **task_fields(task),
                 )
             )
@@ -196,9 +158,11 @@ def validate_feature(
                 "id": task.task_id,
                 "story": task.story,
                 "text": task.text,
+                "writesDeclared": task.writes_declared,
                 "writeTargets": list(task.targets),
                 "specTargets": list(task.spec_targets),
                 "controlTargets": list(task.control_targets),
+                "writeMetadataErrors": list(task.write_metadata_errors),
                 "authorityCount": len(authorities),
                 **authority,
                 "unresolvedTargets": unresolved_targets,

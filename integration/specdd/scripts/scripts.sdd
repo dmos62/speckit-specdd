@@ -3,7 +3,7 @@ Spec: Change Boundary Scripts
 Platform: Python/SpecDD CLI
 
 Purpose:
-  Build deterministic Change Boundary, validation, authorization, and actual-change verification state from SpecDD resolver output without reimplementing SpecDD semantics.
+  Build deterministic Change Boundary, explicit-write validation, authorization, and actual-change verification state from SpecDD resolver output without reimplementing SpecDD semantics.
 
 Structure:
   ./boundary_schema.py: Change Boundary schema loading and reusable JSON Schema value checks
@@ -11,8 +11,8 @@ Structure:
   ./cli_output.py: Shared JSON output, boundary-context Git metadata persistence, and diagnostic exit-threshold handling
   ./workflow_gate.py: Structural Spec Kit workflow gate orchestration
   ./workflow_gate_state.py: Active-feature, boundary-context, and workflow-artifact state helpers
-  ./validation_authority.py: Pure task ownership and operation-authority projection
-  ./validation_permissions.py: Resolver-backed `Can modify` projection for declared task authority
+  ./validation_authority.py: Pure projection from explicit task writes to owning authorities
+  ./validation_task_paths.py: Advisory path discovery plus exact declared-write path normalization
 
 Owns:
   ./boundary.py
@@ -30,7 +30,7 @@ Owns:
   ./validation_authority.py
   ./validation_cli.py
   ./validation_engine.py
-  ./validation_permissions.py
+  ./validation_task_paths.py
   ./validation_tasks.py
   ./validation_types.py
   ./verification.py
@@ -44,7 +44,7 @@ References:
 
 Must:
   SpecDD resolution comes from the installed SpecDD CLI.
-  Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
+  Missing required external executables fail as infrastructure errors instead of resolver, lint, or ownership diagnostics.
   Runtime diagnostics remain usable in downstream repositories without requiring the bridge-development bootstrap script.
   Existing resolver targets preserve unflagged `specdd resolve` behavior.
   Missing targets use `--file`, `--folder`, or `--sdd-file` only when the active resolver exposes the complete typed intended-target capability.
@@ -59,15 +59,14 @@ Must:
   Boundary refresh records deterministic SHA-256 identities of normalized resolver-returned governing spec sections for each resolved target without copying rule text.
   Refresh-time context evidence is bound to the exact generated Change Boundary and stored as replaceable current-worktree Git metadata rather than authorization evidence.
   Authorization fresh-resolves boundary targets and blocks when effective SpecDD context fingerprints or resolver generation identity differ from refresh-time evidence.
-  Validation consumes Change Boundary ownership projection and exact task paths without parsing `.sdd` source.
-  Validation derives non-owning modification permission for explicit `SPECDD_AUTHORITY:` tasks from fresh resolved `Can modify` context while preserving each target's owning authority.
-  Validation may fresh-resolve an intended owner-local target when it is the context anchor for declared task authority.
-  Validation preserves task order, task IDs, user-story labels, and explicit SpecDD evolution classifications in its analysis output.
-  Validation distinguishes zero-authority, single-authority, and multi-authority task write sets.
+  Spec Kit task validation receives implementation scope only from dedicated indented `Writes:` metadata containing comma-separated backticked exact paths.
+  Incidental path-looking task prose never widens task write scope; heuristic path extraction remains advisory planning input only.
+  Validation preserves task order, task IDs, user-story labels, explicit writes, and explicit SpecDD evolution classifications in its analysis output.
+  Validation represents zero-owner, single-owner, and multi-owner write sets directly from each target's owning authority without a synthetic task authority.
   Validation CLI callers may request nonzero process status when deterministic `error` or `blocking` diagnostics are present.
-  Evolution classifications require `.sdd` targets and remain separate from ordinary implementation writes.
+  Evolution classifications require `.sdd` targets declared through `Writes:` and remain separate from ordinary implementation writes.
   Validation records when deliberate evolution requires fresh boundary resolution and when authority evolution ends the prior authority context.
-  Unknown, conflicting, or unpermitted declared authority blocks validation at the implementation stage.
+  Unknown or conflicting target ownership blocks validation at the implementation stage.
   Successful authorization stores the exact validated Change Boundary in current-worktree Git metadata without changing feature boundary state.
   Failed authorization leaves any prior authorization snapshot unchanged.
   Verification derives actual implementation writes from Git and fresh SpecDD resolution.
@@ -80,4 +79,5 @@ Must:
 Must not:
   Parse `.sdd` source as a replacement for SpecDD resolver semantics.
   Apply or synthesize proposed `.sdd` evolution.
-  Rewrite Spec Kit tasks or relax SpecDD authority to make a task valid.
+  Treat `SPECDD_AUTHORITY:` metadata or path-looking task prose as implementation authority.
+  Rewrite Spec Kit tasks or relax target ownership to make a task valid.

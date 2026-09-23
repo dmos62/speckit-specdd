@@ -25,8 +25,8 @@ class TaskRecord:
     invalid_targets: tuple[str, ...]
     control_targets: tuple[str, ...] = ()
     evolution_markers: tuple[str, ...] = ()
-    operation_authority: str | None = None
-    invalid_operation_authorities: tuple[str, ...] = ()
+    writes_declared: bool = False
+    write_metadata_errors: tuple[str, ...] = ()
 
 
 def diagnostic(
@@ -55,7 +55,6 @@ def task_fields(task: TaskRecord) -> dict[str, Any]:
         "taskId": task.task_id,
         "story": task.story,
         "taskOrder": task.order,
-        "operationAuthority": task.operation_authority,
     }
 
 

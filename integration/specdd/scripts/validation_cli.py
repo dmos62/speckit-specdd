@@ -18,10 +18,6 @@ from cli_output import (
     write_json_output as _write_output,
 )
 from validation_engine import VALID_STAGES, validate_feature
-from validation_permissions import (
-    project_task_modification_permissions,
-    requires_permission_projection,
-)
 from validation_tasks import parse_tasks_file
 from validation_types import ValidationError
 
@@ -31,7 +27,7 @@ def parse_args(
 ) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Validate Spec Kit task write targets against "
+            "Validate explicit Spec Kit task Writes metadata against "
             "a derived SpecDD Change Boundary."
         )
     )
@@ -62,11 +58,6 @@ def parse_args(
     parser.add_argument(
         "--schema",
         help="Override the Change Boundary schema path",
-    )
-    parser.add_argument(
-        "--specdd",
-        default="specdd",
-        help="SpecDD CLI executable (default: specdd)",
     )
     parser.add_argument(
         "--output",
@@ -148,23 +139,11 @@ def main(
             root,
             tasks_path,
         )
-        permissions = {}
-        if requires_permission_projection(
-            boundary,
-            tasks,
-        ):
-            permissions = project_task_modification_permissions(
-                root,
-                boundary,
-                tasks,
-                executable=args.specdd,
-            )
         result = validate_feature(
             boundary,
             tasks,
             stage=args.stage,
             expected_feature=args.feature,
-            task_permissions=permissions,
         )
         _write_output(
             root,

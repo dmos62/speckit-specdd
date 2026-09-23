@@ -111,7 +111,7 @@ class RealFixtureIntegrationTests(unittest.TestCase):
                 message,
             )
 
-    def test_intended_targets_flow_through_permission_and_authorization(self):
+    def test_intended_targets_flow_through_explicit_writes_and_authorization(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
         if not self.intended_targets_supported():
@@ -136,41 +136,22 @@ class RealFixtureIntegrationTests(unittest.TestCase):
             payload["authorities"],
         )
 
-        task = validation.TaskRecord(
-            order=0,
-            task_id="T001",
-            story="US1",
-            text="intended cross-owned write",
-            targets=targets,
-            spec_targets=(),
-            invalid_targets=(),
-            operation_authority="src/auth/auth.sdd",
+        task_text = (
+            "- [ ] T001 [US1] Implement intended cross-owner write\n"
+            "  Writes: `src/auth/future-service.ts`, "
+            "`src/users/future-identity-contract.ts`\n"
         )
-        permissions = validation.project_task_modification_permissions(
-            FIXTURE_ROOT,
-            payload,
-            [task],
-        )
+        tasks = validation.parse_tasks(FIXTURE_ROOT, task_text)
         result = validation.validate_feature(
             payload,
-            [task],
+            tasks,
             stage="implementation",
-            task_permissions=permissions,
         )
         self.assertEqual(0, result["summary"]["countsBySeverity"]["error"])
         self.assertEqual(0, result["summary"]["countsBySeverity"]["blocking"])
         self.assertEqual(
-            ["src/auth/auth.sdd"],
-            result["tasks"][0]["operationAuthorities"],
-        )
-        users_permission = next(
-            item
-            for item in result["tasks"][0]["modificationPermissions"]
-            if item["path"] == "src/users/future-identity-contract.ts"
-        )
-        self.assertEqual(
-            ["src/auth/auth.sdd"],
-            users_permission["canModifySources"]["src/auth/auth.sdd"],
+            ["src/auth/auth.sdd", "src/users/users.sdd"],
+            result["tasks"][0]["authorities"],
         )
 
         evidence_path = boundary.write_boundary_context_evidence(
@@ -184,13 +165,7 @@ class RealFixtureIntegrationTests(unittest.TestCase):
                 boundary_path = temporary_path / "boundary.json"
                 tasks_path = temporary_path / "tasks.md"
                 boundary.write_boundary(payload, boundary_path)
-                tasks_path.write_text(
-                    "- [ ] T001 [US1] Update "
-                    "`src/auth/future-service.ts` and "
-                    "`src/users/future-identity-contract.ts` "
-                    "SPECDD_AUTHORITY: `src/auth/auth.sdd`\n",
-                    encoding="utf-8",
-                )
+                tasks_path.write_text(task_text, encoding="utf-8")
                 snapshot = temporary_path / "authorization.json"
                 spec_plan = temporary_path / "authorization-spec-plan.json"
                 stdout = io.StringIO()

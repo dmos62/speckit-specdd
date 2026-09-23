@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Spec Kit task scope against a SpecDD Change Boundary."""
+"""Validate explicit Spec Kit task writes against a SpecDD Change Boundary."""
 
 from __future__ import annotations
 
@@ -22,10 +22,6 @@ from validation_engine import (  # noqa: E402,F401
     SEVERITIES,
     VALID_STAGES,
     validate_feature,
-)
-from validation_permissions import (  # noqa: E402,F401
-    project_task_modification_permissions,
-    requires_permission_projection,
 )
 from validation_tasks import (  # noqa: E402,F401
     extract_repository_targets,

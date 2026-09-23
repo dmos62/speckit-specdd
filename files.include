@@ -8,12 +8,23 @@
 @glob integration/specdd/scripts/**
 @glob integration/specdd/schemas/change-boundary.schema.json
 @glob integration/specdd/workflow-overlay.sdd
-@glob tests/test_boundary.py
-@glob tests/boundary_test_*.py
-@glob tests/test_change_boundary_schema.py
+@glob tests/test_authorization_model.py
 @glob tests/test_validation.py
-@glob tests/validation_test_*.py
+@glob tests/boundary_test_support.py
+@glob tests/validation_test_tasks.py
+@glob tests/validation_test_engine.py
+@glob tests/validation_test_support.py
+@glob tests/test_verification.py
+@glob tests/verification_test_*.py
+@glob tests/test_workflow.py
+@glob tests/workflow_test_gate.py
+@glob tests/workflow_test_source.py
 @glob tests/tests.sdd
+@globexclude tests/test_change_boundary_schema.py
+@globexclude tests/boundary_test_output.py
+@globexclude tests/boundary_test_ownership.py
+@globexclude tests/boundary_test_paths.py
+@globexclude tests/boundary_test_resolver.py
 @globexclude **/__pycache__/**
 @globexclude **/*.pyc
 @endfilegroup

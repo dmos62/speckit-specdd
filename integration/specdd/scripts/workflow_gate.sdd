@@ -3,7 +3,7 @@ Spec: SpecDD Workflow Gate
 Platform: Python/Spec Kit/SpecDD CLI
 
 Purpose:
-  Orchestrate deterministic SpecDD workflow stages around the active Spec Kit feature while reusing boundary, validation, authorization-snapshot, and verification mechanics.
+  Orchestrate deterministic SpecDD workflow stages around the active Spec Kit feature while reusing boundary, explicit-write validation, authorization-snapshot, and verification mechanics.
 
 Owns:
   ./workflow_gate.py
@@ -17,11 +17,12 @@ References:
 
 Must:
   Active feature resolution uses Spec Kit persisted or environment-provided feature state.
-  Planning context discovers explicit repository paths without interpreting `.sdd` ownership itself.
+  Planning context may discover repository paths heuristically without interpreting `.sdd` ownership itself.
+  Heuristic path discovery is advisory planning input only and never grants implementation authority.
   Context and task-stage boundary refresh record fingerprint-bound effective SpecDD context evidence in current-worktree Git metadata.
-  Task-stage execution refreshes the Change Boundary from exact non-`.sdd` task targets before deterministic validation.
+  Task-stage boundary refresh uses only exact non-`.sdd` paths from dedicated task `Writes:` metadata.
   Task-stage validation returns failure status for deterministic `error` or `blocking` diagnostics.
-  Tasks with explicit `SPECDD_AUTHORITY:` use fresh SpecDD resolver output to distinguish target ownership from applicable non-owning `Can modify` permission.
+  Multi-owner tasks retain each write target's owning SpecDD authority without a synthetic task-level authority.
   Authorization validates the existing Change Boundary without rewriting it.
   Authorization fresh-resolves every resolved boundary target and blocks when its effective SpecDD context changed since refresh.
   Successful authorization copies the exact validated Change Boundary to current-worktree Git metadata as immutable operation evidence.
@@ -32,6 +33,7 @@ Must:
 
 Must not:
   Parse `.sdd` files as a replacement for SpecDD resolution.
+  Use path-looking task prose or `SPECDD_AUTHORITY:` annotations to widen implementation scope.
   Refresh or rewrite the Change Boundary during authorization or verification.
   Replace refresh-time context evidence during authorization.
   Replace the authorization snapshot during context or task refresh.

@@ -29,22 +29,17 @@ class RealFixtureValidationTests(unittest.TestCase):
             specdd_framework_version="1.5",
         )
 
-    def permission_projection(self, boundary_value, tasks):
-        return validation.project_task_modification_permissions(
-            FIXTURE_ROOT,
-            boundary_value,
-            tasks,
-        )
-
-    def test_scenario_a_authority_local_tasks_validate_independently(self):
+    def test_scenario_a_owner_local_tasks_validate_independently(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
         tasks = validation.parse_tasks(
             FIXTURE_ROOT,
             """
-- [ ] T001 [US1] Update src/auth/service.ts
-- [ ] T002 [US1] Update src/users/repository.ts
+- [ ] T001 [US1] Update auth service
+  Writes: `src/auth/service.ts`
+- [ ] T002 [US1] Update users repository
+  Writes: `src/users/repository.ts`
 """,
         )
         result = validation.validate_feature(
@@ -60,14 +55,15 @@ class RealFixtureValidationTests(unittest.TestCase):
         )
         self.assertEqual([], result["diagnostics"])
 
-    def test_scenario_c_unmarked_cross_domain_task_remains_representable(self):
+    def test_coordinated_multi_owner_task_uses_target_owners(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
         tasks = validation.parse_tasks(
             FIXTURE_ROOT,
             """
-- [ ] T003 [US1] Update src/auth/service.ts and src/users/repository.ts
+- [ ] T003 [US1] Coordinate auth and users changes
+  Writes: `src/auth/service.ts`, `src/users/repository.ts`
 """,
         )
         result = validation.validate_feature(
@@ -81,93 +77,48 @@ class RealFixtureValidationTests(unittest.TestCase):
         self.assertEqual("CROSS_BOUNDARY", task["classification"])
         self.assertEqual(
             ["src/auth/auth.sdd", "src/users/users.sdd"],
-            task["operationAuthorities"],
+            task["authorities"],
         )
-        self.assertEqual(
-            ["MULTI_AUTHORITY_TASK"],
-            [item["code"] for item in result["diagnostics"]],
-        )
+        self.assertEqual([], result["diagnostics"])
         self.assertFalse(result["summary"]["blocking"])
 
-    def test_declared_auth_write_to_users_contract_uses_can_modify(self):
+    def test_task_prose_path_does_not_enter_implementation_scope(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
         tasks = validation.parse_tasks(
             FIXTURE_ROOT,
             """
-- [ ] T004 [US1] SPECDD_AUTHORITY: `src/auth/auth.sdd` Update src/auth/service.ts and src/users/identity-contract.ts
+- [ ] T004 [US1] Review src/users/repository.ts while updating auth service
+  Writes: `src/auth/service.ts`
 """,
         )
-        boundary_value = self.build_fixture_boundary(
-            [
-                "src/auth/service.ts",
-                "src/users/identity-contract.ts",
-            ]
-        )
         result = validation.validate_feature(
-            boundary_value,
+            self.build_fixture_boundary(),
             tasks,
             stage="implementation",
             expected_feature="two-domain-fixture",
-            task_permissions=self.permission_projection(boundary_value, tasks),
         )
 
-        task = result["tasks"][0]
+        self.assertEqual(
+            ["src/auth/service.ts"],
+            result["tasks"][0]["writeTargets"],
+        )
         self.assertEqual(
             ["src/auth/auth.sdd"],
-            task["operationAuthorities"],
+            result["tasks"][0]["authorities"],
         )
-        identity_permission = next(
-            item
-            for item in task["modificationPermissions"]
-            if item["path"] == "src/users/identity-contract.ts"
-        )
-        self.assertEqual("src/users/users.sdd", identity_permission["owner"])
-        self.assertEqual(
-            ["src/auth/auth.sdd"],
-            identity_permission["canModifySources"]["src/auth/auth.sdd"],
-        )
-        self.assertEqual(
-            ["MULTI_AUTHORITY_TASK"],
-            [item["code"] for item in result["diagnostics"]],
-        )
-        self.assertFalse(result["summary"]["blocking"])
+        self.assertEqual([], result["diagnostics"])
 
-    def test_declared_auth_write_to_users_repository_without_grant_is_blocked(self):
+    def test_durable_contract_is_explicit_spec_evolution(self):
         if not FIXTURE_ROOT.is_dir():
             self.skipTest("two-domain fixture is not available")
 
         tasks = validation.parse_tasks(
             FIXTURE_ROOT,
             """
-- [ ] T005 [US1] SPECDD_AUTHORITY: `src/auth/auth.sdd` Update src/auth/service.ts and src/users/repository.ts
-""",
-        )
-        boundary_value = self.build_fixture_boundary()
-        result = validation.validate_feature(
-            boundary_value,
-            tasks,
-            stage="implementation",
-            expected_feature="two-domain-fixture",
-            task_permissions=self.permission_projection(boundary_value, tasks),
-        )
-
-        self.assertEqual([], result["tasks"][0]["operationAuthorities"])
-        self.assertIn(
-            "AUTHORITY_VIOLATION",
-            [item["code"] for item in result["diagnostics"]],
-        )
-        self.assertTrue(result["summary"]["blocking"])
-
-    def test_scenario_d_durable_contract_is_explicit_spec_evolution(self):
-        if not FIXTURE_ROOT.is_dir():
-            self.skipTest("two-domain fixture is not available")
-
-        tasks = validation.parse_tasks(
-            FIXTURE_ROOT,
-            """
-- [ ] T006 [US1] SPEC_EVOLUTION_REQUIRED: Extend src/users/users.sdd with a durable Auth-to-Users identity-link contract
+- [ ] T006 [US1] SPEC_EVOLUTION_REQUIRED: Extend users identity contract
+  Writes: `src/users/users.sdd`
 """,
         )
         result = validation.validate_feature(
