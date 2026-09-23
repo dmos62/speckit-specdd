@@ -51,37 +51,13 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# P3 self-contained runtime packaging is active.
-@# Keep canonical runtime scripts, command contracts, installer/bootstrap source,
-@# manifests, workflow source, installation tests, and user/developer docs in context.
+@# P4 public identity and provider-isolation work is next.
+@# Keep manifests, runtime source, installer/bootstrap source, commands, tests,
+@# architecture docs, and user/developer docs available for the rename.
+
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
-@# Broader architecture prose remains outside the active runtime-packaging work.
-@globexclude docs/change-boundary.md
-@globexclude docs/spec.md
-@globexclude docs/spec-architecture.md
-@globexclude docs/spec-lifecycle.md
-@globexclude docs/spec-v0.1.md
-@globexclude docs/TECH-DEBT.md
-@globexclude docs/TECH-DEBT.sdd
-
-@# Detailed authority fixtures and low-level projection tests remain outside the
-@# immediate packaging focus; reinclude them if runtime changes reach those contracts.
+@# Provider-specific authority fixture data remains omitted until a P4 change
+@# requires modifying its contracts or expected resolver output.
 @globexclude tests/fixtures/specdd-two-domain/**
-@globexclude tests/test_boundary.py
-@globexclude tests/boundary_test_*.py
-@globexclude tests/test_change_boundary_schema.py
-@globexclude tests/test_validation.py
-@globexclude tests/validation_test_engine.py
-@globexclude tests/validation_test_fixture.py
-@globexclude tests/validation_test_support.py
-@globexclude tests/validation_test_tasks.py
-@globexclude tests/test_workflow_permissions.py
-
-@# Completed Git verification suites remain omitted until P3 needs to change their
-@# behavioral assertions; verification runtime source itself stays available.
-@globexclude tests/test_verification.py
-@globexclude tests/verification_test_engine.py
-@globexclude tests/verification_test_fixture.py
-@globexclude tests/verification_test_git.py
 @endfilegroup

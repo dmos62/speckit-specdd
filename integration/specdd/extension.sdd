@@ -11,11 +11,13 @@ References:
   ./commands/validate.sdd
   ./commands/authorize.sdd
   ./commands/verify.sdd
+  ./scripts/workflow_gate.sdd
 
 Must:
   Command declarations correspond to bridge command contracts that exist under `./commands/`.
   Mandatory lifecycle hooks refresh context after planning, validate after task generation, authorize before implementation, and verify after implementation.
   Hook commands remain invokable through the active registrar-backed Spec Kit integration.
+  Installed extension state carries the runtime scripts and schemas required by bridge commands and structural workflow gates.
   Compatibility is tested against Spec Kit `1.0.10` and SpecDD framework `1.5`.
   The manifest keeps the temporary SpecDD provider package pin at `1.2.0` only while stable upstream CLI `1.1.1` lacks the typed intended-target capability required by the bridge.
 

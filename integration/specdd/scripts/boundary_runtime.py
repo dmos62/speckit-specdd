@@ -58,8 +58,8 @@ def _locate_executable(executable: str) -> str:
     if located is None:
         raise BoundaryError(
             "Required SpecDD CLI executable was not found: "
-            f"{executable}. Run `bash scripts/bootstrap.sh` to install "
-            "the tested SpecDD provider, or restore it to PATH before retrying."
+            f"{executable}. Install or repair the SpecDD provider required "
+            "by this bridge before retrying."
         )
     return located
 
@@ -141,7 +141,7 @@ def specdd_cli_version(
         raise BoundaryError(
             "SpecDD CLI is present, but its installed version could not "
             "be verified because npm was not found. Install Node.js/npm "
-            "and run `bash scripts/bootstrap.sh --check`."
+            "and repair the installed bridge toolchain before retrying."
         )
 
     result = _run(
@@ -161,7 +161,7 @@ def specdd_cli_version(
     raise BoundaryError(
         "SpecDD CLI is present, but its installed version could not be "
         "verified from package metadata or npm global package state. "
-        "Run `bash scripts/bootstrap.sh --check` to repair the tested toolchain."
+        "Repair the installed SpecDD provider before retrying."
     )
 
 

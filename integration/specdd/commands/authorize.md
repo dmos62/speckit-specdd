@@ -49,9 +49,9 @@ and verifies `Can modify` permission for cross-owned writes.
 
    Do not regenerate the Change Boundary here.
 
-3. Run the structural authorization gate:
+3. Run the installed structural authorization gate:
 
-       uv run --no-project python integration/specdd/scripts/workflow_gate.py authorize \
+       uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py authorize \
          --root "<repository-root>"
 
    For each exact editable bootstrap override explicitly named by the Operator in this command invocation, append:

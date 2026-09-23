@@ -38,9 +38,9 @@ This command reports state only.
 
    The companion specification/control document and Git baseline must fingerprint-match the exact boundary snapshot.
 
-3. Run deterministic verification:
+3. Run deterministic verification from installed extension state:
 
-       uv run --no-project python integration/specdd/scripts/verification.py \
+       uv run --no-project python .specify/extensions/specdd/scripts/verification.py \
          --root "<repository-root>" \
          --feature "<feature-id>" \
          --feature-dir "<feature-dir>" \

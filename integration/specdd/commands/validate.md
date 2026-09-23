@@ -25,9 +25,8 @@ This command never rewrites tasks, edits `.sdd` files, relaxes SpecDD authority,
 ## External dependency failures
 
 If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
-when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
-`bash scripts/bootstrap.sh --check`, and do not convert tool absence into unresolved-target, stale-boundary, or authority
-diagnostics.
+when reached), report it as an infrastructure failure and stop. Preserve the tool error, identify the missing or broken
+dependency, and do not convert tool absence into unresolved-target, stale-boundary, or authority diagnostics.
 
 ## Execution
 
@@ -63,9 +62,9 @@ diagnostics.
      `AUTHORITY_VIOLATION`.
    - If `$ARGUMENTS` does not select a stage, use `tasks`.
 
-6. Run the deterministic validator:
+6. Run the deterministic validator from installed extension state:
 
-       uv run --no-project python integration/specdd/scripts/validation.py \
+       uv run --no-project python .specify/extensions/specdd/scripts/validation.py \
          --root "<repository-root>" \
          --feature "<feature-id>" \
          --boundary "<feature-dir>/.specdd/boundary.json" \

@@ -71,15 +71,17 @@ For controlled consumer packaging tests it accepts immutable GitHub tag, 40-char
 
 The installer deliberately does not publish through npm, PyPI, or a public Spec Kit catalog.
 
-## Immutable source and provenance
+## Installed runtime and provenance
 
 Spec Kit `1.0.10` does not persist enough provenance to reconstruct this three-part installation from installed state alone.
 
 Extension and preset components installed from an extracted release are local component installs. The workflow overlay is separately copied into project overlay state. Neither gives a downstream clone one authoritative immutable bridge source.
 
-The downstream model therefore needs one small committed source/version pin that identifies the immutable bridge release independently of generated Spec Kit state. Defining that pin, upgrade flow, and fresh-clone reproduction is part of the downstream-user task.
+The downstream model therefore still needs one small committed source/version pin that identifies the immutable bridge release independently of generated Spec Kit state. Defining that pin, upgrade flow, and fresh-clone reproduction is part of the downstream-user task.
 
-The current archive installer proves the packaging route, installation, Codex switching, removal, and reinstall behavior. It does not yet make runtime execution independent of canonical source paths: the structural workflow shell commands still reference `integration/specdd/scripts/...`. Self-contained installed runtime assets are the next packaging task.
+Runtime execution is self-contained after installation. The installed extension under `.specify/extensions/specdd/` carries the Python runtime and Change Boundary schema. Materialized agent commands and the resolved structural workflow invoke `.specify/extensions/specdd/scripts/workflow_gate.py`, so canonical `integration/specdd/` source does not need to exist in the downstream repository.
+
+The immutable-archive distribution test removes access to canonical bridge source in the consumer repository and exercises context, task validation, authorization, an implementation write, and verification through installed extension state.
 
 ## Rematerialize bridge source
 
@@ -103,7 +105,7 @@ Canonical workflow-overlay source is:
 
     integration/specdd/workflow-overlay.yml
 
-The installed copy under `.specify/workflows/overlays/` is generated state.
+The installed copy under `.specify/workflows/overlays/` is generated state. Its shell steps invoke the gate from installed extension state rather than canonical bridge source.
 
 The resolved `speckit` workflow adds four deterministic shell steps:
 
@@ -148,7 +150,7 @@ Canonical bridge source lives under:
     integration/specdd/
     integration/specdd-preset/
 
-Spec Kit materializes installed commands and bookkeeping under `.agents/skills/` and `.specify/`. Treat those outputs as generated integration state.
+Spec Kit materializes installed commands and bookkeeping under `.agents/skills/` and `.specify/`. The installed runtime under `.specify/extensions/specdd/` is generated integration state, not canonical bridge source.
 
 Feature Change Boundaries are generated feature state. Refresh-time effective-context evidence, authorization boundary snapshots, companion operation selections, and authorization-time Git baselines are generated current-worktree Git metadata.
 

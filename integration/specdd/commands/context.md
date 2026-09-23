@@ -28,8 +28,8 @@ runtime behavior does not rely on that provider version: it checks whether the a
 ## External dependency failures
 
 If a required external command is missing or cannot start (`pwsh` for prerequisite discovery, `git`, `uv`, or `specdd`
-when reached), report it as an infrastructure failure and stop. Preserve the tool error, direct the user to
-`bash scripts/bootstrap.sh --check`, and do not convert tool absence into unresolved-target or authority diagnostics.
+when reached), report it as an infrastructure failure and stop. Preserve the tool error, identify the missing or broken
+dependency, and do not convert tool absence into unresolved-target or authority diagnostics.
 
 ## Execution
 
@@ -77,9 +77,9 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
      an implementation Change Boundary cannot be generated until at least one ordinary implementation target is known.
    - Stop without creating a replacement boundary.
 
-6. Run the existing adapter once with all discovered targets:
+6. Run the installed bridge adapter once with all discovered targets:
 
-       uv run --no-project python integration/specdd/scripts/boundary.py \
+       uv run --no-project python .specify/extensions/specdd/scripts/boundary.py \
          --root "<repository-root>" \
          --feature "<feature-id>" \
          --output "<feature-dir>/.specdd/boundary.json" \

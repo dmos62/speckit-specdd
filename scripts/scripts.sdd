@@ -26,6 +26,7 @@ Must:
   ./install.sh accepts the local checkout, a local archive, or an immutable GitHub tag, commit, or release archive as installation source.
   Remote installation rejects mutable GitHub branch archives.
   ./install.sh supports clean bridge removal, reinstall, and installation-health checks.
+  Installed extension state provides the runtime scripts and schema used by commands and workflow gates without requiring canonical bridge source in the target repository.
   Bootstrap delegates bridge materialization to ./install.sh after establishing the pinned development toolchain.
   Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, workflow-overlay resolution, and `specdd lint` without changing repository state.
   Missing required host executables report dependency-specific remediation before bootstrap mutates repository state.

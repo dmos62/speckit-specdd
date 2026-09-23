@@ -5,6 +5,8 @@ from pathlib import Path
 
 from preset_test_support import (
     EXTENSION_ROOT,
+    INSTALLED_RUNTIME_PATH,
+    INSTALLED_SCHEMA_PATH,
     PRESET_ROOT,
     SPECKIT_VERSION,
     WORKFLOW_OVERLAY_PATH,
@@ -115,10 +117,7 @@ class PresetInstallTests(unittest.TestCase):
                 "speckit",
             )
             require_success(self, overlay_list)
-            self.assertIn(
-                "specdd-bridge",
-                overlay_list.stdout,
-            )
+            self.assertIn("specdd-bridge", overlay_list.stdout)
 
             resolved = run_command(
                 root,
@@ -129,10 +128,8 @@ class PresetInstallTests(unittest.TestCase):
             )
             require_success(self, resolved)
             for step in WORKFLOW_STEPS:
-                self.assertIn(
-                    step,
-                    resolved.stdout,
-                )
+                self.assertIn(step, resolved.stdout)
+            self.assertIn(str(INSTALLED_RUNTIME_PATH), resolved.stdout)
 
             order = (
                 "plan",
@@ -145,15 +142,10 @@ class PresetInstallTests(unittest.TestCase):
                 "specdd-verify",
             )
             positions = [
-                resolved.stdout.index(
-                    f"• {step}:"
-                )
+                resolved.stdout.index(f"• {step}:")
                 for step in order
             ]
-            self.assertEqual(
-                sorted(positions),
-                positions,
-            )
+            self.assertEqual(sorted(positions), positions)
 
             require_success(
                 self,
@@ -167,6 +159,9 @@ class PresetInstallTests(unittest.TestCase):
                     "--force",
                 ),
             )
+            self.assertTrue((root / INSTALLED_RUNTIME_PATH).is_file())
+            self.assertTrue((root / INSTALLED_SCHEMA_PATH).is_file())
+
             extension_list = run_command(
                 root,
                 "specify",
@@ -260,6 +255,9 @@ class PresetInstallTests(unittest.TestCase):
                     "--force",
                 ),
             )
+            self.assertFalse((root / INSTALLED_RUNTIME_PATH).exists())
+            self.assertFalse((root / INSTALLED_SCHEMA_PATH).exists())
+
             extension_list = run_command(
                 root,
                 "specify",
@@ -306,7 +304,4 @@ class PresetInstallTests(unittest.TestCase):
                 "speckit",
             )
             require_success(self, overlay_list)
-            self.assertNotIn(
-                "specdd-bridge",
-                overlay_list.stdout,
-            )
+            self.assertNotIn("specdd-bridge", overlay_list.stdout)

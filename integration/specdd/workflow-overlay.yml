@@ -8,26 +8,26 @@ edits:
     step:
       id: specdd-context
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv and run bash scripts/bootstrap.sh --check" >&2; exit 2; }; uv run --no-project python integration/specdd/scripts/workflow_gate.py context'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py context'
       timeout: 300
 
   - insert_after: tasks
     step:
       id: specdd-task-validation
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv and run bash scripts/bootstrap.sh --check" >&2; exit 2; }; uv run --no-project python integration/specdd/scripts/workflow_gate.py tasks'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py tasks'
       timeout: 300
 
   - insert_before: implement
     step:
       id: specdd-authorize
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv and run bash scripts/bootstrap.sh --check" >&2; exit 2; }; uv run --no-project python integration/specdd/scripts/workflow_gate.py authorize'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py authorize'
       timeout: 300
 
   - insert_after: implement
     step:
       id: specdd-verify
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv and run bash scripts/bootstrap.sh --check" >&2; exit 2; }; uv run --no-project python integration/specdd/scripts/workflow_gate.py verify'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py verify'
       timeout: 300

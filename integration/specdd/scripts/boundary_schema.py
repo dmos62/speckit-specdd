@@ -11,6 +11,11 @@ from boundary_types import BoundaryError
 SCHEMA_RELATIVE_PATH = Path(
     "integration/specdd/schemas/change-boundary.schema.json"
 )
+BUNDLED_SCHEMA_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "schemas"
+    / "change-boundary.schema.json"
+)
 ANNOTATION_SCHEMA_KEYS = {
     "$comment",
     "$id",
@@ -36,10 +41,10 @@ def load_schema(
         path = Path(override).expanduser()
         candidates = [path if path.is_absolute() else root / path]
     else:
-        candidates = [root / SCHEMA_RELATIVE_PATH]
-        source_root = Path(__file__).resolve().parents[3]
-        if source_root != root:
-            candidates.append(source_root / SCHEMA_RELATIVE_PATH)
+        candidates = [BUNDLED_SCHEMA_PATH]
+        canonical = root / SCHEMA_RELATIVE_PATH
+        if canonical.resolve(strict=False) != BUNDLED_SCHEMA_PATH:
+            candidates.append(canonical)
 
     path = next(
         (candidate for candidate in candidates if candidate.is_file()),

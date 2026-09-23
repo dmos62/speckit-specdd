@@ -78,7 +78,9 @@ Installed state can be checked or removed through the same script:
 
 Spec Kit `1.0.10` does not preserve one sufficient immutable source identity for this composition: extracted extension and preset installs are recorded as local component state, while the project overlay is copied separately. A downstream repository therefore needs one small committed source/version pin for reproducibility. Defining that committed pin and the complete fresh-clone experience remains part of the downstream-user work.
 
-The current remote archive path proves installation and removal behavior. It is not yet the final downstream runtime: the structural workflow shell steps still reference canonical bridge-development paths. Making all runtime assets self-contained in installed state is the next packaging task.
+The installed extension carries the bridge runtime scripts and Change Boundary schema under generated Spec Kit extension state. Materialized commands and structural workflow gates invoke that installed runtime, so a downstream repository does not need `integration/specdd/`, `integration/specdd-preset/`, or this repository's development bootstrap for normal lifecycle execution after installation.
+
+The immutable-archive packaging path is exercised in an isolated consumer repository after the archive source is removed, including context refresh, task validation, authorization, an implementation write, and verification. Remaining downstream work is the reproducible committed source/version pin, upgrade flow, removal/reinstall semantics, fresh-clone reconstruction, and user-facing setup documentation.
 
 ## Canonical source and generated state
 
@@ -91,6 +93,8 @@ Generated Spec Kit integration state lives under locations such as:
 
     .agents/skills/
     .specify/
+
+Installed runtime under `.specify/extensions/specdd/` is generated integration state even though commands and structural gates execute from it.
 
 Do not hand-edit generated integration state. Root `.specdd/` framework state is also not an ordinary bridge implementation surface.
 

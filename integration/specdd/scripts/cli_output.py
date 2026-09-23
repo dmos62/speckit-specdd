@@ -82,8 +82,8 @@ def _git_metadata_directory(
         )
     except FileNotFoundError as exc:
         raise BoundaryError(
-            "Required Git executable was not found. Install Git and run "
-            "`bash scripts/bootstrap.sh --check` before refreshing context."
+            "Required Git executable was not found. Install Git before "
+            "refreshing bridge context."
         ) from exc
     except OSError as exc:
         raise BoundaryError(f"Git could not be executed: {exc}") from exc

@@ -18,6 +18,7 @@ Must:
   Development guidance explains why Spec Kit `1.0.10` workflow overlays require thin-installer handling rather than native bundle-only distribution.
   Development guidance distinguishes local checkout installation from immutable GitHub archive installation.
   Development guidance records that direct extracted component and overlay state is insufficient as a durable immutable source pin.
+  Development guidance explains that installed extension state carries the bridge runtime scripts and schema used by commands and structural workflow gates.
   Generated Spec Kit command, workflow-overlay, feature boundary, and authorization-snapshot state remains distinct from canonical bridge source under `../integration/`.
   Migration between active integrations uses supported Spec Kit commands rather than manual generated-state edits.
   Structural workflow enforcement and agent-facing lifecycle hooks have distinct documented responsibilities.

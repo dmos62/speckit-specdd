@@ -45,12 +45,14 @@ References:
 Must:
   SpecDD resolution comes from the installed SpecDD CLI.
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
+  Runtime diagnostics remain usable in downstream repositories without requiring the bridge-development bootstrap script.
   Existing resolver targets preserve unflagged `specdd resolve` behavior.
   Missing targets use `--file`, `--folder`, or `--sdd-file` only when the active resolver exposes the complete typed intended-target capability.
   Resolver capability, not a historical package version, determines whether intended targets can be resolved before creation.
   A resolver without complete typed intended-target support leaves missing targets as conservative `INTENDED_TARGET_UNSUPPORTED` records instead of probing the filesystem or emulating SpecDD resolution.
   Missing `.sdd` paths use `--sdd-file`, missing paths with a trailing separator use `--folder`, and other missing paths use `--file` when typed intended-target transport is available.
   Exact missing `Owns` paths match only their exact intended target while their file-versus-directory shape is unknowable; descendant ownership is not inferred from filesystem absence.
+  Schema loading finds the bundled Change Boundary schema relative to the runtime modules so installed execution does not require canonical source paths.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Change Boundary validation rejects cross-field inconsistency before generated or loaded boundary state can influence validation, authorization, or verification.

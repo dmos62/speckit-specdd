@@ -67,6 +67,7 @@ Must:
   Fixture verification proves authority evolution requires fresh resolution and authorization.
   Preset installation tests exercise registrar-backed command materialization, hooks, composition, workflow-overlay installation, and clean removal.
   Distribution installation tests exercise local installation, Codex switching, clean remove/reinstall, and an immutable GitHub archive path without depending on live network access.
+  Distribution installation tests prove an isolated downstream consumer with provider contracts but no canonical bridge source can run context, task validation, authorization, and verification through installed extension runtime.
   Distribution installation tests reject mutable GitHub branch archives.
   Static source tests cover only packaging and lifecycle wiring that is not already established more directly by behavioral or installation tests.
   Workflow gate tests prove deterministic `error` and `blocking` diagnostics halt shell execution while warnings remain non-failing.
