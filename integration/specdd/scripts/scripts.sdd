@@ -49,6 +49,7 @@ Must:
   The pinned SpecDD CLI exposes `--file`, `--folder`, and `--sdd-file`; intended targets use those typed resolver paths without filesystem probes or local resolution emulation.
   SpecDD CLI `1.2.0` without the complete typed intended-target flag set fails boundary generation as an infrastructure/toolchain error rather than entering compatibility fallback.
   Missing `.sdd` paths use `--sdd-file`, missing paths with a trailing separator use `--folder`, and other missing paths use `--file`.
+  Exact missing `Owns` paths match only their exact intended target while their file-versus-directory shape is unknowable; descendant ownership is not inferred from filesystem absence.
   When a non-pinned resolver lacks typed intended-target support, intended targets remain conservative unresolved records with `INTENDED_TARGET_UNSUPPORTED`.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.

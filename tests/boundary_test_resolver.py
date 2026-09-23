@@ -1,15 +1,10 @@
 import copy
-import json
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
-from boundary_test_support import REPO_ROOT, boundary
-
-
-def resolver_payload(specs):
-    return json.dumps({"directories": [{"path": "/", "specs": specs}]})
+from boundary_test_support import boundary, resolver_payload
 
 
 class ResolverProjectionTests(unittest.TestCase):
@@ -89,41 +84,10 @@ class ResolverProjectionTests(unittest.TestCase):
             boundary.specdd_context_fingerprint(copy.deepcopy(base)),
         )
         for specs in variants:
-            self.assertNotEqual(baseline, boundary.specdd_context_fingerprint(specs))
-
-    def test_specdd_globstar_matches_nested_targets(self):
-        self.assertTrue(boundary._glob_matches("src/auth/**", "src/auth/deep/service.ts"))
-        self.assertTrue(
-            boundary._glob_matches("src/auth/**/*", "src/auth/deep/nested/service.ts")
-        )
-        self.assertTrue(
-            boundary._glob_matches("src/**/service.{ts,js}", "src/auth/deep/service.ts")
-        )
-        self.assertFalse(
-            boundary._glob_matches("src/auth/*.ts", "src/auth/deep/service.ts")
-        )
-
-    def test_detects_multiple_ownership_claims(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            target = root / "src" / "auth" / "service.ts"
-            target.parent.mkdir(parents=True)
-            target.touch()
-            specs = [
-                {
-                    "path": "root.sdd",
-                    "sections": {"Owns": [{"body": ["./src/auth"]}]},
-                },
-                {
-                    "path": "src/auth/auth.sdd",
-                    "sections": {"Owns": [{"body": ["./service.ts"]}]},
-                },
-            ]
-            authority, owners = boundary.derive_primary_authority(
-                root, "src/auth/service.ts", specs
+            self.assertNotEqual(
+                baseline,
+                boundary.specdd_context_fingerprint(specs),
             )
-        self.assertIsNone(authority)
-        self.assertEqual(["root.sdd", "src/auth/auth.sdd"], owners)
 
     def test_missing_target_kind_flags_are_forwarded_to_resolver(self):
         cases = (
@@ -140,8 +104,11 @@ class ResolverProjectionTests(unittest.TestCase):
                     def runner(args, **kwargs):
                         calls.append(args)
                         return subprocess.CompletedProcess(
-                            args, 0,
-                            resolver_payload([{"path": "project.sdd", "sections": {}}]),
+                            args,
+                            0,
+                            resolver_payload([
+                                {"path": "project.sdd", "sections": {}}
+                            ]),
                             "",
                         )
 
@@ -163,64 +130,23 @@ class ResolverProjectionTests(unittest.TestCase):
             def existing_runner(args, **kwargs):
                 calls.append(args)
                 return subprocess.CompletedProcess(
-                    args, 0,
-                    resolver_payload([{"path": "project.sdd", "sections": {}}]), ""
+                    args,
+                    0,
+                    resolver_payload([
+                        {"path": "project.sdd", "sections": {}}
+                    ]),
+                    "",
                 )
 
             boundary.resolve_target(
-                root, boundary.normalize_target(root, "src/existing.ts"),
-                "specdd", runner=existing_runner,
-            )
-            self.assertFalse({"--file", "--folder", "--sdd-file"} & set(calls[0]))
-
-    def test_capable_pinned_resolver_projects_intended_owner_shapes(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            (root / "src" / "owned").mkdir(parents=True)
-            specs = [
-                {
-                    "path": "src/owner.sdd",
-                    "sections": {"Owns": [{"body": [
-                        "./exact.ts",
-                        "./owned",
-                        "./generated/*.ts",
-                        "./ambiguous.ts",
-                    ]}]},
-                },
-                {
-                    "path": "src/other.sdd",
-                    "sections": {"Owns": [{"body": ["./ambiguous.ts"]}]},
-                },
-            ]
-
-            def runner(args, **kwargs):
-                self.assertIn("--file", args)
-                return subprocess.CompletedProcess(args, 0, resolver_payload(specs), "")
-
-            payload = boundary.build_change_boundary(
                 root,
-                (
-                    "src/exact.ts",
-                    "src/owned/new.ts",
-                    "src/generated/new.ts",
-                    "src/ambiguous.ts",
-                    "src/no-owner.ts",
-                ),
-                feature="sample",
-                schema=boundary.load_schema(REPO_ROOT),
-                runner=runner,
-                cli_version="1.2.0",
-                specdd_framework_version="1.5",
-                intended_targets_supported=True,
+                boundary.normalize_target(root, "src/existing.ts"),
+                "specdd",
+                runner=existing_runner,
             )
-
-        self.assertEqual(
-            {"src/exact.ts", "src/owned/new.ts", "src/generated/new.ts"},
-            {item["path"] for item in payload["targets"]},
-        )
-        records = {item["normalizedPath"]: item for item in payload["unresolved"]}
-        self.assertEqual("AMBIGUOUS_AUTHORITY", records["src/ambiguous.ts"]["code"])
-        self.assertEqual("UNRESOLVED_TARGET", records["src/no-owner.ts"]["code"])
+            self.assertFalse(
+                {"--file", "--folder", "--sdd-file"} & set(calls[0])
+            )
 
     def test_resolver_failures_are_normalized(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -231,9 +157,13 @@ class ResolverProjectionTests(unittest.TestCase):
             target = boundary.normalize_target(root, "src/auth/service.ts")
 
             def failed(args, **kwargs):
-                return subprocess.CompletedProcess(args, 1, "", "resolver failed\nwith detail")
+                return subprocess.CompletedProcess(
+                    args, 1, "", "resolver failed\nwith detail"
+                )
 
-            specs, error = boundary.resolve_target(root, target, "specdd", runner=failed)
+            specs, error = boundary.resolve_target(
+                root, target, "specdd", runner=failed
+            )
             self.assertIsNone(specs)
             self.assertEqual(
                 "SpecDD resolve exited with status 1: resolver failed with detail",
@@ -247,4 +177,7 @@ class ResolverProjectionTests(unittest.TestCase):
                 root, target, "specdd", runner=malformed
             )
             self.assertIsNone(specs)
-            self.assertRegex(error, r"^SpecDD resolve returned malformed JSON:")
+            self.assertRegex(
+                error,
+                r"^SpecDD resolve returned malformed JSON:",
+            )

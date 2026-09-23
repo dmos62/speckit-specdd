@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -53,6 +54,12 @@ def _load_module(
     sys.modules[module_spec.name] = module
     module_spec.loader.exec_module(module)
     return module
+
+
+def resolver_payload(specs):
+    return json.dumps(
+        {"directories": [{"path": "/", "specs": specs}]}
+    )
 
 
 boundary = _load_module(

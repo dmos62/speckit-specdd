@@ -52,7 +52,8 @@
 @globexclude .specify/workflows/workflow-registry.json
 
 @# Typed intended-path resolution remains active against the fork-backed SpecDD CLI 1.2.0 pin.
-@# Keep the TODO, schema, boundary/runtime implementation, bootstrap, focused tests, and governing specs.
+@# Exact missing ownership paths stay non-recursive until directory shape is knowable.
+@# Keep the schema, boundary/runtime implementation, bootstrap, and focused regression tests.
 @# The completed upstream handoff is excluded until published-package migration becomes active work.
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
@@ -72,7 +73,7 @@
 @globexclude integration/specdd-preset/commands/tasks.md
 
 @# Larger downstream suites remain excluded while published-package migration is pending.
-@# Focused intended-target ownership, permission, and authorization coverage lives in the boundary tests.
+@# Focused intended-target ownership, permission, and authorization coverage remains in boundary tests.
 @globexclude tests/test_change_boundary_schema.py
 @globexclude tests/boundary_test_paths.py
 @globexclude tests/test_workflow_permissions.py
@@ -81,6 +82,9 @@
 @globexclude tests/validation_test_fixture.py
 @globexclude tests/validation_test_support.py
 @globexclude tests/validation_test_tasks.py
+
+@# Real fixture integration remains exercised by dev-scripts but is omitted from passive context.
+@globexclude tests/boundary_test_fixture.py
 
 @# Actual-write verification implementation and command guidance are stable and outside the intended-path focus.
 @globexclude integration/specdd/scripts/verification.py

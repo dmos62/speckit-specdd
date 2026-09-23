@@ -10,6 +10,7 @@ Owns:
   ./boundary_test_support.py
   ./boundary_test_paths.py
   ./boundary_test_resolver.py
+  ./boundary_test_ownership.py
   ./boundary_test_output.py
   ./boundary_test_fixture.py
   ./test_change_boundary_schema.py
@@ -42,7 +43,8 @@ Must:
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Adapter tests preserve path normalization, resolver-backed authority derivation, deterministic output, and schema validation coverage.
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport through the pinned SpecDD CLI behavior.
-  Intended-target projection covers exact ownership, directory ownership, glob ownership, ambiguous ownership, and absent authority without local `.sdd` parsing.
+  Intended-target projection covers exact file ownership, existing directory ownership, glob ownership, ambiguous ownership, absent authority, and exact missing ownership paths whose file-versus-directory shape is unknowable.
+  Exact-file, existing-directory, and glob-owned target authority remains stable before and after target creation.
   Compatibility tests keep a non-pinned resolver without typed intended-target support conservative with `INTENDED_TARGET_UNSUPPORTED`.
   A pinned SpecDD CLI `1.2.0` without complete typed intended-target support fails as infrastructure/toolchain state rather than producing compatibility unresolved records.
   Effective-context tests prove ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, and governing-chain changes alter the deterministic context identity.

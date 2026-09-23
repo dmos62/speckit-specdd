@@ -28,11 +28,11 @@ If you need the human operator to visually inspect what is happening when the in
 
 Use DEBUGGING.md to record information relevant when debugging hard problems over multiple iterations. It should facilitate exploring and keeping track of causes, solutions, expirements, what's ruled out, etc (create a pragmatic system). When debugging is done, it should be deleted.
 
+Note, `*.include` files, TODO.md, DEBUGGING.md, HUMAN-REQUEST.md, are only part of the harness used to work on this project, they are not part of this project's runtime or distribution and deployments of this project will not have them available.
+
 Be proactive about getting rid of unnecessary code/text and refactoring code for better reuse, better maintenance.
 
 You must split code and documentation files into small files, so that they don't exceed 250 lines. We need focused, highly orthogonal files.
-
-Note, recently moved from a Windows+mingw64 environment to WSL2. This may affect some things, cause issues.
 
 @llmformat
 
