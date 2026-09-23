@@ -1,3 +1,4 @@
 @cli! bash -lic "log=\"${TMPDIR:-/tmp}/speckit-specdd-bootstrap-check.log\"; if bash scripts/bootstrap.sh --check >\"$log\" 2>&1; then tail -n 12 \"$log\"; else cat \"$log\"; exit 1; fi"
-@cli! bash -lic "uv run --no-project python -m unittest discover -s tests -p 'test_native_contract*.py'"
+@cli! bash -lic "uv run --no-project python -m unittest discover -s tests -p 'test_validation.py'"
+@cli! bash -lic "uv run --no-project python -m unittest discover -s tests -p 'test_change_boundary_schema.py'"
 @cli! bash -lic "uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"

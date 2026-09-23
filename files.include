@@ -2,9 +2,18 @@
 @glob docs/TODO.md
 @glob docs/spec.md
 @glob docs/spec-architecture.md
-@glob docs/spec-contracts.md
+@glob docs/spec-authorization.md
+@glob docs/spec-lifecycle.md
 @glob src/boundary/**/*.py
-@glob tests/test_boundary_core_layout.py
-@glob tests/test_native_contract*.py
+@glob integration/specdd/scripts/**
+@glob integration/specdd/schemas/change-boundary.schema.json
+@glob integration/specdd/workflow-overlay.sdd
+@glob tests/test_boundary.py
+@glob tests/boundary_test_*.py
+@glob tests/test_change_boundary_schema.py
+@glob tests/test_validation.py
+@glob tests/validation_test_*.py
 @glob tests/tests.sdd
+@globexclude **/__pycache__/**
+@globexclude **/*.pyc
 @endfilegroup

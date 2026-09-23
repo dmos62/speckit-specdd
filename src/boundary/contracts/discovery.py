@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from .errors import ContractParseError
 from .graph import build_contract_graph
 from .model import Contract, ContractGraph
 from .parser import parse_contract
@@ -31,8 +32,28 @@ def load_contracts(repository_root: str | Path) -> tuple[Contract, ...]:
     root = Path(repository_root)
     contracts: list[Contract] = []
     for source_path in discover_contract_paths(root):
-        source = (root / source_path).read_text(encoding="utf-8")
-        contracts.append(parse_contract(source, source_path))
+        contract_path = root / source_path
+        try:
+            source = contract_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise ContractParseError(
+                f"{source_path}: contract source must be UTF-8"
+            ) from exc
+        except OSError as exc:
+            detail = exc.strerror or exc.__class__.__name__
+            raise ContractParseError(
+                f"{source_path}: cannot read contract: {detail}"
+            ) from exc
+
+        try:
+            contract = parse_contract(source, source_path)
+        except ContractParseError as exc:
+            error_type = type(exc)
+            raise error_type(
+                f"{source_path}: {exc}"
+            ) from exc
+        contracts.append(contract)
+
     return tuple(contracts)
 
 

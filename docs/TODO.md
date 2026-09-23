@@ -4,26 +4,9 @@ Boundary's target architecture is defined in the focused `docs/spec*.md` documen
 
 The current executable baseline still uses Spec Kit `1.0.10`, Codex, SpecDD framework `1.5`, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements.
 
+The native contract engine now provides deterministic canonical discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, and transient `boundary inspect <target...>` output with canonical provenance for existing or intended targets.
+
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
-
-## P5 — Introduce the native Boundary contract engine
-
-The provider-neutral core package is established under `src/boundary/`, with separate repository/path, contract, target-context, authorization, verification, and CLI boundaries. Provider-specific implementations remain outside that package.
-
-Native v1 parsing is available through `boundary.contracts.load_contracts`. It deterministically discovers canonical contract files, validates exact and subtree scope syntax, extracts recognized semantic sections, preserves canonical source paths, and assigns LF-normalized SHA-256 content identities.
-
-Native `ContractGraph` construction now builds deterministic contract-ID, ownership, applicability, and dependency indexes; validates direct dependency references and ownership ambiguity; and resolves filesystem-independent target context with additive applicability, most-specific ownership, semantic provenance, and direct dependency interfaces.
-
-### P5.4 — Implement native contract validation and inspection
-
-- [ ] Add `boundary contracts check`.
-- [ ] Add `boundary inspect <target...>`.
-- [ ] Produce compact agent-oriented effective context with provenance.
-- [ ] Keep projections transient; do not create feature-local boundary files.
-- [ ] Add CLI-focused tests for structural diagnostics, multi-target inspection, and stable output.
-
-Done when:
-  Native Boundary contracts can deterministically resolve existing and intended targets without SpecDD, filesystem probes, or persisted Change Boundary state.
 
 ## P6 — Replace the current authorization model
 
