@@ -12,6 +12,9 @@
 @globexclude pnpm-lock.yaml
 @globexclude dist/**
 
+@# Excluding, because it's very large, comment this out when needed, and reexclude when possible.
+@globexclude .specdd/bootstrap.md
+
 @# Agent entrypoint files only redirect to the included SpecDD bootstrap.
 @globexclude AGENTS.md
 @globexclude CLAUDE.md
@@ -54,10 +57,37 @@
 @# P4 public identity and provider-isolation work is next.
 @# Keep manifests, runtime source, installer/bootstrap source, commands, tests,
 @# architecture docs, and user/developer docs available for the rename.
-
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
 @# Provider-specific authority fixture data remains omitted until a P4 change
 @# requires modifying its contracts or expected resolver output.
 @globexclude tests/fixtures/specdd-two-domain/**
+
+@# Explicitly excluded test files
+@globexclude tests/boundary_test_fixture.py
+@globexclude tests/boundary_test_output.py
+@globexclude tests/boundary_test_ownership.py
+@globexclude tests/boundary_test_paths.py
+@globexclude tests/boundary_test_resolver.py
+@globexclude tests/boundary_test_support.py
+@globexclude tests/preset_test_distribution.py
+@globexclude tests/preset_test_install.py
+@globexclude tests/preset_test_source.py
+@globexclude tests/preset_test_support.py
+@globexclude tests/test_boundary.py
+@globexclude tests/test_change_boundary_schema.py
+@globexclude tests/test_preset.py
+@globexclude tests/test_validation.py
+@globexclude tests/test_verification.py
+@globexclude tests/test_workflow.py
+@globexclude tests/test_workflow_permissions.py
+@globexclude tests/validation_test_engine.py
+@globexclude tests/validation_test_fixture.py
+@globexclude tests/validation_test_support.py
+@globexclude tests/validation_test_tasks.py
+@globexclude tests/verification_test_engine.py
+@globexclude tests/verification_test_fixture.py
+@globexclude tests/verification_test_git.py
+@globexclude tests/workflow_test_gate.py
+@globexclude tests/workflow_test_source.py
 @endfilegroup
