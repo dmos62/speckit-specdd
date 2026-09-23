@@ -57,23 +57,23 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Historical acceptance material is not needed for the immediate P4.0 test-baseline repair.
+@# Historical/exploratory design material has been superseded by the focused
+@# Boundary target specifications and is not needed in normal implementation context.
 @globexclude docs/spec-v0.1.md
+@globexclude docs/architecture-exploration-guidance.md
 
-@# P4 public identity and provider-isolation work follows the baseline repair.
-@# Keep manifests, runtime source, installer/bootstrap source, commands,
-@# architecture docs, and current user/developer docs available.
+@# Provider-upstream request history is not useful for the native Boundary migration.
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
-@# Provider-specific authority fixture data remains omitted until a P4 change
-@# requires modifying its contracts or expected resolver output.
+@# Provider-specific authority fixture data remains omitted until a migration
+@# task explicitly converts or compares those contracts.
 @globexclude tests/fixtures/specdd-two-domain/**
 
-@# P4.0 currently needs the four stale-test areas: boundary infrastructure
+@# P4 currently needs the four stale-test areas: boundary infrastructure
 @# failure messaging, preset install/distribution workflow assertions, and
 @# verification Git infrastructure failure messaging. Keep only the directly
-@# useful test modules/support files in iteration context; the full suite still
-@# runs through dev-scripts.include.
+@# useful test modules/support files in iteration context; reinclude focused
+@# native-contract/authorization tests as those P5/P6 tasks begin.
 @globexclude tests/boundary_test_fixture.py
 @globexclude tests/boundary_test_ownership.py
 @globexclude tests/boundary_test_paths.py

@@ -1,34 +1,43 @@
-Spec: Integration Design Specification
+Spec: Boundary Design Specification
 
 Purpose:
-  Own the focused design documents that define the Spec Kit and SpecDD responsibility split, bridge architecture, lifecycle semantics, and v0.1 acceptance contract.
+  Own the focused design documents that define Boundary independently of the current Spec Kit change-system adapter, SpecDD compatibility provider, and Codex agent adapter.
 
 Structure:
-  ./spec.md: Design overview, goals, conceptual model, authority classes, and summary invariant
-  ./spec-architecture.md: Change Boundary, task, adapter, and deterministic-versus-agentic architecture
-  ./spec-lifecycle.md: Lifecycle commands, evolution, convergence, promotion, and governance separation
-  ./spec-v0.1.md: v0.1 scope, fixture scenarios, acceptance criteria, design principles, and future direction
+  ./spec.md: Product purpose, canonical state, invariants, adapter independence, and migration principles
+  ./spec-architecture.md: Provider-neutral core, native contract engine, adapter boundaries, and transient projections
+  ./spec-contracts.md: Native contract syntax, ownership, scoped applicability, dependencies, and effective context
+  ./spec-agent-instructions.md: Skills, progressive disclosure, agent context composition, and portability
+  ./spec-authorization.md: Explicit writes, operation records, Git baselines, authorization epochs, and verification
+  ./spec-lifecycle.md: Change-system lifecycle integration, scope expansion, contract evolution, and convergence
+  ./spec-v0.1.md: Historical acceptance material for the implemented Spec Kit and SpecDD bridge baseline
 
 Owns:
   ./spec.md
   ./spec-architecture.md
+  ./spec-contracts.md
+  ./spec-agent-instructions.md
+  ./spec-authorization.md
   ./spec-lifecycle.md
   ./spec-v0.1.md
 
 References:
   ../speckit-specdd.sdd
   ./change-boundary.sdd
-  ../integration/specdd/extension.sdd
-  ../integration/specdd/workflow-overlay.sdd
-  ../integration/specdd-preset/specdd-preset.sdd
 
 Must:
-  Spec Kit remains authoritative for feature and implementation intent.
-  SpecDD remains authoritative for persistent system intent, ownership, modification authority, dependencies, and durable local contracts.
-  The Spec Kit constitution remains authoritative for development governance.
-  Derived bridge state remains reconstructible and does not become a second persistent copy of SpecDD constraints.
-  Specification and authority evolution remain explicit lifecycle transitions rather than retroactive permission for an existing implementation operation.
-  The focused documents avoid duplicating detailed command procedures already owned by command and lifecycle guides.
+  Boundary product concepts remain independent of Spec Kit, SpecDD, and Codex.
+  The target persistent-contract model uses native Boundary contracts rather than `.sdd` or SpecDD bootstrap semantics.
+  Native contracts use explicit path scope and additive applicability so a more specific owner cannot silently escape broader matching constraints.
+  Boundary v1 has no global catch-all contract, implicit file-location inheritance, override semantics, or task-level synthetic operation authority.
+  Implementation authorization uses explicit declared writes rather than path mentions in prose.
+  Authorization derives fresh scope from canonical change input and the native contract graph rather than a persisted feature Change Boundary.
+  One operation is represented by one atomic historical record.
+  Implementation and persistent-contract evolution remain distinct operation kinds.
+  Agent procedure is progressively disclosed through small stable skills while project-specific effective context is derived on demand.
+  Deterministic authorization and verification remain independent of agent prompt compliance.
+  Current Spec Kit and SpecDD behavior is documented as transitional where operational documentation still depends on it.
+  Focused documents avoid duplicating detailed migration checklists from ./TODO.md.
 
 Done when:
-  A maintainer can navigate from the overview to one focused document for architecture, lifecycle semantics, or v0.1 acceptance without reading one oversized project specification.
+  A maintainer can understand Boundary's product model, native contract semantics, agent instruction architecture, authorization evidence, and lifecycle without treating the current Spec Kit or SpecDD implementation as the architecture.

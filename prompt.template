@@ -34,9 +34,7 @@ You must split code and documentation files into small files, so that they don't
 
 @#llmformat
 
-Our docs may have become disorganized. Stale docs might be present. Suggest ways to clean up. `docs/architecture-exploration-guidance.md` shouldn't be touched.
-
-@#Let's discuss architectural changes. `docs/architecture-exploration-guidance.md` is the starting point.
+Let's discuss architectural changes/improvements. `docs/architecture-exploration-guidance.md` is the starting point.
 
 
 

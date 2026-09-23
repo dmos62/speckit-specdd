@@ -1,170 +1,250 @@
 # Implementation TODO
 
-The tested compatibility baseline remains:
+Boundary's target architecture is defined in the focused `docs/spec*.md` documents.
 
-- Node.js 22+;
-- Spec Kit `1.0.10`;
-- Spec Kit integration `codex`;
-- stable upstream SpecDD CLI `1.1.1`;
-- temporary typed intended-target provider package reporting `1.2.0`;
-- SpecDD framework `1.5`.
-
-P1–P3 established resolver-capability detection, immutable authorization evidence, the thin installer, and installed-runtime operation without vendored bridge source. Their implementation history belongs in Git and the focused design/development documentation rather than in this active work list.
+The current executable baseline still uses Spec Kit `1.0.10`, Codex, SpecDD framework `1.5`, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements.
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
-## P4 — Rename the public integration and isolate the SpecDD provider
+## P4 — Restore a trustworthy current baseline
 
-The target product vocabulary is:
+Complete the already identified current-implementation repairs before using the test suite as a migration signal.
 
-- product/display name: `Spec Kit Boundary`;
-- repository or distribution identity: `speckit-boundary`;
-- extension ID: `boundary`;
-- preset ID: `boundary-workflow`;
-- workflow overlay ID: `boundary-gates`;
-- bundle ID, when supported: `boundary`;
-- user-facing commands: `speckit.boundary.*`;
-- generated feature state may continue using the term Change Boundary and `boundary.json`;
-- SpecDD is the initial persistent-contract provider and implementation dependency, not the identity of the bridge.
-
-### P4.0 — Repair the current test baseline
-
-- [ ] Remove stale test expectations that downstream runtime failures instruct users to run this repository's development bootstrap.
-  - Missing SpecDD-provider tests should assert an explicit provider/dependency failure and actionable provider repair guidance.
-  - Missing Git tests should assert an explicit Git dependency failure and actionable Git installation/repair guidance.
-  - Do not restore development-only `scripts/bootstrap.sh` remediation text to downstream runtime errors merely to satisfy old tests.
-- [ ] Update installation/distribution tests that expect `specify workflow resolve` to print structural shell command bodies.
-  - Assert workflow overlay attribution and structural step placement from resolver output.
-  - Inspect installed overlay/runtime materialization when the exact runtime path itself must be tested.
-  - Preserve the stronger isolated-consumer lifecycle execution test as proof that installed runtime paths actually work.
-- [ ] Run the full test suite and return it to green before using it as the P4 migration signal.
+- [ ] Remove stale tests that expect downstream dependency failures to instruct users to run this repository's development bootstrap.
+  - Missing SpecDD-provider tests assert explicit provider/dependency failure plus provider repair guidance.
+  - Missing Git tests assert explicit Git dependency failure plus Git installation/repair guidance.
+  - Do not restore development-only bootstrap remediation text to runtime errors.
+- [ ] Update workflow installation/distribution tests for Spec Kit `1.0.10` resolver output.
+  - Assert overlay attribution and structural step order from `specify workflow resolve`.
+  - Inspect installed overlay/runtime materialization when exact shell paths must be tested.
+  - Preserve the isolated-consumer lifecycle execution test as runtime-path proof.
+- [ ] Run the full suite and return the current SpecDD-backed baseline to green.
 
 Done when:
-  The current SpecDD-named implementation has a green test baseline without reintroducing development-repository assumptions into downstream behavior.
+  The existing implementation passes without reintroducing development-repository assumptions into downstream behavior.
 
-### P4.1 — Replace the public `specdd` identity with `boundary`
+## P5 — Introduce the native Boundary contract engine
 
-- [ ] Rename public integration identities consistently.
-  - Rename the extension identity to `boundary`.
-  - Rename the preset identity to `boundary-workflow`.
-  - Rename the workflow overlay identity to `boundary-gates`.
-  - Rename public commands to `speckit.boundary.*`.
-  - Rename generated Codex skill identities consistently.
-  - Rename canonical source directories to an implementation-independent layout such as `integration/boundary/` and `integration/boundary-preset/`.
-  - Update installer/bootstrap constants, checks, package assertions, workflow source, manifests, and tests.
-- [ ] Rename bridge-owned generated namespaces where they currently expose the provider name.
-  - Move installed runtime references from `.specify/extensions/specdd/` to the new extension identity.
-  - Move feature-owned bridge state out of a provider-named namespace if doing so can be completed atomically with the migration.
-  - Move bridge-owned Git metadata out of `<git-dir>/specdd/` if doing so does not require preserving an already-supported downstream compatibility contract.
-  - Keep root `.specdd/` provider bootstrap and contract state provider-specific.
-- [ ] Replace public operation metadata such as `SPECDD_AUTHORITY:` with provider-neutral vocabulary.
-- [ ] Rename diagnostics only when the diagnostic describes a bridge concept rather than a genuine SpecDD-provider result.
-  - Ownership projection, scope drift, authorization, lifecycle, and actual-write verification should be provider-neutral.
-  - SpecDD CLI/framework failures and SpecDD contract/lint results may retain provider-specific terminology where that identity is meaningful.
-- [ ] Avoid compatibility aliases unless an actual downstream migration requirement is identified.
-- [ ] Update `.sdd` ownership/reference paths as canonical source moves.
-- [ ] Keep Change Boundary terminology and `boundary.json`.
+Build the native persistent-contract model before mechanically renaming the old bridge.
 
-Done when:
-  Public installation, command, workflow, generated-state, operation-metadata, and documentation identities use the `boundary` family while `specdd` remains only where it denotes the active provider or its contracts.
+### P5.1 — Establish provider-neutral core source boundaries
 
-### P4.2 — Isolate the current SpecDD provider
+- [ ] Create a provider-neutral Python package under a layout such as `src/boundary/`.
+- [ ] Separate:
+  - repository/path utilities;
+  - contract parsing and graph construction;
+  - target-context projection;
+  - authorization;
+  - verification;
+  - CLI entry points.
+- [ ] Keep Spec Kit, Codex, and SpecDD code outside the core package.
+- [ ] Keep modules below 250 lines and split by responsibility.
+- [ ] Do not introduce dynamic provider/plugin registration.
 
-- [ ] Separate provider-neutral bridge mechanics from SpecDD invocation where current modules mix them.
-- [ ] Keep provider-neutral mechanics responsible for:
-  - target ownership projection;
-  - modification-permission projection;
-  - effective-context identity;
-  - Change Boundary construction and semantic consistency;
-  - lifecycle validation;
-  - authorization evidence;
-  - Git operation baselines;
-  - actual-write verification.
-- [ ] Keep SpecDD-specific code responsible for:
-  - `specdd resolve` invocation;
-  - resolver-output translation;
-  - `Owns` and `Can modify` interpretation from resolver-returned sections;
-  - SpecDD CLI/framework identity;
-  - typed intended-target capability detection;
-  - SpecDD lint execution.
-- [ ] Prefer one or a few focused provider modules over a generalized provider-plugin framework.
-- [ ] Express provider compatibility through required capabilities and tested semantics rather than product naming or package-version assumptions.
-- [ ] Preserve the rule that the bridge consumes resolver semantics instead of parsing `.sdd` source as an independent authority engine.
+### P5.2 — Implement native contract parsing
 
-Done when:
-  The bridge lifecycle and evidence model can be understood without SpecDD terminology, while the current SpecDD adapter remains small, explicit, and fully tested.
+- [ ] Discover canonical `contracts/**/*.contract.md`.
+- [ ] Implement `boundary.contract/v1` frontmatter.
+- [ ] Support only:
+  - exact repository-relative scopes;
+  - subtree scopes ending in `/**`.
+- [ ] Reject catch-all `**` and arbitrary glob syntax.
+- [ ] Parse recognized semantic sections:
+  - Purpose;
+  - Invariants;
+  - Prohibitions;
+  - Interfaces.
+- [ ] Preserve source provenance and deterministic content identities.
 
-### P4.3 — Normalize documentation after the rename
+### P5.3 — Implement ownership and additive applicability
 
-- [ ] Keep `README.md` focused on user-facing purpose, install/use flow, generated-versus-canonical state, and links to detailed documents.
-- [ ] Keep `docs/spec.md` as the concise current design overview.
-- [ ] Keep `docs/spec-architecture.md` focused on provider-neutral structures and responsibility boundaries.
-- [ ] Keep `docs/spec-lifecycle.md` focused on lifecycle transitions and convergence.
-- [ ] Keep `docs/change-boundary.md` focused on Change Boundary derivation, freshness, semantic consistency, and its relationship to authorization.
-- [ ] Consider extracting authorization snapshot, Git-baseline, concurrent-dirty-state, and control-selection semantics into a focused authorization-evidence document if `docs/change-boundary.md` remains responsible for too many independent concepts after P4.
-- [ ] Consider extracting SpecDD-specific bootstrap, resolver, version, lint, `.sdd`, `Owns`, and `Can modify` details into a provider-focused document once the provider boundary exists in code.
-- [ ] Make `docs/spec-v0.1.md` explicitly historical or move it under a history/archive location after checking all references and tests.
-- [ ] Remove completed migration narrative from active TODO/debt documents instead of retaining them as changelogs.
-- [ ] Split downstream-user setup from bridge-developer procedures where P5 introduces the final reproducible consumer workflow.
-- [ ] Do not modify `docs/architecture-exploration-guidance.md`.
-- [ ] Keep documentation files below 250 lines and split by responsibility rather than by arbitrary size.
+- [ ] Make every `owns` scope also an applicability scope.
+- [ ] Apply `applies_to` as additional non-ownership scope.
+- [ ] Select the most-specific matching owner for nested ownership.
+- [ ] Keep all broader matching contracts applicable.
+- [ ] Reject ambiguous incomparable/equally specific ownership.
+- [ ] Resolve missing intended paths without filesystem-dependent semantics.
+- [ ] Implement direct contract dependencies and dependency-interface projection.
+- [ ] Do not implement override, exception, `Can modify`, or synthetic operation-authority semantics.
+
+### P5.4 — Implement native contract validation and inspection
+
+- [ ] Add `boundary contracts check`.
+- [ ] Add `boundary inspect <target...>`.
+- [ ] Produce compact agent-oriented effective context with provenance.
+- [ ] Keep projections transient; do not create feature-local boundary files.
+- [ ] Add focused tests for exact ownership, nested ownership, applicability overlap, ambiguity, missing intended paths, dependency interfaces, and deterministic output.
 
 Done when:
-  Current docs describe one implemented architecture, historical acceptance material is clearly historical, provider details have one obvious home, and lifecycle/architecture/development documents do not duplicate each other's procedures.
+  Native Boundary contracts can deterministically resolve existing and intended targets without SpecDD, filesystem probes, or persisted Change Boundary state.
 
-### P4.4 — Complete migration coverage
+## P6 — Replace the current authorization model
 
-- [ ] Update boundary, validation, authorization, verification, workflow, preset, packaging, and bootstrap tests for the new identities.
-- [ ] Add a focused stale-public-identity check after the migration is complete.
-  - Exclude explicitly historical material and provider-specific implementation references.
-  - Catch obsolete public command, extension, preset, overlay, generated-skill, and canonical-source names.
-- [ ] Run full bootstrap, lint, boundary, validation, workflow, preset, distribution, and verification suites.
-- [ ] Review `files.include` after P4 and re-exclude migration-only tests/helpers that are no longer useful in normal implementation context.
+### P6.1 — Make write scope explicit
 
-Done when:
-  The full repository passes without obsolete public SpecDD bridge identities outside deliberate provider or historical contexts.
+- [ ] Define the change-adapter structured write-set contract.
+- [ ] Teach the Spec Kit adapter to read explicit `Writes:` task metadata.
+- [ ] Keep task IDs/order/user-story grouping intact.
+- [ ] Stop using incidental task prose paths for authorization.
+- [ ] Permit heuristic path discovery only for advisory planning/inspection.
+- [ ] Remove `SPECDD_AUTHORITY:` from the target model instead of renaming it.
+- [ ] Represent legitimate multi-owner work directly through target owners.
 
-## P5 — Define and verify the downstream user experience
+### P6.2 — Authorize directly from fresh canonical inputs
 
-- [ ] Replace the development-repository bootstrap model with a reproducible consumer setup, upgrade, removal, and fresh-clone workflow.
-- [ ] Define one committed immutable `speckit-boundary` source/version pin because Spec Kit `1.0.10` installed component and overlay provenance is insufficient to reconstruct the composed installation.
-- [ ] Keep downstream canonical state minimal:
-  - the project's own provider bootstrap/contracts;
-  - project persistent contracts while that provider is active;
-  - normal Spec Kit feature artifacts;
-  - the immutable Boundary source/version pin.
-- [ ] Keep installed extension, preset, workflow, generated command/skill, cache, Change Boundary, context-evidence, authorization-evidence, and other derived integration state non-canonical and recreatable.
-- [ ] Provide one user-facing install operation that materializes all required extension, preset, workflow, and Codex state from the committed immutable pin.
-- [ ] Define deliberate upgrade behavior that updates the tested pin rather than silently changing downstream installations.
-- [ ] Make health checks report newer stable upstream versions without silently changing the compatibility baseline.
-- [ ] Add coverage for:
-  - local developer installation from a checkout;
-  - installation from an immutable controlled source representation;
-  - a clean consumer repository with no canonical bridge source;
-  - clean removal and equivalent reinstall;
-  - fresh-clone reconstruction;
-  - recreation of Codex materializations through supported Spec Kit mechanisms.
-- [ ] Update ignore rules so installed/generated integration state is not treated as canonical downstream source.
-- [ ] Finish the downstream-user/developer documentation split described in P4.3.
-- [ ] Remove obsolete source-layout compatibility code, tests, and documentation after the packaged consumer path is established.
-- [ ] Run the complete supported test/check matrix.
+- [ ] Remove authorization dependence on feature `boundary.json`.
+- [ ] Remove refresh-time context-fingerprint sidecars from the native path.
+- [ ] Fresh-load the native `ContractGraph` during authorization.
+- [ ] Require every implementation write to have one unambiguous owner.
+- [ ] Record target effective-context identities in historical evidence.
+- [ ] Keep contract-evolution and implementation authorization separate.
 
-Done when:
-  A downstream user can initialize a Codex project, install one immutable `speckit-boundary` version, run a health check, use the normal lifecycle, remove/reinstall generated state, and reproduce the same setup from a fresh clone without carrying bridge implementation source.
+### P6.3 — Replace three-file evidence with atomic operation records
 
-## P6 — Define ownership semantics beneath not-yet-created directories
+- [ ] Define a versioned native `OperationRecord`.
+- [ ] Store one operation as one atomic document.
+- [ ] Preserve authorization-time Git `HEAD` and dirty-path content/deletion identities.
+- [ ] Ensure failed authorization cannot partially replace prior successful evidence.
+- [ ] Archive completed operation records only as needed for verified carry-forward.
 
-- [ ] Determine whether an exact owned path such as `Owns: ./future-domain` can authorize intended descendants before that directory exists.
-- [ ] Confirm the behavior against the supported stable SpecDD framework and resolver contract before changing bridge ownership matching.
-- [ ] Do not infer directory intent locally from `.sdd` text or filesystem absence.
-- [ ] If resolver output distinguishes the intended ownership shape unambiguously, project that information through the existing ownership calculation.
-- [ ] If the provider contract remains ambiguous, keep the result conservative and document that an exact missing ownership path cannot act as directory ownership until its type is knowable.
-- [ ] Add focused coverage for:
-  - existing owned directories;
-  - missing owned directories;
-  - exact intended files;
-  - glob-owned intended files;
-  - intended-versus-created resolution parity.
+### P6.4 — Fix dirty-state adoption and scope expansion
+
+- [ ] Reject dirty intended targets without verified predecessor provenance.
+- [ ] Record verification final-state identities needed for carry-forward.
+- [ ] Require verification/closure before an implementation authorization epoch is superseded.
+- [ ] Allow a new epoch to accept unchanged dirty state only when it exactly matches verified predecessor output.
+- [ ] Fail closed when Git `HEAD` changes across an active operation.
+- [ ] Add focused regression coverage for implementation-before-authorization, reauthorization, scope expansion, concurrent dirty changes, deletion, staging-only changes, and predecessor carry-forward.
+
+### P6.5 — Simplify native verification
+
+- [ ] Derive actual implementation writes from Git.
+- [ ] Reject undeclared writes even when they belong to an already represented owner.
+- [ ] Reject native contract changes during implementation operations.
+- [ ] Fresh-resolve actual targets through the native contract graph.
+- [ ] Keep authorization verification separate from feature convergence and contract structural validation.
+- [ ] Introduce provider-neutral native diagnostics.
 
 Done when:
-  Intended descendants receive authority only when the provider exposes enough information to establish that ownership without bridge-side semantic invention.
+  Implementation authority comes only from explicit writes, fresh native contracts, and one atomic historical operation record.
+
+## P7 — Build the progressive agent instruction architecture
+
+### P7.1 — Create canonical Boundary skills
+
+- [ ] Add `boundary-scope`.
+- [ ] Add `boundary-implement`.
+- [ ] Add `boundary-contracts`.
+- [ ] Keep canonical skill text free of current feature IDs, paths, hashes, owners, versions, and generated operation state.
+- [ ] Keep each skill focused and below 250 lines.
+
+### P7.2 — Remove framework bootstrap dependence
+
+- [ ] Stop injecting or requiring `.specdd/bootstrap.md` in normal agent context.
+- [ ] Do not replace it with another global project prompt.
+- [ ] Keep always-on Boundary policy to a very small stable set of behavioral invariants.
+- [ ] Deliver project contract semantics through `boundary inspect` and raw-contract retrieval on demand.
+
+### P7.3 — Materialize skills through agent adapters
+
+- [ ] Implement Codex materialization from canonical Boundary skills.
+- [ ] Keep Codex paths and frontmatter out of canonical procedure where possible.
+- [ ] Test skill discovery and invocation.
+- [ ] Test stable skill bytes across unrelated feature operations.
+- [ ] Test one additional agent runtime before introducing any generalized agent-adapter framework.
+
+Done when:
+  Ordinary implementation receives small stable procedure plus only relevant effective project context and never requires a framework bootstrap.
+
+## P8 — Reduce Spec Kit to a change-system adapter
+
+### P8.1 — Define the change-adapter contract
+
+- [ ] Represent:
+  - active change ID;
+  - task identity;
+  - explicit writes;
+  - adapter-owned feature/generated paths;
+  - implementation lifecycle entry/exit.
+- [ ] Keep Spec Kit-specific file names, workflow stages, and constitution concepts outside Boundary core.
+
+### P8.2 — Simplify Spec Kit integration
+
+- [ ] Replace current public SpecDD command identity with Boundary adapter commands where still needed.
+- [ ] Make the product CLI `boundary ...`; treat `speckit.boundary.*` only as adapter wrappers.
+- [ ] Remove the public `context` lifecycle state.
+- [ ] Remove the public `validate` lifecycle state.
+- [ ] Use on-demand inspection during plan/task work.
+- [ ] Keep deterministic structural enforcement only around authorization and verification.
+- [ ] Remove duplicated extension hooks when the workflow overlay already enforces the same transition.
+- [ ] Reduce the preset to tiny skill/write-metadata integration or remove it entirely if supported skill discovery makes it unnecessary.
+
+### P8.3 — Remove Spec Kit from product naming
+
+- [ ] Use `Boundary` as the display/product identity.
+- [ ] Use `boundary` for extension/runtime/CLI identities where the host permits it.
+- [ ] Keep Spec Kit naming only in the Spec Kit adapter.
+- [ ] Treat the current repository/distribution slug as transitional until release ownership is finalized.
+- [ ] Add stale-public-identity tests after the migration is atomic enough to avoid false positives.
+
+Done when:
+  Replacing Spec Kit requires a new change adapter rather than changes to native contracts, authorization, skills, or verification.
+
+## P9 — Migrate this repository off SpecDD
+
+### P9.1 — Introduce native contracts alongside legacy fixtures
+
+- [ ] Translate representative existing `.sdd` ownership and durable semantics into native contracts.
+- [ ] Add parity tests only for semantics Boundary deliberately preserves.
+- [ ] Do not preserve SpecDD behavior merely because it exists.
+- [ ] Use the temporary SpecDD adapter only as migration evidence.
+
+### P9.2 — Convert repository contracts
+
+- [ ] Create native contracts for current Boundary source, adapters, scripts, docs, and tests.
+- [ ] Preserve useful hierarchical constraints through nested ownership plus additive applicability.
+- [ ] Replace broad cross-contract prose with narrowly scoped relationship contracts only where the relationship is durable and useful.
+- [ ] Avoid a repository-wide catch-all contract.
+
+### P9.3 — Remove legacy provider state
+
+- [ ] Remove runtime reliance on `specdd`.
+- [ ] Remove the temporary fork-backed CLI provider.
+- [ ] Remove `.specdd/` initialization and bootstrap handling.
+- [ ] Remove `.sdd` as canonical Boundary contract source.
+- [ ] Remove SpecDD-specific resolver, lint, ownership, permission, and intended-target compatibility code.
+- [ ] Remove legacy Change Boundary and SpecDD authorization metadata.
+- [ ] Delete obsolete SpecDD compatibility docs/tests after native equivalents pass.
+
+Done when:
+  A downstream Boundary project contains no `.specdd/` directory, needs no SpecDD CLI, and receives all persistent system semantics from native Boundary contracts.
+
+## P10 — Define the reproducible downstream Boundary experience
+
+- [ ] Define one committed immutable Boundary source/version lock.
+- [ ] Include immutable source revision and archive/content checksum.
+- [ ] Keep downstream canonical Boundary state limited to:
+  - native project contracts;
+  - change-system artifacts;
+  - the Boundary lock.
+- [ ] Make extension/adapter/skill/generated state recreatable.
+- [ ] Provide install, health-check, upgrade, remove/reinstall, and fresh-clone reconstruction.
+- [ ] Preserve deliberate upgrades rather than silently following a mutable release.
+- [ ] Add clean consumer coverage with no canonical Boundary implementation source.
+- [ ] Update ignore rules for generated integration and operation state.
+- [ ] Split downstream-user setup cleanly from Boundary developer procedures.
+
+Done when:
+  A fresh clone can reconstruct the same Boundary tooling and agent capabilities from the committed lock while carrying only native project contracts as persistent Boundary semantics.
+
+## P11 — Final migration cleanup
+
+- [ ] Remove obsolete Spec Kit × SpecDD product terminology from non-historical documentation.
+- [ ] Mark or archive historical v0.1 material.
+- [ ] Delete the legacy `change-boundary.md` guide after no supported runtime uses that model.
+- [ ] Remove compatibility-only tests/helpers and shrink `files.include` accordingly.
+- [ ] Keep all code and documentation files below 250 lines.
+- [ ] Run the complete supported bootstrap, native contract, authorization, adapter, packaging, and fresh-clone test matrix.
+
+Done when:
+  Current documentation describes one Boundary architecture, legacy providers survive only in explicit history if retained at all, and no downstream workflow depends on Spec Kit or SpecDD as product concepts.

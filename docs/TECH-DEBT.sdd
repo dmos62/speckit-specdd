@@ -1,7 +1,7 @@
 Spec: Technical Debt Register
 
 Purpose:
-  Track unresolved bridge correctness, workflow, portability, and maintainability risks without retaining completed work as active debt.
+  Track unresolved correctness, coupling, agent-context, and migration risks in the current implementation without retaining completed work as active debt.
 
 Owns:
   ./TECH-DEBT.md
@@ -13,9 +13,13 @@ References:
 
 Must:
   The register contains unresolved risks only.
-  Correctness risks distinguish deterministic authority guarantees from agentic semantic verification gaps.
-  Entries identify the observable risk and preferred direction without duplicating detailed implementation plans from ./TODO.md.
+  Correctness risks distinguish deterministic authorization guarantees from agentic semantic concerns.
+  The register identifies prose-derived authorization scope and dirty-state adoption as correctness risks until the native authorization model replaces them.
+  The register identifies split authorization evidence as an atomicity risk.
+  The register identifies duplicated SpecDD semantics and framework bootstrap context as migration debt rather than durable Boundary architecture.
+  The register identifies current Spec Kit, SpecDD, and Codex naming leakage as adapter coupling.
+  Entries state observable risk and preferred direction without duplicating detailed implementation plans from ./TODO.md.
   Completed risks are removed once current code, tests, and documentation establish the intended behavior.
 
 Done when:
-  Maintainers can distinguish unresolved correctness risks from completed bridge hardening and select future work without reconstructing historical TODO state.
+  Maintainers can identify the remaining correctness and migration hazards without reconstructing historical implementation TODO state.

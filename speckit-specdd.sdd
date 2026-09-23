@@ -1,19 +1,19 @@
-Spec: Spec Kit × SpecDD Integration Lab
+Spec: Boundary Migration Lab
 
-Platform: Node.js 22+/Spec Kit 1.0.10/SpecDD 1.5
+Platform: Node.js 22+/Spec Kit 1.0.10/SpecDD 1.5 during migration
 
 Purpose:
-  Provide a local integration lab for a thin bridge that projects SpecDD system authority into the Spec Kit change lifecycle without forking, merging, or duplicating either system.
+  Provide the repository used to evolve Boundary from the current Spec Kit and SpecDD integration into a standalone persistent-contract and operation-authorization system whose product semantics do not depend on either implementation.
 
 Structure:
-  ./README.md: User-facing project overview, installation, concepts, and normal usage
-  ./integration: Bridge extension and Spec Kit preset source
-  ./fixtures: Integration-test systems used to exercise authority behavior
-  ./docs: Project design, technical debt, implementation TODO, and development guidance
-  ./scripts: Repository bootstrap tooling
+  ./README.md: User-facing Boundary overview, target architecture, current adapter status, and development entry points
+  ./integration: Current Spec Kit and SpecDD adapter source pending migration
+  ./fixtures: Integration-test systems used to exercise current and migration behavior
+  ./docs: Boundary design, technical debt, migration TODO, and development guidance
+  ./scripts: Current repository bootstrap and installation tooling
 
 Owns:
-  Repository-wide bridge architecture and source/generated-state separation.
+  Repository-wide Boundary architecture and source/generated-state separation.
   ./dev-scripts.include
   ./docs/TODO.md
   ./integration/**/.gitkeep
@@ -25,12 +25,21 @@ References:
   ./docs/development.sdd
 
 Must:
-  Spec Kit remains authoritative for the change lifecycle and SpecDD remains authoritative for persistent system semantics.
-  Bridge-derived state remains reconstructible from canonical Spec Kit and SpecDD artifacts.
-  Integration source remains separate from generated or installed upstream state.
-  Compatibility baseline stays at Spec Kit `1.0.10`, upstream SpecDD CLI `1.1.1`, and SpecDD framework `1.5` until a deliberate compatibility task changes it.
-  Typed intended-target resolution remains an explicit temporary provider capability gap until a stable upstream SpecDD CLI exposes equivalent semantics.
+  Boundary product semantics remain independent of Spec Kit, SpecDD, and Codex.
+  Spec Kit is treated as the current change-system adapter rather than the product change model.
+  SpecDD is treated as temporary migration compatibility rather than the target persistent-contract model.
+  Codex is treated as the current agent-runtime adapter rather than canonical instruction packaging.
+  The target architecture uses native Boundary contracts with explicit ownership and additive scoped applicability.
+  Implementation authorization ultimately comes from explicit write declarations, fresh native contracts, and historical operation evidence.
+  Agent procedure ultimately uses progressive disclosure through small Boundary skills rather than the SpecDD framework bootstrap.
+  Generated integration and operation state remains reconstructible and distinct from canonical project contracts.
+  Until migration replaces the current executable path, the checked-in compatibility baseline stays at Spec Kit `1.0.10`, upstream SpecDD CLI `1.1.1`, and SpecDD framework `1.5`.
+  Active migration work remains in ./docs/TODO.md and does not turn historical implementation detail into durable product semantics.
 
 Must not:
-  Patch files under `.specify/`, `.specify-agent/`, or `.specdd/` to implement bridge behavior.
-  Maintain a second persistent copy of SpecDD constraints in Spec Kit feature artifacts.
+  Introduce a new global monolithic project contract or bootstrap as a replacement for `.specdd/bootstrap.md`.
+  Maintain a second persistent compiled copy of native Boundary contract prose.
+  Treat current SpecDD semantics as mandatory compatibility requirements unless the native Boundary specification preserves them explicitly.
+
+Done when:
+  The repository can complete the migration described by the focused Boundary specifications without requiring its current Spec Kit or SpecDD implementation choices to remain product architecture.

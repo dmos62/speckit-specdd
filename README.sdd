@@ -1,43 +1,37 @@
-Spec: Project README
+Spec: Boundary README
 
 Purpose:
-  Provide the user-facing introduction to the Spec Kit × SpecDD bridge, its installation model, core concepts, and normal usage.
+  Provide the user-facing introduction to Boundary, distinguish durable product concepts from current Spec Kit, SpecDD, and Codex adapters, and describe the migration state without presenting transitional implementation details as product architecture.
 
 Owns:
   ./README.md
 
 References:
-  ./docs/spec.md
+  ./docs/spec.sdd
   ./docs/change-boundary.sdd
-  ./docs/development.md
+  ./docs/development.sdd
   ./scripts/scripts.sdd
-  ./integration/specdd/extension.sdd
-  ./integration/specdd/workflow-overlay.sdd
-  ./integration/specdd-preset/specdd-preset.sdd
 
 Must:
-  Explain the Spec Kit change-lifecycle role and SpecDD persistent-system role before command-level usage.
-  Installation guidance distinguishes repository development bootstrap from the thin archive installer selected for Spec Kit `1.0.10`.
-  Installation guidance identifies `codex` as the registrar-backed Spec Kit integration required by the tested setup.
-  Installation guidance distinguishes upstream SpecDD CLI `1.1.1` from the temporary typed intended-target provider package used until upstream exposes equivalent resolver capability.
-  Explain that Spec Kit `1.0.10` can remotely install extensions and presets but project workflow overlays still require local materialization, so the current distribution decision uses one thin installer rather than a native bundle.
-  Explain that direct extracted component installation and workflow-overlay state do not preserve one sufficient immutable distribution source, so downstream reproducibility requires a separate committed source/version pin.
-  Explain that installed extension state carries runtime scripts and schemas, allowing commands and structural workflow gates to run without canonical bridge source in a downstream repository.
-  Canonical bridge source remains distinct from generated extension, preset, command, workflow, feature-boundary, context-fingerprint, and authorization-snapshot state.
-  Describe the Change Boundary as refreshable, rebuildable, feature-scoped ownership context rather than another source of truth.
-  Explain that boundary refresh records fingerprint-bound effective SpecDD context and authorization rejects governing-contract drift before implementation.
-  Explain that unmarked multi-owner tasks remain coordinated across owner domains while explicit `SPECDD_AUTHORITY:` tasks require `Can modify` coverage for cross-owned targets.
-  Describe successful authorization as preserving the exact validated Change Boundary in immutable operation evidence outside the worktree.
-  Explain the normal `context` → `validate` → `authorize` → `implement` → `verify` lifecycle and the structural workflow gates that enforce it.
-  Explain that verification uses the authorization snapshot rather than later Change Boundary or context-fingerprint refreshes.
-  Explain that specification evolution is separate from implementation authority and dependent implementation requires fresh context plus authorization after evolution.
-  Include a concise cross-domain example showing one feature with separately owned targets and explicit non-owning modification permission.
-  Detailed development-host prerequisites, rematerialization procedures, and maintenance commands remain in ./docs/development.md.
+  Introduce Boundary as a persistent-contract and operation-authorization system independent of any one change system, contract provider, or agent runtime.
+  Identify Spec Kit, SpecDD, and Codex as current adapters or migration dependencies rather than durable product concepts.
+  Explain that the target downstream architecture contains native Boundary contracts and no `.specdd/` directory, SpecDD bootstrap, or SpecDD CLI requirement.
+  Explain additive scoped contract applicability so a more specific owned subcomponent cannot silently escape broader applicable constraints.
+  Explain that Boundary does not use a global catch-all cross-contract contract or permanently inject project contracts into agent context.
+  Explain progressive disclosure through small skills and on-demand effective contract context.
+  Explain that authorization uses explicit write declarations rather than path mentions in prose.
+  Explain that implementation and persistent-contract evolution are separate operation kinds.
+  Explain that successful authorization records historical operation evidence and verification uses that evidence rather than mutable planning state.
+  Keep the currently executable Spec Kit and SpecDD command names clearly marked as transitional until migration removes them.
+  Keep current development bootstrap guidance accurate while directing target architecture readers to the focused specification documents.
+  Keep active migration work in ./docs/TODO.md rather than turning the README into a migration changelog.
 
 Must not:
-  Present generated Spec Kit or SpecDD integration state as canonical bridge source.
-  Present changed `.sdd` state, refreshed Change Boundary state, or refreshed context fingerprints as retroactive authority for implementation in the same operation.
-  Require canonical bridge-development runtime paths after the integration has been installed.
+  Present Spec Kit as Boundary's product-level change model.
+  Present SpecDD or `.sdd` as Boundary's target persistent-contract model.
+  Present Codex-specific packaging as canonical agent procedure.
+  Present generated integration state as canonical Boundary source.
+  Present a framework bootstrap or global project contract as required always-loaded agent context.
 
 Done when:
-  A new user can understand the responsibility split, distinguish development bootstrap from the selected distribution model, distinguish ownership from modification permission, understand governing-context freshness, distinguish current boundary context from historical authorization evidence, and follow the authority-aware workflow.
+  A new reader can distinguish Boundary's durable concepts from its current adapters, understand the target contract and authorization model, and identify which current installation and command details are transitional.

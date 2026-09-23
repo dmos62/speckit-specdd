@@ -1,162 +1,247 @@
-# Integration Architecture
+# Boundary Architecture
 
-This document defines the structural bridge between Spec Kit feature work and persistent SpecDD authority. Lifecycle sequencing and evolution procedures are documented separately in [spec-lifecycle.md](spec-lifecycle.md).
+This document defines Boundary's target structural architecture. Contract semantics, agent instruction delivery, authorization evidence, and lifecycle transitions are documented separately.
 
-## Change Boundary
+## Architectural boundaries
 
-The central integration abstraction is the Change Boundary.
+Boundary has four target layers.
 
-A Change Boundary is a derived projection of the persistent SpecDD model onto one Spec Kit feature. It answers which SpecDD authority domains own the ordinary implementation targets currently associated with that feature.
+### Boundary core
 
-For a feature such as `specs/001-google-login/`, derived state lives at:
+The core owns provider-independent mechanics:
 
-    specs/001-google-login/.specdd/boundary.json
+- repository path normalization;
+- explicit operation write scope;
+- contract-graph queries;
+- target ownership projection;
+- effective-context composition;
+- operation authorization;
+- Git operation baselines;
+- actual-write verification;
+- provider-neutral diagnostics;
+- atomic operation evidence.
 
-The boundary is disposable cache/integration state. It is not a specification, permission grant, task system, or historical authorization record.
+The core does not know about Spec Kit command names, Codex skill directories, SpecDD sections, `.sdd`, or `.specdd/`.
 
-### Boundary contents
+### Native contract engine
 
-Change Boundary v1 records:
+The native contract engine:
 
-- schema version;
-- feature identifier;
-- resolved ordinary implementation targets;
-- primary SpecDD authority per resolved target;
-- governing specifications returned by resolution;
-- distinct authority domains;
-- whether multiple domains are involved;
-- unresolved target diagnostics;
-- deterministic tool-generation metadata.
+- discovers `contracts/**/*.contract.md`;
+- parses contract frontmatter and semantic sections;
+- validates path scopes and ownership relationships;
+- constructs the in-memory `ContractGraph`;
+- resolves `TargetContext`;
+- exposes relevant interface context for declared dependencies;
+- validates contract-only evolution results.
 
-It does not copy persistent `Must`, `Must not`, `Owns`, `Can modify`, dependency, or other durable SpecDD rule text.
+The graph is rebuilt from canonical contracts. It is not a persistent second source of truth.
 
-Refresh-time effective-context fingerprints are stored separately in current-worktree Git metadata and remain bound to the exact generated boundary.
+### Change-system adapter
 
-### Semantic consistency
+A change-system adapter translates an external change workflow into Boundary inputs.
 
-Schema shape validation is not sufficient before boundary state influences authorization or verification.
+Its responsibilities are limited to concepts such as:
 
-Readers also require deterministic consistency between targets, authority projection, `crossBoundary`, unresolved state, and each target's governing spec chain.
+- active change identifier;
+- canonical task identity;
+- explicit declared write targets;
+- adapter-owned feature artifacts;
+- lifecycle integration points.
 
-A shape-valid document with unknown `primaryAuthority` never grants implementation permission.
+The initial adapter is Spec Kit.
 
-## Target discovery
+Boundary's core semantics must not require Spec Kit-specific stages, files, command syntax, or constitution concepts.
 
-Target discovery becomes more precise as a feature advances.
+### Agent-runtime adapter
 
-Planning may discover paths from explicit implementation structure in `plan.md`. Task generation refines the boundary from exact ordinary task write targets. Authorization uses the existing task-stage boundary without regenerating it. Verification uses actual Git changes rather than current task text.
+An agent-runtime adapter materializes Boundary's canonical skills and thin entry points for an agent environment.
 
-`.sdd` evolution targets and root SpecDD bootstrap controls remain outside implementation boundary projection.
+The initial adapter is Codex.
 
-Pinned SpecDD CLI `1.1.1` requires existing resolver targets. A non-existent intended implementation path therefore remains unresolved with `INTENDED_TARGET_UNSUPPORTED` rather than receiving locally inferred authority.
+Canonical skill content uses Boundary concepts rather than vendor-specific tool syntax. Agent-specific wrappers may map those concepts onto local commands.
 
-## Task semantics
+## Transitional SpecDD compatibility adapter
 
-Spec Kit remains the canonical feature execution system. SpecDD `Tasks:` entries are local persistent-spec work context and are never synchronized with Spec Kit `tasks.md`.
+During migration, the repository may retain a concrete SpecDD compatibility adapter.
 
-A normal implementation task should use one primary SpecDD authority when the work is naturally decomposable. User stories may span any number of domains.
+Its only purpose is to keep current behavior available while native contracts and tests are introduced.
 
-A legitimate coordinated task may still write targets owned by several authorities. This is represented as `MULTI_AUTHORITY_TASK` and is not automatically invalid.
+Any remaining SpecDD-specific behavior belongs behind this boundary, including:
 
-When one task deliberately executes all writes under one authority, task text may declare:
+- `specdd resolve`;
+- `.sdd` parsing or resolver-output interpretation;
+- `Owns` and `Can modify`;
+- SpecDD framework bootstrap state;
+- intended-target capability probing;
+- `specdd lint`;
+- SpecDD CLI/framework identity.
 
-    SPECDD_AUTHORITY: `path/to/authority.sdd`
+The compatibility adapter is temporary and is removed after repository contracts and downstream tests use native Boundary semantics.
 
-The declared authority must own or have inherited `Can modify` permission for every ordinary write target. Non-owning permission never transfers target ownership.
+It must not define the core API.
 
-Task analysis distinguishes:
+## Core data model
 
-- `NORMAL`: implementation under current contracts;
-- `CROSS_BOUNDARY`: coordinated implementation involving multiple owner domains;
-- `SPEC_EVOLUTION`: deliberate persistent contract evolution;
-- `AUTHORITY_EVOLUTION`: deliberate ownership or modification-permission evolution.
+The target core operates on a small set of provider-independent structures.
 
-## Integration layers
+### Contract
 
-The bridge has four architectural layers.
+A parsed canonical persistent contract containing:
 
-### SpecDD bridge extension
+- stable ID;
+- source path;
+- owned scopes;
+- additional applicable scopes;
+- declared dependencies;
+- semantic sections;
+- content identity.
 
-The extension exposes bridge commands, invokes SpecDD tooling, constructs Change Boundaries, validates authority structure, and performs deterministic verification.
+### ContractGraph
 
-The v0.1 command surface is:
+An in-memory validated graph containing:
 
-- `speckit.specdd.context`;
-- `speckit.specdd.validate`;
-- `speckit.specdd.authorize`;
-- `speckit.specdd.verify`.
+- contracts by ID;
+- ownership scope index;
+- applicability scope index;
+- dependency edges.
 
-### Spec Kit preset
+The graph is transient and deterministic for equivalent canonical contract contents.
 
-The preset augments planning, task generation, and convergence while preserving upstream command behavior.
+### TargetContext
 
-It composes with upstream templates rather than copying complete upstream command bodies.
+A derived projection for one repository target:
 
-### Workflow overlay
+- target path;
+- primary owner;
+- applicable contract IDs;
+- effective invariants and prohibitions;
+- relevant dependency interfaces;
+- source provenance.
 
-The workflow overlay inserts deterministic structural gates around the upstream `speckit` workflow.
+Target context is query output, not canonical state.
 
-Its resolved sequence is:
+### ChangeContext
 
-    plan
-      → specdd-context
-      → review-plan
-      → tasks
-      → specdd-task-validation
-      → specdd-authorize
-      → implement
-      → specdd-verify
+Input supplied by a change-system adapter:
 
-### Packaging
+- change identifier;
+- operation kind;
+- task identity where applicable;
+- exact declared write targets;
+- adapter-owned non-implementation artifacts.
 
-The bridge extension, preset, and overlay remain independently sourced under `integration/` and are materialized through supported Spec Kit mechanisms.
+The core never discovers authorization scope from arbitrary prose.
 
-Generated `.specify/` and `.agents/skills/` state is not canonical source.
+### OperationRecord
 
-## Thin adapter
+Historical evidence for one authorized operation:
 
-The SpecDD adapter stays close to this conceptual API:
+- operation identifier;
+- change identifier;
+- operation kind;
+- exact authorized targets;
+- target ownership/effective-context identities;
+- Git `HEAD`;
+- dirty-path baseline;
+- predecessor/carry-forward evidence when applicable;
+- lifecycle status.
 
-    resolve(targets) -> ChangeBoundary
-    validate(featureArtifacts, boundary) -> diagnostics
-    verify(changes, authorizationEvidence) -> diagnostics
+One operation is represented by one atomic document.
 
-The adapter uses machine-readable SpecDD CLI output and does not become an independent architecture database.
+## Source layout direction
 
-It fails clearly when required tools cannot execute, resolver output is invalid, repository state cannot be identified, or required feature context is absent.
+The canonical implementation should migrate toward a provider-neutral layout similar to:
 
-## Deterministic and agentic responsibilities
+    src/boundary/
+      contracts/
+      context/
+      authorization/
+      verification/
+      cli/
 
-Objective mechanics belong in deterministic bridge code.
+    skills/
+      scope/
+      implement/
+      contracts/
 
-These include:
+    adapters/
+      speckit/
+      codex/
+      specdd-compat/
 
-- invoking `specdd resolve`;
-- parsing resolver JSON;
-- normalizing repository paths;
-- deriving ownership from resolver-returned context;
-- evaluating explicit `Can modify` permission;
-- checking boundary semantic consistency;
-- detecting multi-owner write sets;
-- comparing authorization evidence with actual Git state;
-- storing and rebuilding derived state;
-- detecting context and authorization drift.
+    schemas/
 
-Architectural judgment remains agentic when mechanical evidence cannot decide intent.
+The exact packaging may change while migration is underway, but provider names must not define core package boundaries.
 
-Examples include:
+Installed/generated integration state remains separate from this canonical source.
 
-- whether a multi-owner task should be decomposed;
-- whether a proposed path represents an implementation conflict;
-- whether a durable contract genuinely needs evolution;
-- whether feature information should be promoted into persistent SpecDD.
+## Deterministic versus agentic responsibility
 
-The bridge should make additional checks deterministic only when doing so does not create a second implementation of SpecDD semantics.
+Deterministic code owns facts that can be computed reliably:
 
-## Progressive strictness
+- valid path syntax;
+- contract parsing;
+- scope containment;
+- ownership selection;
+- applicability;
+- explicit write-set equality;
+- Git baseline comparison;
+- undeclared-write detection;
+- operation-kind separation;
+- contract graph structural validity.
 
-SpecDD strictness increases through the lifecycle.
+Agentic reasoning owns semantics that cannot be mechanically established from the contract structure alone:
 
-Planning may tolerate unresolved advisory context while paths are still emerging. Task generation requires structural precision. Authorization fails closed on unknown or stale implementation authority. Verification fails closed when actual writes cannot be reconciled with historical operation evidence.
+- whether a feature requirement implies a durable new invariant;
+- how an invariant should be phrased;
+- whether implementation satisfies prose intent;
+- whether a dependency or interface should be redesigned;
+- whether a cross-component task should be decomposed for maintainability.
 
-This permits exploration without weakening implementation authority.
+The architecture should move a concern into deterministic code only when doing so does not create an unreliable second interpretation of prose semantics.
+
+## No persisted planning boundary
+
+Boundary does not require a feature-local `boundary.json`.
+
+Planning and task generation may call `boundary inspect` and receive target projections, but those projections are disposable query results.
+
+Authorization always resolves canonical task scope against a fresh `ContractGraph`.
+
+This removes:
+
+- boundary refresh lifecycle state;
+- refresh-time fingerprint sidecars;
+- stale feature-boundary synchronization;
+- a provider-named feature-state namespace.
+
+## No generalized provider framework
+
+Boundary should use concrete internal interfaces only where they simplify current code.
+
+Do not add:
+
+- dynamic provider registration;
+- provider manifests;
+- configurable semantic engines;
+- runtime adapter discovery.
+
+The native contract engine is the product implementation.
+
+SpecDD is a migration adapter, not the first member of a permanent provider ecosystem.
+
+A generalized abstraction is justified only after another real implementation demonstrates shared requirements.
+
+## Portability invariant
+
+Replacing Spec Kit, Codex, or the SpecDD compatibility layer must not require redesigning:
+
+- native contract semantics;
+- target effective-context composition;
+- explicit write authorization;
+- operation evidence;
+- Git verification;
+- contract-evolution separation.
+
+Those are Boundary concepts.

@@ -1,157 +1,200 @@
-# Integration Lifecycle Semantics
+# Boundary Lifecycle Semantics
 
-This document defines how SpecDD context participates in the Spec Kit feature lifecycle. Structural data and adapter architecture are documented in [spec-architecture.md](spec-architecture.md).
+Boundary integrates with a change process without making that process part of its product identity.
 
-## Normal lifecycle
+The current change-system adapter is Spec Kit. Another change system, or a future Boundary-native change workflow, must be able to drive the same Boundary lifecycle.
 
-The bridge lifecycle is:
+## Mandatory implementation lifecycle
+
+Boundary's mandatory lifecycle is:
+
+    authorize → implement → verify
+
+Planning and task generation may use Boundary context, but they do not establish implementation authority.
+
+This is deliberately smaller than the currently implemented:
 
     context → validate → authorize → implement → verify
 
-The installed workflow overlay positions these operations around the upstream Spec Kit steps so objective authority checks do not depend only on an agent remembering to invoke them.
+The current `context` and `validate` behavior becomes query/analysis functionality reused by planning, task generation, and authorization.
 
-## Context
+## Planning
 
-`speckit.specdd.context` builds or refreshes the current feature Change Boundary from concrete or intended ordinary implementation targets.
+During planning an agent may:
 
-It calls the existing bridge adapter and real SpecDD resolver. It does not parse `.sdd` source independently, infer authority from naming or proximity, or treat specification evolution as implementation permission.
+- inspect candidate target contracts;
+- identify ownership;
+- discover applicable invariants and interfaces;
+- classify likely contract evolution;
+- refine implementation paths.
 
-Each successful refresh also records fingerprint-bound effective SpecDD context identities in current-worktree Git metadata.
+Planning context is advisory.
 
-These fingerprints are disposable freshness evidence, not authorization evidence.
+Heuristic path discovery is acceptable here because planning output cannot grant write permission.
 
-Planning may continue with unresolved targets, but unresolved context never grants permission.
+No feature-local authorization artifact is created.
 
-## Validation
+## Task generation
 
-`speckit.specdd.validate` checks Spec Kit task write targets against the current Change Boundary.
+Before tasks are considered implementation-ready, the change-system adapter supplies explicit write declarations.
 
-Validation preserves primary ownership and separately projects non-owning modification permission when a task explicitly declares `SPECDD_AUTHORITY:`.
+The Boundary scope skill helps the agent:
 
-Lifecycle strictness increases from `planning` to `tasks` to `implementation`.
+- name exact intended writes;
+- inspect their effective context;
+- separate contract evolution from implementation;
+- prefer coherent owner-local tasks where useful.
 
-The validator surfaces deterministic findings such as:
+A user story may span any number of owner domains.
 
-- unresolved target scope;
-- stale boundary scope;
-- multi-authority tasks;
-- invalid declared operation authority;
-- missing `Can modify` permission;
-- malformed or mixed specification-evolution scope.
+A coordinated task may also span several owners.
 
-Architectural reasoning then distinguishes implementation conflict from genuine contract or authority evolution.
-
-Validation does not create historical implementation authorization.
+Boundary v1 does not require a synthetic task authority identity.
 
 ## Authorization
 
-`speckit.specdd.authorize` is the blocking pre-implementation gate.
+Authorization is the blocking transition into implementation.
 
-It requires the existing Change Boundary, task list, and matching refresh-time context evidence. It does not regenerate the boundary.
+It uses:
 
-Authorization fresh-resolves each resolved boundary target and compares the effective SpecDD context with the refresh-time fingerprints. A changed governing contract, reference, governing chain, owner, or resolver generation identity produces blocking `STALE_BOUNDARY`.
+- canonical explicit writes;
+- fresh native contracts;
+- current Git state.
 
-Successful authorization stores three documents in current-worktree Git metadata:
+It does not refresh an earlier boundary and does not prove an earlier planning cache fresh.
 
-    specdd/authorization-boundary.json
-    specdd/authorization-spec-evolution.json
-    specdd/authorization-git-baseline.json
+Successful authorization creates the historical operation record consumed by verification.
 
-The boundary snapshot is the exact validated ownership projection.
+## Implementation
 
-The companion plan records exact `.sdd` evolution targets and explicitly selected editable bootstrap controls. It grants no implementation authority.
+Implementation runs under one active implementation operation.
 
-The Git baseline records authorization-time `HEAD` and exact content or deletion identities for every dirty path.
+The implementation skill instructs the agent to:
 
-Failed authorization does not replace prior successful evidence.
+- inspect relevant effective contract context;
+- modify only authorized targets;
+- stop before scope expansion;
+- transition out of implementation when persistent contracts need evolution.
+
+Deterministic checks remain authoritative even if an agent fails to follow the skill.
+
+## Scope expansion
+
+When implementation discovers another required target:
+
+1. the target may be inspected;
+2. it may not be written under the current operation;
+3. the current operation is verified and closed;
+4. a new operation is authorized;
+5. verified predecessor state may be carried forward.
+
+Scope expansion does not require discarding valid completed work, but it does require an explicit authorization epoch transition.
 
 ## Verification
 
-`speckit.specdd.verify` compares post-authorization Git state with immutable historical evidence.
+Verification compares actual Git changes with the historical operation record.
 
-The current feature boundary and current tasks are not verification authority.
+It does not use:
 
-Verification:
+- current task prose;
+- current planning projections;
+- a regenerated feature boundary.
 
-- excludes unchanged dirty state that already existed at authorization;
-- includes a pre-existing dirty path when its content or deletion state changed afterward;
-- includes clean paths that became dirty after authorization;
-- fails closed when Git `HEAD` changed;
-- excludes generated integration state and active feature artifacts from implementation authority checks;
-- validates changed `.sdd` files against authorization-time evolution selections;
-- validates root bootstrap-control changes against authorization-time selections;
-- freshly resolves existing actual implementation targets;
-- checks deleted implementation targets against the historical boundary;
-- runs `specdd lint`.
+Verification reports authorization correctness only.
 
-Concurrent post-authorization work remains part of the operation because Git cannot identify which process produced a worktree delta. An optional dedicated worktree can isolate concurrent operations.
+Feature correctness and broader convergence are separate.
 
-## Specification evolution
+## Contract evolution
 
-A feature may legitimately require a durable SpecDD contract change.
+When requested behavior cannot satisfy current persistent contracts:
 
-Such work uses explicit `SPEC_EVOLUTION_REQUIRED:` task text and names only `.sdd` targets.
+1. stop dependent implementation;
+2. close or abandon the current implementation operation safely;
+3. begin a `contract-evolution` operation;
+4. use the Boundary contracts skill;
+5. modify only native contract files;
+6. run `boundary contracts check`;
+7. verify/close contract evolution;
+8. authorize dependent implementation against the resulting fresh graph.
 
-The specification change occurs separately from dependent ordinary implementation. After evolution, context is refreshed and dependent implementation receives fresh authorization.
-
-The changed specification never retroactively authorizes writes already performed in the previous operation.
-
-## Authority evolution
-
-Ownership and modification-permission changes use explicit `AUTHORITY_EVOLUTION_REQUIRED:` task text.
-
-Authority evolution ends the prior authority context.
-
-Any implementation that depends on the new owner or permission state begins only after:
-
-1. the `.sdd` authority change is applied;
-2. the feature boundary and effective context are refreshed;
-3. authorization succeeds again;
-4. a new Git baseline is captured.
-
-## Promotion into SpecDD
-
-Not every feature requirement should become persistent system specification.
-
-A useful promotion question is:
-
-> If this information were forgotten after the feature shipped, could a future developer make a locally reasonable but systemically invalid change?
-
-Durable architectural invariants, ownership rules, security invariants, cross-component contracts, dependency restrictions, and persistent local behavior are candidates for SpecDD.
-
-One-time migration sequencing, rollout tasks, temporary feature mechanics, and historical discussion normally remain in Spec Kit feature history.
-
-Promotion is deliberate. The bridge does not automatically edit `.sdd` files.
-
-## Constitution versus root SpecDD
-
-The Spec Kit constitution and root SpecDD specification are separate policy layers.
-
-The constitution governs development process, for example test requirements, compatibility review, migration process, or security review.
-
-Root SpecDD governs persistent system architecture, for example dependency direction, persistence isolation, or cross-service contracts.
-
-Equivalent-looking rules should live at the layer matching their semantic purpose rather than being copied into both.
+Contract evolution never retroactively authorizes earlier implementation.
 
 ## Convergence
 
-Combined convergence has three dimensions:
+Boundary distinguishes:
 
-- feature correctness: implementation satisfies Spec Kit feature intent;
-- system correctness: resulting state satisfies SpecDD contracts;
-- governance correctness: work satisfies the Spec Kit constitution.
+- operation correctness: actual writes matched historical authorization;
+- contract structural correctness: the native contract graph is valid;
+- feature correctness: implementation satisfies requested behavior;
+- semantic system correctness: implementation respects applicable prose contracts;
+- development governance: the active change system's process rules are satisfied.
 
-Authority verification remains distinct from convergence.
+Only the first two are fully deterministic Boundary-core concerns in v1.
 
-Authority verification asks whether the operation was permitted under historical system boundaries. Convergence asks whether the resulting implementation satisfies feature, system, and governance intent.
+The current Spec Kit constitution is one change-system governance implementation, not a Boundary architectural layer.
 
-Relevant SpecDD convergence diagnostics include:
+## Product CLI direction
 
-- `SPECDD_VIOLATION`;
-- `SPECDD_DRIFT`;
-- `AUTHORITY_VIOLATION`;
-- `UNPLANNED_SPEC_EVOLUTION`;
-- `CONTROL_STATE_VIOLATION`;
-- agentic `MISSING_SPEC_EVOLUTION`.
+The canonical product-level command surface should converge toward:
 
-Blocking authority, control-state, or SpecDD lint findings prevent a clean converged result.
+    boundary inspect <target...>
+    boundary contracts check
+    boundary authorize
+    boundary verify
+
+Additional status/debugging commands may be introduced when justified.
+
+These commands use Boundary terminology and do not depend on a particular change system.
+
+## Spec Kit adapter
+
+The initial Spec Kit adapter may expose thin agent-facing wrappers such as:
+
+    speckit.boundary.authorize
+    speckit.boundary.verify
+
+Those names belong to the adapter.
+
+They are not the canonical Boundary product API.
+
+The Spec Kit workflow integration should eventually enforce only:
+
+    tasks
+      → boundary-authorize
+      → implement
+      → boundary-verify
+
+Planning/task augmentations may invoke Boundary skills and inspection, but they should not create redundant structural gates.
+
+## Extension hooks and workflow overlays
+
+The current implementation registers both extension hooks and structural workflow-overlay steps for overlapping lifecycle responsibilities.
+
+The target architecture uses one mechanism for deterministic structural enforcement.
+
+For the current Spec Kit baseline, the workflow overlay is preferred because its ordering and nonzero shell status are explicit.
+
+Extension hooks should not duplicate authorization or verification gates.
+
+## Preset role
+
+The current large SpecDD preset should not survive mechanically.
+
+If Spec Kit still needs an augmentation after native skills exist, it should be minimal, for example:
+
+- instruct task generation to load `boundary-scope`;
+- require explicit `Writes:` metadata;
+- instruct implementation to load `boundary-implement`.
+
+If those responsibilities can be supplied through supported skill discovery without a preset, the preset should be removed.
+
+## Adapter replacement
+
+Replacing Spec Kit must require only a new change-system adapter that can provide:
+
+- active change identity;
+- explicit operation writes;
+- lifecycle calls around implementation;
+- classification of its own generated/change artifacts.
+
+Native contracts, skills, authorization semantics, and Git verification remain unchanged.
