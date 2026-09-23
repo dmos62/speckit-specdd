@@ -1,17 +1,24 @@
 @filegroup
 @glob docs/TODO.md
 @glob docs/spec.md
-@glob docs/spec-architecture.md
 @glob docs/spec-authorization.md
 @glob docs/spec-lifecycle.md
-@glob src/boundary/**/*.py
-@glob integration/specdd/scripts/verification_git.py
-@glob integration/specdd/scripts/verification_types.py
-@glob tests/test_authorization_model.py
-@glob tests/test_operation_record.py
-@glob tests/boundary_test_support.py
+@glob integration/specdd/scripts/verification*.py
+@glob integration/specdd-preset/**
+@glob scripts/bootstrap.sh
+@glob tests/test_verification.py
 @glob tests/verification_test_git.py
+@glob tests/verification_test_engine.py
+@glob tests/verification_test_fixture.py
+@glob tests/preset_test_distribution.py
+@glob tests/preset_test_support.py
+@glob tests/preset_test_install_support.py
+@glob tests/preset_test_source.py
+@glob tests/preset_test_install.py
+@glob tests/test_preset.py
 @glob tests/tests.sdd
+@globexclude **/__pycache__/**
+@globexclude **/*.pyc
 @globexclude integration/specdd/scripts/boundary_schema*.py
 @globexclude integration/specdd/scripts/validation*.py
 @globexclude integration/specdd/scripts/workflow_gate*.py
@@ -19,13 +26,9 @@
 @globexclude tests/validation_test_*.py
 @globexclude tests/test_workflow.py
 @globexclude tests/workflow_test_*.py
-@globexclude tests/verification_test_engine.py
-@globexclude tests/verification_test_fixture.py
 @globexclude tests/test_change_boundary_schema.py
 @globexclude tests/boundary_test_output.py
 @globexclude tests/boundary_test_ownership.py
 @globexclude tests/boundary_test_paths.py
 @globexclude tests/boundary_test_resolver.py
-@globexclude **/__pycache__/**
-@globexclude **/*.pyc
 @endfilegroup
