@@ -4,23 +4,16 @@ Boundary's target architecture is defined in the focused `docs/spec*.md` documen
 
 The current executable baseline still uses Spec Kit `1.0.10`, Codex, SpecDD framework `1.5`, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements.
 
-The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, and exact dirty-state carry-forward provenance.
+The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, exact dirty-state carry-forward provenance, and Git-derived actual-write authorization verification with provider-neutral diagnostics.
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
-## P6 — Replace the current authorization model
+## Verification regression cleanup
 
-### P6.5 — Simplify native verification
-
-- [ ] Derive actual implementation writes from Git.
-- [ ] Reject undeclared writes even when they belong to an already represented owner.
-- [ ] Reject native contract changes during implementation operations.
-- [ ] Fresh-resolve actual targets through the native contract graph.
-- [ ] Keep authorization verification separate from feature convergence and contract structural validation.
-- [ ] Introduce provider-neutral native diagnostics.
+- [ ] Update `tests/test_operation_record.py::test_atomic_replace_failure_preserves_prior_record` to close its predecessor epoch before fault-injecting successor storage replacement. Preserve the verified-before-reauthorization invariant and the assertion that failed atomic replacement leaves prior evidence usable.
 
 Done when:
-  Implementation authority comes only from explicit writes, fresh native contracts, and one atomic historical operation record.
+  The complete test suite passes without weakening verified-epoch replacement semantics.
 
 ## P7 — Build the progressive agent instruction architecture
 

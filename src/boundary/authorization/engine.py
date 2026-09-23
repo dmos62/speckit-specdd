@@ -3,7 +3,13 @@
 from pathlib import Path
 
 from boundary.context import resolve_target_context
-from boundary.contracts import ContractOwnershipError, load_contract_graph
+from boundary.contracts import (
+    ContractGraph,
+    ContractGraphError,
+    ContractOwnershipError,
+    ContractParseError,
+    load_contract_graph,
+)
 
 from .identities import contract_graph_identity, effective_context_identity
 from .model import (
@@ -28,23 +34,25 @@ def authorize_implementation(
             "declared write target"
         )
 
-    graph = load_contract_graph(repository_root)
+    graph = _load_graph(repository_root)
     targets: list[AuthorizedTarget] = []
     for path in change.writes:
         if is_native_contract_path(path):
             raise AuthorizationError(
-                "implementation operations may not modify native contracts: "
-                f"{path}"
+                "OPERATION_KIND_VIOLATION: implementation operations may "
+                f"not modify native contracts: {path}"
             )
         try:
             context = resolve_target_context(graph, path)
         except ContractOwnershipError as exc:
             raise AuthorizationError(
-                f"implementation write has ambiguous ownership: {path}"
+                "AMBIGUOUS_OWNERSHIP: implementation write has ambiguous "
+                f"ownership: {path}"
             ) from exc
         if context.owner_id is None:
             raise AuthorizationError(
-                f"implementation write has no primary owner: {path}"
+                "UNOWNED_WRITE_TARGET: implementation write has no primary "
+                f"owner: {path}"
             )
         targets.append(
             AuthorizedTarget(
@@ -78,11 +86,11 @@ def authorize_contract_evolution(
     for path in change.writes:
         if not is_native_contract_path(path):
             raise AuthorizationError(
-                "contract-evolution operations may modify only native "
-                f"contracts: {path}"
+                "OPERATION_KIND_VIOLATION: contract-evolution operations may "
+                f"modify only native contracts: {path}"
             )
 
-    graph = load_contract_graph(repository_root)
+    graph = _load_graph(repository_root)
     return ContractEvolutionAuthorization(
         change_id=change.change_id,
         targets=change.writes,
@@ -97,3 +105,16 @@ def is_native_contract_path(path: str) -> bool:
         path.startswith("contracts/")
         and path.endswith(".contract.md")
     )
+
+
+def _load_graph(repository_root: str | Path) -> ContractGraph:
+    try:
+        return load_contract_graph(repository_root)
+    except ContractOwnershipError as exc:
+        raise AuthorizationError(
+            f"AMBIGUOUS_OWNERSHIP: {exc}"
+        ) from exc
+    except (ContractParseError, ContractGraphError) as exc:
+        raise AuthorizationError(
+            f"CONTRACT_GRAPH_INVALID: {exc}"
+        ) from exc

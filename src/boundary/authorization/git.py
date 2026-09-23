@@ -70,10 +70,11 @@ def path_state(
 
     root = Path(repository_root)
     canonical = normalize_repo_path(path)
+    worktree = _worktree_state(root, canonical)
     payload = {
         "schema": "boundary.git-path-state/v1",
         "index": _index_state(root, canonical),
-        "worktree": _worktree_state(root, canonical),
+        "worktree": worktree,
     }
     encoded = json.dumps(
         payload,
@@ -81,7 +82,8 @@ def path_state(
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+    digest = hashlib.sha256(encoded).hexdigest()
+    return f"{worktree['kind']}:sha256:{digest}"
 
 
 def git_metadata_directory(

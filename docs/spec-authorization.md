@@ -1,116 +1,78 @@
 # Authorization and Operation Evidence
 
-Boundary authorization turns explicit change-system write declarations plus fresh persistent contracts into historical evidence for one operation.
-
-Authorization does not depend on a previously persisted planning boundary.
+Boundary turns explicit change-system write declarations plus fresh native contracts into historical evidence for one operation. Authorization does not depend on a persisted planning boundary.
 
 ## Explicit write declarations
 
-Implementation scope must be explicit.
-
-For the current Spec Kit adapter, the intended task representation is structurally equivalent to:
+Implementation scope is structured and exact. For the current Spec Kit adapter, the intended task shape is equivalent to:
 
     - [ ] T012 [US2] Implement authenticated callback handling
       Writes: `src/auth/callback.ts`, `src/auth/session.ts`
 
-The exact adapter syntax may evolve, but authorization receives a structured ordered set of write targets.
-
-Path mentions elsewhere in task prose do not widen that set.
-
-Planning tools may heuristically extract paths for advisory inspection only.
+Path mentions elsewhere in task prose never widen authority. Planning may heuristically inspect path-looking prose because planning output cannot grant write permission.
 
 ## Operation kinds
 
-Boundary v1 defines two operation kinds:
-
-- `implementation`;
-- `contract-evolution`.
+Boundary v1 has two operation kinds.
 
 ### Implementation
 
 An implementation operation:
 
-- authorizes exact ordinary project write targets;
-- requires every target to have one unambiguous owner;
-- may span several owner domains;
-- may not modify native contract files.
+- authorizes exact ordinary project paths;
+- requires one unambiguous primary owner for every target;
+- may span several owners;
+- may not modify native contracts.
 
-There is no task-level `SPECDD_AUTHORITY:` replacement in Boundary v1.
-
-Multi-owner work is represented directly as one operation containing targets with different owners.
+There is no task-level synthetic authority identity. Multi-owner work is one operation with targets owned by different contracts.
 
 ### Contract evolution
 
 A contract-evolution operation:
 
-- declares exact `contracts/**/*.contract.md` targets;
+- authorizes exact `contracts/**/*.contract.md` paths;
 - may create, modify, or delete contracts;
 - may not modify ordinary implementation files;
-- must leave the resulting native contract graph structurally valid.
+- must be followed by structural contract validation before dependent implementation.
 
-Contract changes never authorize dependent implementation in the same operation.
+Changed contracts never authorize implementation writes in the same operation.
 
-## Authorization inputs
+## Authorization inputs and checks
 
 Implementation authorization consumes:
 
-- active change identifier from the change-system adapter;
+- active change identity;
 - task identities where available;
 - exact declared write targets;
-- fresh native `ContractGraph`;
+- a freshly loaded native `ContractGraph`;
 - current Git `HEAD`;
-- current dirty worktree and index state;
-- adapter classification of generated/change-system-owned paths.
+- exact current index/worktree dirty state;
+- adapter classification of generated and change-system-owned paths where needed by integration.
+
+It verifies canonical paths, operation kind, unambiguous ownership, resolvable effective context, internally consistent task scope, verified predecessor closure, dirty-target provenance, and reliable Git capture.
 
 No feature-local Change Boundary or refresh-time context sidecar is required.
 
-## Authorization checks
+## Dirty-target provenance
 
-Before an implementation operation is accepted, Boundary verifies:
+An intended path must not silently adopt unverified pre-authorization work.
 
-- every write target is a valid canonical repository path;
-- no write target is a native contract file;
-- every write target has one unambiguous primary owner;
-- effective target context can be derived;
-- explicit task scope is internally consistent;
-- an existing active authorization epoch has been verified before replacement;
-- intended operation targets are not being silently adopted from unverified dirty state;
-- Git state can be captured reliably.
+Unrelated dirty paths are allowed and recorded in the baseline. A dirty intended target is accepted only when:
 
-Contract evolution performs the corresponding contract-target and Git checks without granting implementation authority.
+- the current predecessor is verified;
+- it belongs to the same change and operation kind;
+- it recorded a verified final state for that exact target;
+- the target's current Git state exactly equals that recorded state.
 
-## Dirty-state rule
+Git state identity includes index and worktree state, so staging, unstaging, deletion, mode changes, symlinks, and content changes affect identity.
 
-A path intended for the new operation must not already contain unverified work that the operation would silently adopt.
+Otherwise authorization fails with `DIRTY_TARGET_NOT_VERIFIED`.
 
-Unrelated dirty paths may exist and are recorded in the Git baseline.
+This prevents both pre-authorize modification adoption and mutation of verified predecessor output before a successor epoch.
 
-For v1, a dirty intended target is accepted only when:
+## Atomic operation record
 
-- the current predecessor operation is verified;
-- the predecessor belongs to the same change and operation kind;
-- the predecessor recorded a verified final state for that exact target;
-- the target's current Git state exactly equals that recorded final state.
-
-The Git state identity includes both index and worktree state. Staging, unstaging, deletion, executable-mode changes, symlinks, and content changes therefore alter the identity even when ordinary file bytes alone would not expose the transition.
-
-Otherwise authorization fails.
-
-This prevents:
-
-    modify target
-    authorize
-    verify
-
-from treating the pre-authorization modification as out-of-scope baseline state.
-
-It also prevents a verified predecessor output from being changed after verification and then silently adopted by a later authorization epoch.
-
-## Operation record
-
-Each successful authorization creates one atomic operation document.
-
-Conceptually it records:
+Each successful authorization creates one versioned operation document containing, conceptually:
 
     schemaVersion
     operationId
@@ -133,129 +95,80 @@ Conceptually it records:
       finalPathStates
     status
 
-The exact schema should remain minimal and versioned.
+One operation is never split across independently writable boundary, selection, and baseline documents.
 
-One operation must not be split across separately writable boundary, selection, and baseline documents.
+`status: verified` closes the authorization epoch and permits replacement.
 
-`status: verified` means that authorization epoch is closed and may be superseded.
+## Storage and atomicity
 
-## Storage
-
-Operation evidence lives in current-worktree Git metadata, not in project source.
-
-A target layout is:
+Operation evidence lives in current-worktree Git metadata, for example:
 
     <git-dir>/boundary/current.json
     <git-dir>/boundary/operations/<operation-id>.json
 
-`current.json` represents the current authorization epoch.
+`current.json` is the active epoch. A verified predecessor is archived immutably only when a successor depends on its carry-forward evidence.
 
-A verified predecessor is archived as an immutable operation document only when a successor depends on its carry-forward evidence.
+Creating or replacing active evidence is transactional from the caller's perspective. Construction or write failure must leave the previous successful record usable. Temporary files followed by atomic replacement are preferred.
 
-A verified predecessor that is superseded without carry-forward need not be archived.
+When carry-forward is required, the verified predecessor is archived before successor installation. A later successor-write failure leaves the prior current record usable; the immutable archive is harmless.
 
-The storage design must preserve a prior successful operation if creation of a replacement authorization fails.
+Operation evidence is workflow history, not a persistent project contract.
 
-No operation evidence is a persistent project contract.
+## Contract and Git identities
 
-## Atomicity
+Authorization records enough identity to prove what governed each target without duplicating contract prose.
 
-Creating or replacing active operation state must be transactional from the caller's perspective.
+`effectiveContextIdentity` derives from canonical contracts contributing to a target's effective context. Verification fresh-resolves actual targets and compares current effective identity with historical target evidence.
 
-A failure while constructing or writing new evidence must leave the previous successful evidence usable.
+The Git baseline records authorization-time `HEAD` plus exact index/worktree identities for dirty paths present at authorization.
 
-Temporary files followed by atomic replacement are preferred.
+A baseline dirty path whose state is unchanged is not an operation write. A baseline dirty path that changes, or a clean path that becomes dirty, enters operation scope.
 
-When carry-forward is required, the verified predecessor is archived before the successor current record is installed. If successor installation fails afterward, the prior current record remains usable and the immutable archive is harmless.
-
-## Effective-context identity
-
-Authorization records enough contract identity to prove what governed each target when the operation began.
-
-The identity is derived from canonical native contracts contributing to that target's effective context.
-
-Rule prose is not duplicated into the operation record unless required for a future audit format.
-
-Verification uses current canonical contracts plus historical identities to detect contract-context changes relevant to the authorized operation.
-
-## Git baseline
-
-The operation baseline records:
-
-- authorization-time `HEAD`;
-- exact index/worktree identities for dirty paths that existed before the operation.
-
-A path whose state remains exactly equal to the baseline is not an operation write.
-
-A baseline dirty path that changes afterward enters operation scope.
-
-A clean path that becomes dirty enters operation scope.
-
-A changed Git `HEAD` invalidates direct baseline comparison. Verification fails closed rather than heuristically attributing changes across commits or resets.
-
-## Verification closure
-
-Successful verification records the final dirty-state identity of every authorized target that remains dirty.
-
-Those final states are the only states eligible for later carry-forward.
-
-Verification also confirms that Git `HEAD` still equals the authorization baseline before the operation can be marked verified.
-
-The native verification implementation adds actual-write authorization checks separately; recording final states and closing an epoch does not weaken those checks.
+A changed `HEAD` invalidates direct comparison. Verification fails closed with `GIT_BASELINE_CHANGED` rather than attributing changes across commits or resets.
 
 ## Verification
 
-Verification derives actual post-authorization changes from Git.
+Verification derives post-authorization writes from Git final state and the historical operation record.
 
-For an implementation operation it:
+For implementation it:
 
 - excludes unchanged baseline dirty state;
-- separates change-system artifacts and generated adapter state;
+- separates adapter-owned generated/change-system state when the adapter classifies it as such;
 - rejects native contract changes;
-- requires every ordinary implementation write to appear in the exact authorized target set;
-- fresh-resolves ownership and effective-context identity;
-- detects contract-context changes;
-- verifies carried-forward states where applicable.
+- rejects every ordinary write absent from the exact authorized target set, even when its owner is already represented;
+- fresh-resolves actual ordinary targets through the native graph;
+- rejects unowned or ambiguous targets;
+- detects changed effective contract context.
 
-Current tasks or planning projections cannot widen verification scope.
+Adapter classification cannot hide native contract paths or paths already present in the operation's authorized target set.
+
+For contract evolution, verification checks exact contract-write authority and rejects ordinary project writes. Structural contract validation remains a separate `boundary contracts check` concern.
+
+Current tasks, planning projections, feature convergence, tests, and semantic review do not participate in authorization verification.
+
+## Verification closure
+
+Successful verification records the exact final dirty-state identity of every authorized target that remains dirty. Those states are the only states eligible for later carry-forward.
+
+Closure also confirms that Git `HEAD` still equals the authorization baseline before marking the operation verified.
 
 ## Scope expansion
 
-Discovering another necessary target is allowed.
+When implementation discovers another required target:
 
-Writing it under stale authorization is not.
-
-Boundary v1 uses authorization epochs:
-
-1. stop before writing the new target;
-2. verify and close the current implementation operation;
-3. preserve the verified final states of completed targets;
-4. create a fresh authorization containing the required next write set;
-5. carry forward prior dirty states only when they exactly match verified predecessor evidence;
-6. archive that predecessor only when its evidence is required by the successor;
+1. stop before writing it;
+2. verify and close the current operation;
+3. preserve verified final states of completed targets;
+4. authorize a fresh write set;
+5. carry forward only exact verified predecessor states;
+6. archive the predecessor only when the successor relies on that evidence;
 7. continue implementation.
 
-This avoids silently absorbing already-produced implementation into a new pre-authorization baseline.
-
-A future design may support richer nested authorization, but v1 does not require an event-sourced transaction system.
-
-## Verification versus convergence
-
-Authorization verification answers:
-
-> Were the actual writes permitted by the historical operation?
-
-It does not answer:
-
-> Is the implementation semantically correct?
-
-Contract structural validation, tests, feature convergence, and agentic review remain separate concerns.
-
-The workflow may run them together, but the core APIs and diagnostics remain distinct.
+This preserves completed work without widening stale authority.
 
 ## Provider-neutral diagnostics
 
-The native implementation should prefer product-level diagnostics such as:
+Native authorization and verification prefer product-level codes such as:
 
 - `INVALID_WRITE_TARGET`;
 - `UNOWNED_WRITE_TARGET`;
@@ -267,4 +180,4 @@ The native implementation should prefer product-level diagnostics such as:
 - `GIT_BASELINE_CHANGED`;
 - `CONTRACT_GRAPH_INVALID`.
 
-Legacy SpecDD-specific diagnostics remain inside the migration adapter until that adapter is removed.
+Legacy provider diagnostics stay inside migration adapters.
