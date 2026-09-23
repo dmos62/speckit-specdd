@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest import mock
 
 from boundary_test_support import (
+    REPO_ROOT,
+    boundary,
     validation,
     verification,
     workflow_gate,
@@ -141,6 +143,24 @@ class WorkflowGateExitTests(unittest.TestCase):
                         "\n"
                     )
                 )
+
+    def test_task_stage_boundary_can_represent_empty_write_scope(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            value = boundary.build_change_boundary(
+                root,
+                (),
+                feature="001-empty",
+                schema=boundary.load_schema(REPO_ROOT),
+                cli_version="1.1.1",
+                specdd_framework_version="1.5",
+                allow_empty=True,
+            )
+
+        self.assertEqual([], value["targets"])
+        self.assertEqual([], value["authorities"])
+        self.assertEqual([], value["unresolved"])
+        self.assertFalse(value["crossBoundary"])
 
 
 class WorkflowFeaturePathTests(unittest.TestCase):

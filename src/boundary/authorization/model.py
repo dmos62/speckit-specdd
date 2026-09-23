@@ -1,4 +1,4 @@
-"""Structured change-adapter write declarations."""
+"""Structured native authorization inputs and resolved authority projections."""
 
 from dataclasses import dataclass
 
@@ -7,6 +7,10 @@ from boundary.repository import RepositoryPathError, normalize_repo_path
 
 class WriteSetError(ValueError):
     """Raised when a change adapter supplies an invalid declared write set."""
+
+
+class AuthorizationError(ValueError):
+    """Raised when canonical inputs cannot authorize an operation."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,43 +29,25 @@ class TaskWriteSet:
             raise WriteSetError("task order must be non-negative")
         _validate_optional_identity(self.task_id, "task id")
         _validate_optional_identity(self.story, "task story")
-
-        writes = tuple(self.writes)
-        normalized: list[str] = []
-        seen: set[str] = set()
-        for write in writes:
-            if not isinstance(write, str):
-                raise TypeError("declared write targets must be strings")
-            try:
-                canonical = normalize_repo_path(write)
-            except RepositoryPathError as exc:
-                raise WriteSetError(str(exc)) from exc
-            if canonical != write:
-                raise WriteSetError(
-                    "declared write target must use canonical repository syntax: "
-                    f"{write!r}"
-                )
-            if write in seen:
-                raise WriteSetError(
-                    f"declared write target is duplicated: {write!r}"
-                )
-            seen.add(write)
-            normalized.append(write)
-        object.__setattr__(self, "writes", tuple(normalized))
+        object.__setattr__(
+            self,
+            "writes",
+            _canonical_writes(
+                self.writes,
+                label="declared write target",
+            ),
+        )
 
 
 @dataclass(frozen=True, slots=True)
 class ChangeWriteSet:
-    """Ordered task write declarations supplied by one change-system adapter."""
+    """Ordered implementation writes supplied by one change-system adapter."""
 
     change_id: str
     tasks: tuple[TaskWriteSet, ...] = ()
 
     def __post_init__(self) -> None:
-        if not isinstance(self.change_id, str):
-            raise TypeError("change id must be a string")
-        if not self.change_id.strip():
-            raise WriteSetError("change id must be non-empty")
+        _validate_change_id(self.change_id)
 
         tasks = tuple(self.tasks)
         orders = tuple(task.order for task in tasks)
@@ -87,6 +73,92 @@ class ChangeWriteSet:
                     seen.add(write)
                     result.append(write)
         return tuple(result)
+
+
+@dataclass(frozen=True, slots=True)
+class ContractEvolutionWriteSet:
+    """Exact native contract targets for a separate contract-evolution operation."""
+
+    change_id: str
+    writes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        _validate_change_id(self.change_id)
+        object.__setattr__(
+            self,
+            "writes",
+            _canonical_writes(
+                self.writes,
+                label="contract-evolution target",
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorizedTarget:
+    """One implementation target resolved against fresh canonical contracts."""
+
+    path: str
+    owner_id: str
+    effective_context_identity: str
+
+
+@dataclass(frozen=True, slots=True)
+class ImplementationAuthorization:
+    """Fresh canonical authorization result for one implementation operation."""
+
+    change_id: str
+    tasks: tuple[TaskWriteSet, ...]
+    targets: tuple[AuthorizedTarget, ...]
+    contract_graph_identity: str
+
+    @property
+    def writes(self) -> tuple[str, ...]:
+        """Return exact authorized implementation paths in canonical order."""
+
+        return tuple(target.path for target in self.targets)
+
+
+@dataclass(frozen=True, slots=True)
+class ContractEvolutionAuthorization:
+    """Fresh canonical authorization result for contract evolution only."""
+
+    change_id: str
+    targets: tuple[str, ...]
+    contract_graph_identity: str
+
+
+def _canonical_writes(
+    writes: tuple[str, ...],
+    *,
+    label: str,
+) -> tuple[str, ...]:
+    values = tuple(writes)
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for write in values:
+        if not isinstance(write, str):
+            raise TypeError(f"{label}s must be strings")
+        try:
+            canonical = normalize_repo_path(write)
+        except RepositoryPathError as exc:
+            raise WriteSetError(str(exc)) from exc
+        if canonical != write:
+            raise WriteSetError(
+                f"{label} must use canonical repository syntax: {write!r}"
+            )
+        if write in seen:
+            raise WriteSetError(f"{label} is duplicated: {write!r}")
+        seen.add(write)
+        normalized.append(write)
+    return tuple(normalized)
+
+
+def _validate_change_id(value: str) -> None:
+    if not isinstance(value, str):
+        raise TypeError("change id must be a string")
+    if not value.strip():
+        raise WriteSetError("change id must be non-empty")
 
 
 def _validate_optional_identity(value: str | None, label: str) -> None:

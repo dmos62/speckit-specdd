@@ -105,13 +105,8 @@ def _refresh_boundary(
     *,
     require_targets: bool,
 ) -> dict[str, object] | None:
-    if not targets:
+    if not targets and not require_targets:
         output.unlink(missing_ok=True)
-        if require_targets:
-            raise WorkflowGateError(
-                "Task-stage SpecDD validation requires at least one "
-                "exact non-spec implementation target"
-            )
         return None
 
     schema = load_schema(root)
@@ -122,6 +117,7 @@ def _refresh_boundary(
         feature=feature,
         schema=schema,
         context_fingerprints=fingerprints,
+        allow_empty=not targets,
     )
     write_boundary_context_evidence(
         root,

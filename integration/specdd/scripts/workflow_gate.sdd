@@ -21,6 +21,7 @@ Must:
   Heuristic path discovery is advisory planning input only and never grants implementation authority.
   Context and task-stage boundary refresh record fingerprint-bound effective SpecDD context evidence in current-worktree Git metadata.
   Task-stage boundary refresh uses only exact non-`.sdd` paths from dedicated task `Writes:` metadata.
+  Task-stage refresh may materialize an empty Change Boundary when no ordinary implementation writes are declared; it must not invent scope solely to make validation pass.
   Task-stage validation returns failure status for deterministic `error` or `blocking` diagnostics.
   Multi-owner tasks retain each write target's owning SpecDD authority without a synthetic task-level authority.
   Authorization validates the existing Change Boundary without rewriting it.

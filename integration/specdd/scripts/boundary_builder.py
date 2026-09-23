@@ -43,6 +43,7 @@ def build_change_boundary(
     specdd_framework_version: str | None = None,
     context_fingerprints: dict[str, str] | None = None,
     intended_targets_supported: bool | None = None,
+    allow_empty: bool = False,
 ) -> dict[str, Any]:
     if not feature.strip():
         raise BoundaryError("Feature identifier must not be empty")
@@ -67,7 +68,7 @@ def build_change_boundary(
             continue
         normalized.setdefault(target.path, target)
 
-    if not had_input:
+    if not had_input and not allow_empty:
         raise BoundaryError("At least one target path is required")
 
     cli_version = cli_version or specdd_cli_version(root, executable, runner)
