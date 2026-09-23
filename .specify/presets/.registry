@@ -4,7 +4,7 @@
     "specdd-bridge": {
       "version": "0.1.0",
       "source": "local",
-      "manifest_hash": "sha256:119d33a7b9e4df3619c6573cd478e0792eb969ed6e1c19fd81b803de90c0720f",
+      "manifest_hash": "sha256:24b59f568764229d4902f2a7a126bce8e7c1fce98ec702c03aefabf8abe4b294",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -21,7 +21,7 @@
           "speckit-converge"
         ]
       },
-      "installed_at": "2026-09-22T18:02:49.186305+00:00"
+      "installed_at": "2026-09-23T13:47:45.099672+00:00"
     }
   }
 }

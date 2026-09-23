@@ -26,16 +26,21 @@ Spec Kit tasks are not synchronized with SpecDD `Tasks:` entries.
 | Component | Requirement |
 | --- | --- |
 | Node.js | 22+ |
-| Spec Kit | `1.0.7` |
+| Spec Kit | `1.0.10` |
 | Spec Kit integration | `codex` |
-| SpecDD CLI | `1.1.1` |
+| Stable upstream SpecDD CLI baseline | `1.1.1` |
+| Temporary resolver provider | `specdd` package `1.2.0` from `dmos62/specdd-cli` branch `feature/resolve-intended-targets` |
 | SpecDD framework | `1.5` |
 
-The exercised 2026-09-17 host was Windows 10 `10.0.19045` on AMD64 with Python `3.12.11`. Those observations are test evidence, not broader compatibility claims.
+The stable compatibility baseline was re-checked on 2026-09-23.
 
-## Install
+Upstream SpecDD CLI `1.1.1` does not expose the typed `--file`, `--folder`, and `--sdd-file` resolver transport required for pre-creation target resolution. Development bootstrap therefore installs the temporary provider package reporting `1.2.0`. Bridge runtime behavior detects the resolver capability itself rather than treating package version `1.2.0` as the semantic contract.
 
-Run:
+The temporary provider can be removed when a stable upstream SpecDD CLI exposes equivalent intended-target behavior and passes the focused parity and authority tests.
+
+## Development install
+
+From a bridge checkout:
 
     bash scripts/bootstrap.sh
 
@@ -43,7 +48,37 @@ Then verify without intentionally changing repository state:
 
     bash scripts/bootstrap.sh --check
 
+Bootstrap pins the tested development toolchain and delegates bridge materialization to the same thin installer used by the packaging tests:
+
+    bash scripts/install.sh --source .
+
 Development procedures are in [docs/development.md](docs/development.md).
+
+## Distribution model
+
+Spec Kit `1.0.10` can install extensions and presets from remote archives and can install complete workflow packages from remote archives. Project workflow overlays are different: `workflow overlay add` accepts a local overlay file, and bundles do not package project overlays as a component.
+
+The bridge therefore does not use a native bundle as its current distribution unit. The selected P2 model is one thin installer that obtains one immutable bridge archive, then delegates installation to the native extension, preset, integration, and workflow-overlay commands.
+
+The installer accepts a local checkout or archive for development and an immutable GitHub tag, 40-character commit, or release archive URL for consumer packaging tests:
+
+    bash scripts/install.sh --source .
+
+For an immutable remote release, run the installer script from the same immutable release and pass its archive URL. Until the repository owner and release location are finalized, the command shape is:
+
+    curl -fsSL "https://raw.githubusercontent.com/<owner>/speckit-boundary/<tag>/scripts/install.sh" |
+      bash -s -- --source "https://github.com/<owner>/speckit-boundary/archive/refs/tags/<tag>.tar.gz"
+
+Mutable branch archives such as `refs/heads/main` are rejected.
+
+Installed state can be checked or removed through the same script:
+
+    bash scripts/install.sh --check
+    bash scripts/install.sh --remove
+
+Spec Kit `1.0.10` does not preserve one sufficient immutable source identity for this composition: extracted extension and preset installs are recorded as local component state, while the project overlay is copied separately. A downstream repository therefore needs one small committed source/version pin for reproducibility. Defining that committed pin and the complete fresh-clone experience remains part of the downstream-user work.
+
+The current remote archive path proves installation and removal behavior. It is not yet the final downstream runtime: the structural workflow shell steps still reference canonical bridge-development paths. Making all runtime assets self-contained in installed state is the next packaging task.
 
 ## Canonical source and generated state
 
@@ -73,7 +108,7 @@ Authorization fresh-resolves those targets and rejects governing-contract drift 
 
 An unmarked multi-owner task remains coordinated across its owning domains. When one task intentionally performs all writes under one authority, task text uses `SPECDD_AUTHORITY:` and validation fresh-resolves non-owning `Can modify` permission while preserving each target's original owner.
 
-Pinned SpecDD CLI `1.1.1` resolves existing targets only. Missing intended implementation targets remain `UNRESOLVED_TARGET` with `INTENDED_TARGET_UNSUPPORTED` rather than receiving locally inferred authority.
+Resolver capability determines pre-creation behavior. When complete typed intended-target support is unavailable, missing intended implementation paths remain `INTENDED_TARGET_UNSUPPORTED` rather than receiving locally inferred authority.
 
 Successful authorization stores three operation-evidence documents in current-worktree Git metadata:
 
@@ -160,6 +195,7 @@ Changed `.sdd`, bootstrap-control, Change Boundary, context-fingerprint, or Git-
 | --- | --- |
 | `INVALID_TARGET` | Input cannot identify a valid repository target. |
 | `UNRESOLVED_TARGET` | A target lacks trustworthy current authority projection. |
+| `INTENDED_TARGET_UNSUPPORTED` | The active resolver lacks complete typed intended-target transport. |
 | `RESOLUTION_FAILED` | SpecDD resolution failed or returned unusable output. |
 | `AMBIGUOUS_AUTHORITY` | Multiple resolved specifications claim ownership. |
 | `MULTI_AUTHORITY_TASK` | One task contains targets owned by several authority domains. |
@@ -178,6 +214,6 @@ Changed `.sdd`, bootstrap-control, Change Boundary, context-fingerprint, or Git-
 
 - [docs/spec.md](docs/spec.md): concise design overview with links to focused architecture, lifecycle, and v0.1 acceptance documents.
 - [docs/change-boundary.md](docs/change-boundary.md): boundary, baseline, authorization, and lifecycle evidence semantics.
-- [docs/development.md](docs/development.md): development environment and maintenance.
+- [docs/development.md](docs/development.md): development environment, packaging checks, and maintenance.
 - [docs/TECH-DEBT.md](docs/TECH-DEBT.md): unresolved correctness and maintainability risks.
 - [docs/TODO.md](docs/TODO.md): active implementation work.

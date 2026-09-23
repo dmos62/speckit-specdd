@@ -6,6 +6,7 @@ from pathlib import Path
 from preset_test_support import (
     EXTENSION_ROOT,
     PRESET_ROOT,
+    SPECKIT_VERSION,
     WORKFLOW_OVERLAY_PATH,
     command_available,
     require_success,
@@ -61,8 +62,10 @@ class PresetInstallTests(unittest.TestCase):
     def test_local_install_materializes_codex_commands_and_hooks(self):
         version = run_command(PRESET_ROOT, "specify", "--version")
         require_success(self, version)
-        if "1.0.7" not in version.stdout + version.stderr:
-            self.skipTest("Preset composition smoke requires Spec Kit 1.0.7")
+        if SPECKIT_VERSION not in version.stdout + version.stderr:
+            self.skipTest(
+                f"Preset composition smoke requires Spec Kit {SPECKIT_VERSION}"
+            )
 
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()

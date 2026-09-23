@@ -10,13 +10,18 @@ References:
   ./docs/spec.md
   ./docs/change-boundary.sdd
   ./docs/development.md
+  ./scripts/scripts.sdd
   ./integration/specdd/extension.sdd
   ./integration/specdd/workflow-overlay.sdd
   ./integration/specdd-preset/specdd-preset.sdd
 
 Must:
   Explain the Spec Kit change-lifecycle role and SpecDD persistent-system role before command-level usage.
-  Installation guidance uses repository bootstrap and identifies `codex` as the registrar-backed Spec Kit integration required by pinned Spec Kit `1.0.7`.
+  Installation guidance distinguishes repository development bootstrap from the thin archive installer selected for Spec Kit `1.0.10`.
+  Installation guidance identifies `codex` as the registrar-backed Spec Kit integration required by the tested setup.
+  Installation guidance distinguishes upstream SpecDD CLI `1.1.1` from the temporary typed intended-target provider package used until upstream exposes equivalent resolver capability.
+  Explain that Spec Kit `1.0.10` can remotely install extensions and presets but project workflow overlays still require local materialization, so the current distribution decision uses one thin installer rather than a native bundle.
+  Explain that direct extracted component installation and workflow-overlay state do not preserve one sufficient immutable distribution source, so downstream reproducibility requires a separate committed source/version pin.
   Canonical bridge source remains distinct from generated extension, preset, command, workflow, feature-boundary, context-fingerprint, and authorization-snapshot state.
   Describe the Change Boundary as refreshable, rebuildable, feature-scoped ownership context rather than another source of truth.
   Explain that boundary refresh records fingerprint-bound effective SpecDD context and authorization rejects governing-contract drift before implementation.
@@ -31,6 +36,7 @@ Must:
 Must not:
   Present generated Spec Kit or SpecDD integration state as canonical bridge source.
   Present changed `.sdd` state, refreshed Change Boundary state, or refreshed context fingerprints as retroactive authority for implementation in the same operation.
+  Present the current archive-install proof as a complete downstream runtime until installed runtime assets are self-contained.
 
 Done when:
-  A new user can install the bridge, understand the responsibility split, distinguish ownership from modification permission, understand governing-context freshness, distinguish current boundary context from historical authorization evidence, and follow the authority-aware workflow.
+  A new user can understand the responsibility split, distinguish development bootstrap from the selected distribution model, distinguish ownership from modification permission, understand governing-context freshness, distinguish current boundary context from historical authorization evidence, and follow the authority-aware workflow.

@@ -1,7 +1,7 @@
 Spec: Development Setup Guide
 
 Purpose:
-  Document the reproducible local environment and generated-state boundaries used to develop the Spec Kit and SpecDD integration.
+  Document the reproducible local environment, packaging path, and generated-state boundaries used to develop the Spec Kit and SpecDD integration.
 
 Owns:
   ./development.md
@@ -11,12 +11,17 @@ References:
   ../integration/specdd/scripts/workflow_gate.sdd
 
 Must:
-  Development guidance records the pinned tool versions used by repository bootstrap.
+  Development guidance records the tested Spec Kit `1.0.10`, upstream SpecDD CLI `1.1.1`, and SpecDD framework `1.5` baseline used by repository bootstrap.
+  Development guidance identifies the temporary typed intended-target provider package separately from the stable upstream SpecDD CLI baseline and states its removal condition.
   Development guidance identifies the supported registrar-backed Spec Kit integration used for local bridge execution.
+  Development guidance explains that bootstrap delegates bridge materialization to the thin installer.
+  Development guidance explains why Spec Kit `1.0.10` workflow overlays require thin-installer handling rather than native bundle-only distribution.
+  Development guidance distinguishes local checkout installation from immutable GitHub archive installation.
+  Development guidance records that direct extracted component and overlay state is insufficient as a durable immutable source pin.
   Generated Spec Kit command, workflow-overlay, feature boundary, and authorization-snapshot state remains distinct from canonical bridge source under `../integration/`.
   Migration between active integrations uses supported Spec Kit commands rather than manual generated-state edits.
   Structural workflow enforcement and agent-facing lifecycle hooks have distinct documented responsibilities.
   Development guidance explains that successful authorization records immutable operation evidence in current-worktree Git metadata and verification consumes that evidence.
 
 Done when:
-  A clean development host can reproduce the supported local setup and understand the generated authority state by following the guide and repository bootstrap.
+  A clean development host can reproduce the supported local setup, exercise the selected packaging path, and understand the generated authority state by following the guide and repository bootstrap.

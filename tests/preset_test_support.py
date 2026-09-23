@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -12,7 +13,13 @@ WORKFLOW_OVERLAY_PATH = (
     / "workflow-overlay.yml"
 )
 BOOTSTRAP_PATH = REPO_ROOT / "scripts" / "bootstrap.sh"
+INSTALLER_PATH = REPO_ROOT / "scripts" / "install.sh"
 CODEX_SKILLS_DIR = Path(".agents") / "skills"
+
+SPECKIT_VERSION = "1.0.10"
+SPECDD_UPSTREAM_CLI_VERSION = "1.1.1"
+SPECDD_PROVIDER_VERSION = "1.2.0"
+SPECDD_FRAMEWORK_VERSION = "1.5"
 
 
 def command_available(name: str) -> bool:
@@ -55,7 +62,12 @@ def skill_body(content: str) -> str:
 def run_command(
     root: Path,
     *args: str,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    process_env = os.environ.copy()
+    if env:
+        process_env.update(env)
+
     return subprocess.run(
         list(args),
         cwd=root,
@@ -64,6 +76,7 @@ def run_command(
         text=True,
         encoding="utf-8",
         errors="replace",
+        env=process_env,
     )
 
 

@@ -4,7 +4,7 @@
     "specdd": {
       "version": "0.1.0",
       "source": "local",
-      "manifest_hash": "sha256:23dadf7010b247ac04815ba945ce00666654ce6156145a32cf6c9901c453a262",
+      "manifest_hash": "sha256:a018a53e877a30394669e3e6d8992e12da985c65131b928a3292079a56860e7a",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -16,7 +16,7 @@
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-09-22T18:02:48.785446+00:00"
+      "installed_at": "2026-09-23T13:47:44.655201+00:00"
     }
   }
 }

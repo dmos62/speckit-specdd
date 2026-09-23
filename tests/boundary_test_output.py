@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from boundary_test_support import REPO_ROOT, boundary, validation
+from boundary_test_support import REPO_ROOT, boundary, resolver_payload, validation
 
 
 class BoundaryOutputTests(unittest.TestCase):
@@ -21,17 +21,13 @@ class BoundaryOutputTests(unittest.TestCase):
             "crossBoundary": True,
             "unresolved": [],
         }
-        metadata = boundary._generation_metadata(schema, "1.2.0", "1.5")
+        metadata = boundary._generation_metadata(schema, "1.1.1", "1.5")
         if metadata is not None:
             sample[metadata[0]] = metadata[1]
-
-        with self.assertRaisesRegex(
-            boundary.BoundaryError,
-            "does not satisfy its schema",
-        ):
+        with self.assertRaisesRegex(boundary.BoundaryError, "does not satisfy its schema"):
             boundary.validate_boundary(sample, schema)
 
-    def test_older_non_pinned_resolver_retains_unsupported_intended_targets(self):
+    def test_resolver_without_intended_target_capability_stays_conservative(self):
         schema = boundary.load_schema(REPO_ROOT)
         intended = (
             "src/exact.ts",
@@ -50,14 +46,10 @@ class BoundaryOutputTests(unittest.TestCase):
                 specdd_framework_version="1.5",
                 intended_targets_supported=False,
             )
-
         self.assertEqual([], payload["targets"])
         self.assertEqual([], payload["authorities"])
         self.assertFalse(payload["crossBoundary"])
-        records = {
-            item["normalizedPath"]: item
-            for item in payload["unresolved"]
-        }
+        records = {item["normalizedPath"]: item for item in payload["unresolved"]}
         self.assertEqual(set(intended), set(records))
         message = (
             "SpecDD CLI 1.1.1 does not expose complete typed intended-target "
@@ -65,37 +57,41 @@ class BoundaryOutputTests(unittest.TestCase):
         )
         for path in intended:
             with self.subTest(path=path):
-                self.assertEqual(
-                    "INTENDED_TARGET_UNSUPPORTED",
-                    records[path]["code"],
-                )
+                self.assertEqual("INTENDED_TARGET_UNSUPPORTED", records[path]["code"])
                 self.assertEqual(message, records[path]["message"])
-                self.assertNotIn(
-                    "INTENDED_TARGET_UNSUPPORTED",
-                    records[path]["message"],
-                )
+                self.assertNotIn("INTENDED_TARGET_UNSUPPORTED", records[path]["message"])
 
-    def test_malformed_pinned_resolver_is_infrastructure_failure(self):
+    def test_existing_targets_do_not_require_intended_target_capability(self):
         schema = boundary.load_schema(REPO_ROOT)
+        specs = [{
+            "path": "owner.sdd",
+            "sections": {"Owns": [{"body": ["./src/existing.ts"]}]},
+        }]
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             target = root / "src" / "existing.ts"
             target.parent.mkdir(parents=True)
             target.touch()
 
-            with self.assertRaisesRegex(
-                boundary.BoundaryError,
-                r"SpecDD CLI 1\.2\.0.*pinned SpecDD CLI installation is invalid",
-            ):
-                boundary.build_change_boundary(
-                    root,
-                    ("src/existing.ts",),
-                    feature="sample",
-                    schema=schema,
-                    cli_version="1.2.0",
-                    specdd_framework_version="1.5",
-                    intended_targets_supported=False,
-                )
+            def runner(args, **kwargs):
+                return subprocess.CompletedProcess(args, 0, resolver_payload(specs), "")
+
+            payload = boundary.build_change_boundary(
+                root,
+                ("src/existing.ts",),
+                feature="sample",
+                schema=schema,
+                runner=runner,
+                cli_version="1.1.1",
+                specdd_framework_version="1.5",
+                intended_targets_supported=False,
+            )
+        self.assertEqual([{
+            "path": "src/existing.ts",
+            "primaryAuthority": "owner.sdd",
+            "resolvedSpecs": ["owner.sdd"],
+        }], payload["targets"])
+        self.assertEqual([], payload["unresolved"])
 
     def test_validation_surfaces_intended_target_unsupported_boundary_code(self):
         schema = boundary.load_schema(REPO_ROOT)
@@ -110,7 +106,6 @@ class BoundaryOutputTests(unittest.TestCase):
                 specdd_framework_version="1.5",
                 intended_targets_supported=False,
             )
-
         task = validation.TaskRecord(
             order=0,
             task_id="T001",
@@ -120,12 +115,7 @@ class BoundaryOutputTests(unittest.TestCase):
             spec_targets=(),
             invalid_targets=(),
         )
-        result = validation.validate_feature(
-            payload,
-            [task],
-            stage="implementation",
-        )
-
+        result = validation.validate_feature(payload, [task], stage="implementation")
         diagnostics = [
             item
             for item in result["diagnostics"]
@@ -133,10 +123,7 @@ class BoundaryOutputTests(unittest.TestCase):
             and item.get("boundaryCode") == "INTENDED_TARGET_UNSUPPORTED"
         ]
         self.assertEqual(1, len(diagnostics))
-        self.assertNotIn(
-            "INTENDED_TARGET_UNSUPPORTED",
-            payload["unresolved"][0]["message"],
-        )
+        self.assertNotIn("INTENDED_TARGET_UNSUPPORTED", payload["unresolved"][0]["message"])
 
     def test_intended_target_support_is_detected_from_resolve_help(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -144,10 +131,7 @@ class BoundaryOutputTests(unittest.TestCase):
 
             def supported(args, **kwargs):
                 return subprocess.CompletedProcess(
-                    args,
-                    0,
-                    "--file --folder --sdd-file",
-                    "",
+                    args, 0, "--file --folder --sdd-file", ""
                 )
 
             def unsupported(args, **kwargs):
@@ -170,14 +154,10 @@ class BoundaryOutputTests(unittest.TestCase):
         with contextlib.redirect_stdout(stdout):
             boundary.write_boundary(payload, "-")
         self.assertEqual('{\n  "schemaVersion": 1\n}\n', stdout.getvalue())
-
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "nested" / "boundary.json"
             boundary.write_boundary(payload, output)
-            self.assertEqual(
-                payload,
-                json.loads(output.read_text(encoding="utf-8")),
-            )
+            self.assertEqual(payload, json.loads(output.read_text(encoding="utf-8")))
 
     def test_unresolved_record_uses_schema_field_names(self):
         schema = {
@@ -217,16 +197,11 @@ class BoundaryOutputTests(unittest.TestCase):
 
     def test_generation_metadata_supports_schema_reference(self):
         schema = {
-            "properties": {
-                "generation": {"$ref": "#/$defs/generation"}
-            },
+            "properties": {"generation": {"$ref": "#/$defs/generation"}},
             "$defs": {
                 "generation": {
                     "type": "object",
-                    "required": [
-                        "specddCliVersion",
-                        "specddFrameworkVersion",
-                    ],
+                    "required": ["specddCliVersion", "specddFrameworkVersion"],
                     "properties": {
                         "specddCliVersion": {"type": "string"},
                         "specddFrameworkVersion": {"type": "string"},
@@ -238,11 +213,11 @@ class BoundaryOutputTests(unittest.TestCase):
             (
                 "generation",
                 {
-                    "specddCliVersion": "1.2.0",
+                    "specddCliVersion": "1.1.1",
                     "specddFrameworkVersion": "1.5",
                 },
             ),
-            boundary._generation_metadata(schema, "1.2.0", "1.5"),
+            boundary._generation_metadata(schema, "1.1.1", "1.5"),
         )
 
     def test_feature_boundary_is_ignored_and_untracked(self):
@@ -255,7 +230,6 @@ class BoundaryOutputTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(0, ignored.returncode, ignored.stderr)
-
         tracked = subprocess.run(
             ["git", "ls-files", "specs/*/.specdd/boundary.json"],
             cwd=REPO_ROOT,

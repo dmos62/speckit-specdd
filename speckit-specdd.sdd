@@ -1,6 +1,6 @@
 Spec: Spec Kit × SpecDD Integration Lab
 
-Platform: Node.js 22+/Spec Kit 1.0.7/SpecDD 1.5
+Platform: Node.js 22+/Spec Kit 1.0.10/SpecDD 1.5
 
 Purpose:
   Provide a local integration lab for a thin bridge that projects SpecDD system authority into the Spec Kit change lifecycle without forking, merging, or duplicating either system.
@@ -28,7 +28,8 @@ Must:
   Spec Kit remains authoritative for the change lifecycle and SpecDD remains authoritative for persistent system semantics.
   Bridge-derived state remains reconstructible from canonical Spec Kit and SpecDD artifacts.
   Integration source remains separate from generated or installed upstream state.
-  Compatibility pins stay at Spec Kit `1.0.7`, SpecDD CLI `1.2.0`, and SpecDD framework `1.5` until a deliberate compatibility task changes them.
+  Compatibility baseline stays at Spec Kit `1.0.10`, upstream SpecDD CLI `1.1.1`, and SpecDD framework `1.5` until a deliberate compatibility task changes it.
+  Typed intended-target resolution remains an explicit temporary provider capability gap until a stable upstream SpecDD CLI exposes equivalent semantics.
 
 Must not:
   Patch files under `.specify/`, `.specify-agent/`, or `.specdd/` to implement bridge behavior.

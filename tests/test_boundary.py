@@ -27,7 +27,7 @@ def semantic_boundary():
         "crossBoundary": False,
         "unresolved": [],
         "generation": {
-            "specddCliVersion": "1.2.0",
+            "specddCliVersion": "1.1.1",
             "specddFrameworkVersion": "1.5",
         },
     }

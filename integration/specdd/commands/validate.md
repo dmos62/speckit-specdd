@@ -55,9 +55,10 @@ diagnostics.
    - If `TASK_FILE` does not exist, stop and instruct the user to generate tasks with `/speckit.tasks`.
 
 5. Select validation strictness:
-   - `planning`: unresolved or invalid declared-authority scope is advisory while implementation paths may still be emerging.
-   - `tasks`: unresolved, stale, or invalid declared-authority scope is an error that must be corrected before implementation
-     planning is considered complete.
+   - `planning`: unresolved or invalid declared-authority scope is advisory while implementation paths may still be
+     emerging.
+   - `tasks`: unresolved, stale, or invalid declared-authority scope is an error that must be corrected before
+     implementation planning is considered complete.
    - `implementation`: stale scope blocks, and unknown, conflicting, or unpermitted write authority produces a blocking
      `AUTHORITY_VIOLATION`.
    - If `$ARGUMENTS` does not select a stage, use `tasks`.
@@ -76,9 +77,10 @@ diagnostics.
    `Can modify` from resolver output.
 
 7. Interpret deterministic diagnostics:
-   - `UNRESOLVED_TARGET`: a boundary or task target does not currently have trustworthy authority projection. If its
-     message begins with `INTENDED_TARGET_UNSUPPORTED`, pinned SpecDD CLI `1.1.1` cannot resolve the non-existent target;
-     this is a bridge limitation rather than evidence that SpecDD forbids creation.
+   - `UNRESOLVED_TARGET`: a boundary or task target does not currently have trustworthy authority projection.
+   - `INTENDED_TARGET_UNSUPPORTED`: the active SpecDD resolver lacks the complete `--file`, `--folder`, and `--sdd-file`
+     transport needed to resolve that missing target before creation. This is a resolver-capability limitation rather
+     than evidence that SpecDD forbids creation.
    - `MULTI_AUTHORITY_TASK`: one task writes targets owned by more than one primary authority. This remains a structural
      finding and does not by itself imply invalidity.
    - `AUTHORITY_VIOLATION`: at task or implementation strictness, a declared `SPECDD_AUTHORITY:` is invalid, conflicting,
@@ -134,8 +136,8 @@ diagnostics.
 ## Output
 
 Report, in task order: stage, task identity, write targets, owner domains, declared `SPECDD_AUTHORITY:` when present,
-`operationAuthorities`, `modificationPermissions`, deterministic classification, evolution projection, diagnostics, and authority-local
-decomposition guidance when useful.
+`operationAuthorities`, `modificationPermissions`, deterministic classification, evolution projection, diagnostics, and
+authority-local decomposition guidance when useful.
 
 If any blocking diagnostic exists, state that implementation must not proceed under the current boundary. Keep
 deterministic findings distinct from architectural interpretation.
@@ -146,5 +148,6 @@ deterministic findings distinct from architectural interpretation.
 - Never rewrite Spec Kit tasks automatically.
 - Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries.
 - Never infer ownership or non-owning modification permission from descriptive task wording, directory names, proximity,
-  or non-existent target ownership patterns; only the explicit `SPECDD_AUTHORITY:` marker selects a non-owning task authority.
+  or non-existent target ownership patterns; only the explicit `SPECDD_AUTHORITY:` marker selects a non-owning task
+  authority.
 - Never relax SpecDD ownership or write authority to make a task valid.

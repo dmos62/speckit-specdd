@@ -46,11 +46,11 @@ Must:
   SpecDD resolution comes from the installed SpecDD CLI.
   Missing required external executables fail as infrastructure errors instead of resolver, lint, or authority diagnostics.
   Existing resolver targets preserve unflagged `specdd resolve` behavior.
-  The pinned SpecDD CLI exposes `--file`, `--folder`, and `--sdd-file`; intended targets use those typed resolver paths without filesystem probes or local resolution emulation.
-  SpecDD CLI `1.2.0` without the complete typed intended-target flag set fails boundary generation as an infrastructure/toolchain error rather than entering compatibility fallback.
-  Missing `.sdd` paths use `--sdd-file`, missing paths with a trailing separator use `--folder`, and other missing paths use `--file`.
+  Missing targets use `--file`, `--folder`, or `--sdd-file` only when the active resolver exposes the complete typed intended-target capability.
+  Resolver capability, not a historical package version, determines whether intended targets can be resolved before creation.
+  A resolver without complete typed intended-target support leaves missing targets as conservative `INTENDED_TARGET_UNSUPPORTED` records instead of probing the filesystem or emulating SpecDD resolution.
+  Missing `.sdd` paths use `--sdd-file`, missing paths with a trailing separator use `--folder`, and other missing paths use `--file` when typed intended-target transport is available.
   Exact missing `Owns` paths match only their exact intended target while their file-versus-directory shape is unknowable; descendant ownership is not inferred from filesystem absence.
-  When a non-pinned resolver lacks typed intended-target support, intended targets remain conservative unresolved records with `INTENDED_TARGET_UNSUPPORTED`.
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Change Boundary validation rejects cross-field inconsistency before generated or loaded boundary state can influence validation, authorization, or verification.

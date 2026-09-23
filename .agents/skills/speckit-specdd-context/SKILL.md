@@ -24,9 +24,11 @@ Each successful refresh also records deterministic effective-SpecDD context fing
 metadata. That refreshable evidence is bound to the exact generated Change Boundary and lets authorization detect
 governing contract drift without copying persistent rule text into `boundary.json`.
 
-Pinned SpecDD CLI `1.1.1` requires resolver targets to exist. The adapter therefore retains a non-existent intended
-target as `UNRESOLVED_TARGET` with an `INTENDED_TARGET_UNSUPPORTED` message instead of locally inventing pre-creation
-authority. This is a bridge limitation, not a statement that SpecDD forbids creating the file.
+The stable upstream SpecDD CLI baseline is `1.1.1`, which does not expose the bridge's required typed intended-target
+transport. Development bootstrap therefore currently installs a temporary provider package reporting `1.2.0`. Bridge
+runtime behavior does not rely on that provider version: it checks whether the active resolver exposes the complete
+`--file`, `--folder`, and `--sdd-file` capability. Without that capability, non-existent intended targets remain
+`INTENDED_TARGET_UNSUPPORTED` rather than receiving locally inferred pre-creation authority.
 
 ## External dependency failures
 
@@ -66,9 +68,11 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    - Ignore root `.specdd/` bootstrap control paths during Change Boundary discovery. Their edit authority is enforced
      separately by authorization and verification.
    - Do not derive targets from symbols, URLs, libraries, headings, similar filenames, or semantic guesses.
-   - Keep intended ordinary paths even when they do not exist yet. Under pinned SpecDD CLI `1.1.1`, the adapter retains
-     them as unresolved with an `INTENDED_TARGET_UNSUPPORTED` message because `specdd resolve` cannot authorize a
-     missing target.
+   - Keep intended ordinary paths even when they do not exist yet.
+   - When the active resolver exposes `--file`, `--folder`, and `--sdd-file`, the adapter passes the intended target
+     type through to SpecDD resolution.
+   - When that complete capability is unavailable, retain missing paths as unresolved
+     `INTENDED_TARGET_UNSUPPORTED` records instead of inferring authority.
    - Preserve first-seen order while removing exact duplicate path strings.
 
 5. If no candidate target exists:
@@ -110,6 +114,7 @@ when reached), report it as an infrastructure failure and stop. Preserve the too
    Distinguish:
    - `INVALID_TARGET`: input cannot identify a repository target.
    - `UNRESOLVED_TARGET`: valid input cannot currently resolve to one primary authority.
+   - `INTENDED_TARGET_UNSUPPORTED`: the active resolver lacks complete typed intended-target transport.
    - `RESOLUTION_FAILED`: SpecDD resolver execution or output failed.
    - `AMBIGUOUS_AUTHORITY`: multiple resolved specs claim ownership.
 

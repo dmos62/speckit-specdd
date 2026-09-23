@@ -10,8 +10,7 @@ from typing import Mapping, Sequence
 
 from boundary_types import BoundaryError, RunCommand
 
-PINNED_SPECDD_CLI_VERSION = "1.2.0"
-_INTENDED_TARGET_FLAGS = ("--file", "--folder", "--sdd-file")
+INTENDED_TARGET_FLAGS = ("--file", "--folder", "--sdd-file")
 
 
 def _run(
@@ -60,7 +59,7 @@ def _locate_executable(executable: str) -> str:
         raise BoundaryError(
             "Required SpecDD CLI executable was not found: "
             f"{executable}. Run `bash scripts/bootstrap.sh` to install "
-            "the pinned SpecDD CLI, or restore it to PATH before retrying."
+            "the tested SpecDD provider, or restore it to PATH before retrying."
         )
     return located
 
@@ -84,23 +83,7 @@ def specdd_resolve_supports_intended_targets(
             + (f": {detail}" if detail else "")
         )
     output = result.stdout + "\n" + result.stderr
-    return all(flag in output for flag in _INTENDED_TARGET_FLAGS)
-
-
-def validate_intended_target_capabilities(
-    cli_version: str,
-    supported: bool,
-) -> None:
-    if supported or cli_version != PINNED_SPECDD_CLI_VERSION:
-        return
-
-    flags = ", ".join(_INTENDED_TARGET_FLAGS)
-    raise BoundaryError(
-        f"SpecDD CLI {PINNED_SPECDD_CLI_VERSION} is installed but its "
-        "resolver does not expose the complete typed intended-target flag "
-        f"set ({flags}). The pinned SpecDD CLI installation is invalid; "
-        "run `bash scripts/bootstrap.sh` to repair it."
-    )
+    return all(flag in output for flag in INTENDED_TARGET_FLAGS)
 
 
 def _package_version(path: Path) -> str | None:
@@ -178,7 +161,7 @@ def specdd_cli_version(
     raise BoundaryError(
         "SpecDD CLI is present, but its installed version could not be "
         "verified from package metadata or npm global package state. "
-        "Run `bash scripts/bootstrap.sh --check` to repair the pinned toolchain."
+        "Run `bash scripts/bootstrap.sh --check` to repair the tested toolchain."
     )
 
 

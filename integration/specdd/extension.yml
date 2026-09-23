@@ -13,7 +13,7 @@ extension:
   effect: read-write
 
 requires:
-  speckit_version: "==1.0.7"
+  speckit_version: "==1.0.10"
   tools:
     - name: specdd
       version: "==1.2.0"

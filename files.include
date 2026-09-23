@@ -51,66 +51,37 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# Typed intended-path resolution remains active against the fork-backed SpecDD CLI 1.2.0 pin.
-@# Exact missing ownership paths stay non-recursive until directory shape is knowable.
-@# Keep the schema, boundary/runtime implementation, bootstrap, and focused regression tests.
-@# The completed upstream handoff is excluded until published-package migration becomes active work.
+@# P3 self-contained runtime packaging is active.
+@# Keep canonical runtime scripts, command contracts, installer/bootstrap source,
+@# manifests, workflow source, installation tests, and user/developer docs in context.
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
-@# User-facing design prose stays out of the active context until published-package migration needs it.
-@globexclude README.md
+@# Broader architecture prose remains outside the active runtime-packaging work.
 @globexclude docs/change-boundary.md
-@globexclude docs/development.md
 @globexclude docs/spec.md
 @globexclude docs/spec-architecture.md
 @globexclude docs/spec-lifecycle.md
 @globexclude docs/spec-v0.1.md
 @globexclude docs/TECH-DEBT.md
-@globexclude integration/specdd/commands/context.md
-@globexclude integration/specdd/commands/validate.md
-@globexclude integration/specdd/commands/authorize.md
-@globexclude integration/specdd-preset/commands/plan.md
-@globexclude integration/specdd-preset/commands/tasks.md
+@globexclude docs/TECH-DEBT.sdd
 
-@# Larger downstream suites remain excluded while published-package migration is pending.
-@# Focused intended-target ownership, permission, and authorization coverage remains in boundary tests.
+@# Detailed authority fixtures and low-level projection tests remain outside the
+@# immediate packaging focus; reinclude them if runtime changes reach those contracts.
+@globexclude tests/fixtures/specdd-two-domain/**
+@globexclude tests/test_boundary.py
+@globexclude tests/boundary_test_*.py
 @globexclude tests/test_change_boundary_schema.py
-@globexclude tests/boundary_test_paths.py
-@globexclude tests/test_workflow_permissions.py
-@globexclude tests/workflow_test_gate.py
+@globexclude tests/test_validation.py
 @globexclude tests/validation_test_engine.py
 @globexclude tests/validation_test_fixture.py
 @globexclude tests/validation_test_support.py
 @globexclude tests/validation_test_tasks.py
+@globexclude tests/test_workflow_permissions.py
 
-@# Real fixture integration remains exercised by dev-scripts but is omitted from passive context.
-@globexclude tests/boundary_test_fixture.py
-
-@# Actual-write verification implementation and command guidance are stable and outside the intended-path focus.
-@globexclude integration/specdd/scripts/verification.py
-@globexclude integration/specdd/scripts/verification_cli.py
-@globexclude integration/specdd/scripts/verification_engine.py
-@globexclude integration/specdd/scripts/verification_git.py
-@globexclude integration/specdd/scripts/verification_types.py
-@globexclude integration/specdd/commands/verify.md
-@globexclude integration/specdd/commands/verify.sdd
-@globexclude integration/specdd-preset/commands/converge.md
-@globexclude integration/specdd-preset/commands/converge.sdd
-
-@# Completed Git verification suites are omitted until verification behavior becomes active work again.
+@# Completed Git verification suites remain omitted until P3 needs to change their
+@# behavioral assertions; verification runtime source itself stays available.
 @globexclude tests/test_verification.py
 @globexclude tests/verification_test_engine.py
 @globexclude tests/verification_test_fixture.py
 @globexclude tests/verification_test_git.py
-
-@# Preset packaging tests remain excluded while resolver and authorization semantics are the active focus.
-@globexclude tests/preset_test_install.py
-@globexclude tests/preset_test_source.py
-@globexclude tests/preset_test_support.py
-@globexclude tests/test_preset.py
-
-@# Static workflow-overlay source coverage and trivial test aggregators are low-value for intended-path resolver work.
-@globexclude tests/workflow_test_source.py
-@globexclude tests/test_workflow.py
-@globexclude tests/test_validation.py
 @endfilegroup

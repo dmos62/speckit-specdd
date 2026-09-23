@@ -3,7 +3,12 @@ import unittest
 from preset_test_support import (
     BOOTSTRAP_PATH,
     EXTENSION_ROOT,
+    INSTALLER_PATH,
     PRESET_ROOT,
+    SPECDD_FRAMEWORK_VERSION,
+    SPECDD_PROVIDER_VERSION,
+    SPECDD_UPSTREAM_CLI_VERSION,
+    SPECKIT_VERSION,
 )
 
 
@@ -22,15 +27,15 @@ class PresetSourceTests(unittest.TestCase):
         )
 
         self.assertIn(
-            'speckit_version: "==1.0.7"',
+            f'speckit_version: "=={SPECKIT_VERSION}"',
             extension,
         )
         self.assertIn(
-            'version: "==1.1.1"',
+            f'version: "=={SPECDD_PROVIDER_VERSION}"',
             extension,
         )
         self.assertIn(
-            'speckit_version: "==1.0.7"',
+            f'speckit_version: "=={SPECKIT_VERSION}"',
             preset,
         )
         self.assertIn(
@@ -52,9 +57,20 @@ class PresetSourceTests(unittest.TestCase):
             )
 
         for declaration in (
-            'readonly SPECKIT_VERSION="1.0.7"',
-            'readonly SPECDD_CLI_VERSION="1.1.1"',
-            'readonly SPECDD_FRAMEWORK_VERSION="1.5"',
+            f'readonly SPECKIT_VERSION="{SPECKIT_VERSION}"',
+            'readonly SPECKIT_TAG="v${SPECKIT_VERSION}"',
+            (
+                "readonly SPECDD_UPSTREAM_CLI_VERSION="
+                f'"{SPECDD_UPSTREAM_CLI_VERSION}"'
+            ),
+            (
+                "readonly SPECDD_COMPAT_CLI_VERSION="
+                f'"{SPECDD_PROVIDER_VERSION}"'
+            ),
+            (
+                "readonly SPECDD_FRAMEWORK_VERSION="
+                f'"{SPECDD_FRAMEWORK_VERSION}"'
+            ),
         ):
             self.assertIn(
                 declaration,
@@ -94,7 +110,7 @@ class PresetSourceTests(unittest.TestCase):
             manifest.count("optional: false"),
         )
 
-    def test_bootstrap_uses_supported_codex_installation(self):
+    def test_bootstrap_uses_shared_codex_installer(self):
         content = BOOTSTRAP_PATH.read_text(
             encoding="utf-8"
         )
@@ -103,19 +119,54 @@ class PresetSourceTests(unittest.TestCase):
             'readonly ACTIVE_INTEGRATION="codex"',
             'readonly ACTIVE_COMMANDS_DIR=".agents/skills"',
             'specify integration switch "$ACTIVE_INTEGRATION" --script ps',
-            "specify extension add integration/specdd --dev --force",
-            "specify preset add --dev integration/specdd-preset --priority 10",
-            "specify workflow overlay add",
+            "bash scripts/install.sh --source .",
         ):
             self.assertIn(
                 marker,
                 content,
             )
 
-        self.assertNotIn(
+        for obsolete in (
+            "specify extension add integration/specdd --dev --force",
+            "specify preset add --dev integration/specdd-preset --priority 10",
+            "specify workflow overlay add integration/specdd/workflow-overlay.yml",
             "--integration generic",
-            content,
+        ):
+            self.assertNotIn(
+                obsolete,
+                content,
+            )
+
+    def test_installer_uses_native_components_and_immutable_remote_sources(self):
+        content = INSTALLER_PATH.read_text(
+            encoding="utf-8"
         )
+
+        for marker in (
+            'readonly SPECKIT_VERSION="1.0.10"',
+            'readonly ACTIVE_INTEGRATION="codex"',
+            "archive/refs/tags/",
+            "releases/download/",
+            "specify extension add",
+            "specify preset add",
+            "specify workflow overlay add",
+            "specify workflow overlay remove",
+            "specify integration switch",
+        ):
+            self.assertIn(
+                marker,
+                content,
+            )
+
+        for forbidden in (
+            "npm install",
+            "pip install",
+            "specify bundle install",
+        ):
+            self.assertNotIn(
+                forbidden,
+                content,
+            )
 
     def test_augmentations_cover_authority_aware_lifecycle(self):
         plan = (
