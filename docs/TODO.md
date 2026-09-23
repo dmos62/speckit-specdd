@@ -8,21 +8,7 @@ Work in the order below unless a newly discovered correctness issue requires rep
 
 ## P5 — Introduce the native Boundary contract engine
 
-Build the native persistent-contract model before mechanically renaming the old bridge.
-
-### P5.1 — Establish provider-neutral core source boundaries
-
-- [ ] Create a provider-neutral Python package under a layout such as `src/boundary/`.
-- [ ] Separate:
-  - repository/path utilities;
-  - contract parsing and graph construction;
-  - target-context projection;
-  - authorization;
-  - verification;
-  - CLI entry points.
-- [ ] Keep Spec Kit, Codex, and SpecDD code outside the core package.
-- [ ] Keep modules below 250 lines and split by responsibility.
-- [ ] Do not introduce dynamic provider/plugin registration.
+The provider-neutral core package is established under `src/boundary/`, with separate repository/path, contract, target-context, authorization, verification, and CLI boundaries. Provider-specific implementations remain outside that package.
 
 ### P5.2 — Implement native contract parsing
 

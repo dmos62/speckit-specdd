@@ -7,6 +7,7 @@ Purpose:
 
 Structure:
   ./README.md: User-facing Boundary overview, target architecture, current adapter status, and development entry points
+  ./src/boundary: Provider-neutral Boundary core source
   ./integration: Current Spec Kit and SpecDD adapter source pending migration
   ./fixtures: Integration-test systems used to exercise current and migration behavior
   ./docs: Boundary design, technical debt, migration TODO, and development guidance
@@ -14,6 +15,7 @@ Structure:
 
 Owns:
   Repository-wide Boundary architecture and source/generated-state separation.
+  ./src/boundary/**
   ./dev-scripts.include
   ./docs/TODO.md
   ./integration/**/.gitkeep
@@ -26,6 +28,7 @@ References:
 
 Must:
   Boundary product semantics remain independent of Spec Kit, SpecDD, and Codex.
+  Provider-neutral core source under ./src/boundary keeps change-system, contract-provider, and agent-runtime implementation details outside the core package.
   Spec Kit is treated as the current change-system adapter rather than the product change model.
   SpecDD is treated as temporary migration compatibility rather than the target persistent-contract model.
   Codex is treated as the current agent-runtime adapter rather than canonical instruction packaging.

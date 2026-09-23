@@ -62,6 +62,19 @@
 @globexclude docs/spec-v0.1.md
 @globexclude docs/architecture-exploration-guidance.md
 
+@# P5 native-contract work now focuses on the provider-neutral core, contract
+@# specification, architecture, TODO, and focused native tests.
+@globexclude README.md
+@globexclude README.sdd
+@globexclude docs/TECH-DEBT.md
+@globexclude docs/TECH-DEBT.sdd
+@globexclude docs/spec-agent-instructions.md
+@globexclude docs/spec-authorization.md
+@globexclude docs/spec-lifecycle.md
+@globexclude docs/change-boundary.sdd
+@globexclude docs/development.sdd
+@globexclude files.sdd
+
 @# P5 is provider-neutral native contract work. Legacy bridge runtime,
 @# packaging, and operational guides remain baseline code rather than design inputs.
 @globexclude integration/specdd/**
