@@ -8,13 +8,6 @@ The native path now provides deterministic canonical contract discovery, parsing
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
-## Verification regression cleanup
-
-- [ ] Update `tests/test_operation_record.py::test_atomic_replace_failure_preserves_prior_record` to close its predecessor epoch before fault-injecting successor storage replacement. Preserve the verified-before-reauthorization invariant and the assertion that failed atomic replacement leaves prior evidence usable.
-
-Done when:
-  The complete test suite passes without weakening verified-epoch replacement semantics.
-
 ## P7 — Build the progressive agent instruction architecture
 
 ### P7.1 — Create canonical Boundary skills

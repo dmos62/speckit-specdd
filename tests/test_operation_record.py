@@ -14,6 +14,7 @@ from boundary.authorization import (
     authorize_implementation_operation,
     current_operation_path,
 )
+from boundary.verification import finalize_operation_verification
 
 
 class OperationRecordTests(unittest.TestCase):
@@ -115,7 +116,7 @@ class OperationRecordTests(unittest.TestCase):
             for item in document["gitBaseline"]["dirtyPathStates"]
         }
         self.assertTrue(states["docs/note.md"].startswith("file:sha256:"))
-        self.assertEqual("deleted", states["docs/old.md"])
+        self.assertTrue(states["docs/old.md"].startswith("missing:sha256:"))
         self.assertEqual(
             "auth",
             document["authorizedTargets"][0]["owner"],
@@ -155,6 +156,10 @@ class OperationRecordTests(unittest.TestCase):
             authorize_implementation_operation(
                 root,
                 self.implementation_change(),
+                operation_id="operation-1",
+            )
+            finalize_operation_verification(
+                root,
                 operation_id="operation-1",
             )
             path = current_operation_path(root)
