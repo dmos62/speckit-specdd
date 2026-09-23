@@ -201,7 +201,9 @@ def write_consumer_fixture(testcase, root: Path) -> Path:
         encoding="utf-8",
     )
     (feature_dir / "tasks.md").write_text(
-        "# Tasks\n\n- [ ] T001 Update `src/app.py`\n",
+        "# Tasks\n\n"
+        "- [ ] T001 Update application value\n"
+        "  Writes: `src/app.py`\n",
         encoding="utf-8",
     )
 

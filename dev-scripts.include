@@ -1,4 +1,4 @@
-@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest tests.preset_test_distribution.DistributionInstallTests.test_immutable_archive_runs_lifecycle_without_vendored_bridge_source"
+@cli! bash -lic "PYTHONPATH=src:tests uv run --no-project python -m unittest preset_test_distribution.DistributionInstallTests.test_immutable_archive_runs_lifecycle_without_vendored_bridge_source"
+@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_authorization_model.py'"
 @cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_verification.py'"
-@cli! bash -lic "log=\"${TMPDIR:-/tmp}/speckit-specdd-bootstrap-check.log\"; if bash scripts/bootstrap.sh --check >\"$log\" 2>&1; then tail -n 12 \"$log\"; else cat \"$log\"; exit 1; fi"
 @cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"
