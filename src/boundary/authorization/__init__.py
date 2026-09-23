@@ -5,7 +5,12 @@ from .engine import (
     authorize_implementation,
     is_native_contract_path,
 )
-from .git import capture_git_baseline
+from .git import (
+    capture_dirty_path_states,
+    capture_git_baseline,
+    capture_git_head,
+    path_state,
+)
 from .identities import contract_graph_identity, effective_context_identity
 from .model import (
     AuthorizationError,
@@ -18,6 +23,7 @@ from .model import (
     WriteSetError,
 )
 from .record import (
+    CarriedForwardState,
     DirtyPathState,
     GitBaseline,
     OperationRecord,
@@ -27,11 +33,18 @@ from .service import (
     authorize_contract_evolution_operation,
     authorize_implementation_operation,
 )
-from .storage import current_operation_path, write_current_operation
+from .storage import (
+    archive_operation,
+    current_operation_path,
+    operation_archive_path,
+    read_current_operation,
+    write_current_operation,
+)
 
 __all__ = [
     "AuthorizationError",
     "AuthorizedTarget",
+    "CarriedForwardState",
     "ChangeWriteSet",
     "ContractEvolutionAuthorization",
     "ContractEvolutionWriteSet",
@@ -42,14 +55,20 @@ __all__ = [
     "OperationTargetEvidence",
     "TaskWriteSet",
     "WriteSetError",
+    "archive_operation",
     "authorize_contract_evolution",
     "authorize_contract_evolution_operation",
     "authorize_implementation",
     "authorize_implementation_operation",
+    "capture_dirty_path_states",
     "capture_git_baseline",
+    "capture_git_head",
     "contract_graph_identity",
     "current_operation_path",
     "effective_context_identity",
     "is_native_contract_path",
+    "operation_archive_path",
+    "path_state",
+    "read_current_operation",
     "write_current_operation",
 ]

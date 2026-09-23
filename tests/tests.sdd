@@ -12,6 +12,7 @@ Owns:
   ./test_native_contract_context.py
   ./test_native_contract_cli.py
   ./test_authorization_model.py
+  ./test_authorization_lifecycle.py
   ./test_boundary.py
   ./boundary_test_support.py
   ./boundary_test_paths.py
@@ -53,6 +54,7 @@ Must:
   Native contract graph/context tests cover deterministic indexes, exact and nested ownership, additive applicability, ambiguity rejection, missing intended targets, direct dependency interfaces, semantic provenance, and deterministic projection.
   Native CLI tests cover contract-check diagnostics, multi-target inspection of absent intended targets, stable provenance-rich output, and absence of persisted projections.
   Native authorization-model tests cover canonical explicit task writes, task identity/order preservation, duplicate rejection, and ordered change-level write projection.
+  Native authorization-lifecycle tests cover implementation-before-authorization rejection, verified epoch replacement, scope expansion, exact predecessor carry-forward, concurrent dirty mutation, deletion, staging/index transitions, immutable predecessor archival, and Git HEAD changes.
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Adapter tests preserve path normalization, resolver-backed ownership derivation, deterministic output, and schema validation coverage.
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport whenever the active SpecDD provider exposes the complete intended-target capability.

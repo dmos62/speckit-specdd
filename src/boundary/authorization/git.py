@@ -1,9 +1,11 @@
-"""Git baseline capture for native operation authorization."""
+"""Git baseline and exact path-state capture for native authorization."""
 
 from collections.abc import Sequence
 import hashlib
+import json
 import os
 from pathlib import Path, PurePosixPath
+import stat
 import subprocess
 
 from boundary.repository import RepositoryPathError, normalize_repo_path
@@ -19,15 +21,67 @@ def capture_git_baseline(
 
     root = Path(repository_root)
     return GitBaseline(
-        head=_git_head(root),
-        dirty_path_states=tuple(
-            DirtyPathState(
-                path=path,
-                state=_path_state(root, path),
-            )
-            for path in _dirty_paths(root)
-        ),
+        head=capture_git_head(root),
+        dirty_path_states=capture_dirty_path_states(root),
     )
+
+
+def capture_git_head(
+    repository_root: str | Path,
+) -> str | None:
+    """Return current HEAD, including the unborn-repository case."""
+
+    root = Path(repository_root)
+    result = _run_git(
+        root,
+        ["rev-parse", "--verify", "--quiet", "HEAD"],
+    )
+    if result.returncode == 0 and result.stdout.strip():
+        return result.stdout.strip()
+    if result.returncode == 1 and not (result.stderr or result.stdout).strip():
+        return None
+    detail = " ".join((result.stderr or result.stdout or "").split())
+    raise AuthorizationError(
+        "could not determine Git HEAD"
+        + (f": {detail}" if detail else "")
+    )
+
+
+def capture_dirty_path_states(
+    repository_root: str | Path,
+) -> tuple[DirtyPathState, ...]:
+    """Return exact current states for every dirty Git path."""
+
+    root = Path(repository_root)
+    return tuple(
+        DirtyPathState(
+            path=path,
+            state=path_state(root, path),
+        )
+        for path in _dirty_paths(root)
+    )
+
+
+def path_state(
+    repository_root: str | Path,
+    path: str,
+) -> str:
+    """Identify one path's combined Git index and worktree state."""
+
+    root = Path(repository_root)
+    canonical = normalize_repo_path(path)
+    payload = {
+        "schema": "boundary.git-path-state/v1",
+        "index": _index_state(root, canonical),
+        "worktree": _worktree_state(root, canonical),
+    }
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
 def git_metadata_directory(
@@ -49,22 +103,6 @@ def git_metadata_directory(
     return path.resolve(strict=False)
 
 
-def _git_head(root: Path) -> str | None:
-    result = _run_git(
-        root,
-        ["rev-parse", "--verify", "--quiet", "HEAD"],
-    )
-    if result.returncode == 0 and result.stdout.strip():
-        return result.stdout.strip()
-    if result.returncode == 1 and not (result.stderr or result.stdout).strip():
-        return None
-    detail = " ".join((result.stderr or result.stdout or "").split())
-    raise AuthorizationError(
-        "could not determine authorization-time Git HEAD"
-        + (f": {detail}" if detail else "")
-    )
-
-
 def _dirty_paths(root: Path) -> tuple[str, ...]:
     result = _run_git(
         root,
@@ -79,7 +117,7 @@ def _dirty_paths(root: Path) -> tuple[str, ...]:
     if result.returncode != 0:
         detail = " ".join((result.stderr or result.stdout or "").split())
         raise AuthorizationError(
-            "could not determine authorization-time dirty paths"
+            "could not determine dirty Git paths"
             + (f": {detail}" if detail else "")
         )
 
@@ -101,29 +139,58 @@ def _dirty_paths(root: Path) -> tuple[str, ...]:
     return tuple(sorted(paths))
 
 
-def _path_state(root: Path, path: str) -> str:
+def _index_state(root: Path, path: str) -> tuple[str, ...]:
+    result = _run_git(
+        root,
+        ["ls-files", "--stage", "-z", "--", path],
+    )
+    if result.returncode != 0:
+        detail = " ".join((result.stderr or result.stdout or "").split())
+        raise AuthorizationError(
+            f"could not identify Git index state for {path}"
+            + (f": {detail}" if detail else "")
+        )
+    return tuple(
+        sorted(
+            record
+            for record in result.stdout.split("\0")
+            if record
+        )
+    )
+
+
+def _worktree_state(root: Path, path: str) -> dict[str, str]:
     absolute = root.joinpath(*PurePosixPath(path).parts)
     if not os.path.lexists(absolute):
-        return "deleted"
+        return {"kind": "missing"}
+
     try:
-        if absolute.is_symlink():
+        metadata = absolute.lstat()
+        if stat.S_ISLNK(metadata.st_mode):
             payload = os.readlink(absolute).encode(
                 "utf-8",
                 errors="surrogateescape",
             )
-            kind = "symlink"
-        elif absolute.is_file():
+            return {
+                "kind": "symlink",
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            }
+        if stat.S_ISREG(metadata.st_mode):
             payload = absolute.read_bytes()
-            kind = "file"
-        else:
-            raise AuthorizationError(
-                f"dirty Git path is not a file or symlink: {path}"
-            )
+            executable = bool(metadata.st_mode & 0o111)
+            return {
+                "kind": "file",
+                "mode": "100755" if executable else "100644",
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            }
     except OSError as exc:
         raise AuthorizationError(
             f"could not identify dirty Git path: {path}: {exc}"
         ) from exc
-    return f"{kind}:sha256:{hashlib.sha256(payload).hexdigest()}"
+
+    raise AuthorizationError(
+        f"dirty Git path is not a file or symlink: {path}"
+    )
 
 
 def _run_git(

@@ -4,21 +4,11 @@ Boundary's target architecture is defined in the focused `docs/spec*.md` documen
 
 The current executable baseline still uses Spec Kit `1.0.10`, Codex, SpecDD framework `1.5`, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements.
 
-The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, and one atomic current operation record.
+The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, and exact dirty-state carry-forward provenance.
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
 ## P6 — Replace the current authorization model
-
-### P6.4 — Fix dirty-state adoption and scope expansion
-
-- [ ] Reject dirty intended targets without verified predecessor provenance.
-- [ ] Record verification final-state identities needed for carry-forward.
-- [ ] Require verification/closure before an implementation authorization epoch is superseded.
-- [ ] Archive verified predecessor operation records only when carry-forward requires them.
-- [ ] Allow a new epoch to accept unchanged dirty state only when it exactly matches verified predecessor output.
-- [ ] Fail closed when Git `HEAD` changes across an active operation.
-- [ ] Add focused regression coverage for implementation-before-authorization, reauthorization, scope expansion, concurrent dirty changes, deletion, staging-only changes, and predecessor carry-forward.
 
 ### P6.5 — Simplify native verification
 

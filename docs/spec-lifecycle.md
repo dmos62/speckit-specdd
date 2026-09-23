@@ -65,6 +65,8 @@ It does not refresh an earlier boundary and does not prove an earlier planning c
 
 Successful authorization creates the historical operation record consumed by verification.
 
+An existing unverified operation cannot be silently replaced by another authorization epoch.
+
 ## Implementation
 
 Implementation runs under one active implementation operation.
@@ -78,6 +80,8 @@ The implementation skill instructs the agent to:
 
 Deterministic checks remain authoritative even if an agent fails to follow the skill.
 
+A Git `HEAD` transition during an active operation invalidates the baseline and prevents successful verification.
+
 ## Scope expansion
 
 When implementation discovers another required target:
@@ -86,7 +90,9 @@ When implementation discovers another required target:
 2. it may not be written under the current operation;
 3. the current operation is verified and closed;
 4. a new operation is authorized;
-5. verified predecessor state may be carried forward.
+5. verified predecessor state may be carried forward only when its exact Git state is unchanged.
+
+A verified predecessor is archived only when the successor actually relies on that carry-forward evidence.
 
 Scope expansion does not require discarding valid completed work, but it does require an explicit authorization epoch transition.
 
@@ -102,6 +108,8 @@ It does not use:
 
 Verification reports authorization correctness only.
 
+Successful verification closes the current authorization epoch by marking its operation record verified and recording final dirty-state identities for authorized targets. Those identities provide the only provenance accepted for dirty-target carry-forward into a later epoch.
+
 Feature correctness and broader convergence are separate.
 
 ## Contract evolution
@@ -109,7 +117,7 @@ Feature correctness and broader convergence are separate.
 When requested behavior cannot satisfy current persistent contracts:
 
 1. stop dependent implementation;
-2. close or abandon the current implementation operation safely;
+2. verify and close the current implementation operation, or abandon it through an explicit future lifecycle mechanism;
 3. begin a `contract-evolution` operation;
 4. use the Boundary contracts skill;
 5. modify only native contract files;
