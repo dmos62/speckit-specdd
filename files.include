@@ -15,6 +15,9 @@
 @# Excluding, because it's very large, comment this out when needed, and reexclude when possible.
 @globexclude .specdd/bootstrap.md
 
+@# Root provider override content is not useful for the current bridge/test migration.
+@globexclude .specdd/bootstrap.project.md
+
 @# Agent entrypoint files only redirect to the included SpecDD bootstrap.
 @globexclude AGENTS.md
 @globexclude CLAUDE.md
@@ -54,40 +57,43 @@
 @globexclude .specify/memory/.constitution-template.json
 @globexclude .specify/workflows/workflow-registry.json
 
-@# P4 public identity and provider-isolation work is next.
-@# Keep manifests, runtime source, installer/bootstrap source, commands, tests,
-@# architecture docs, and user/developer docs available for the rename.
+@# Historical acceptance material is not needed for the immediate P4.0 test-baseline repair.
+@globexclude docs/spec-v0.1.md
+
+@# P4 public identity and provider-isolation work follows the baseline repair.
+@# Keep manifests, runtime source, installer/bootstrap source, commands,
+@# architecture docs, and current user/developer docs available.
 @globexclude HUMAN-REQUEST-UPSTREAM-SPECDD-CLI.md
 
 @# Provider-specific authority fixture data remains omitted until a P4 change
 @# requires modifying its contracts or expected resolver output.
 @globexclude tests/fixtures/specdd-two-domain/**
 
-@# Explicitly excluded test files
+@# P4.0 currently needs the four stale-test areas: boundary infrastructure
+@# failure messaging, preset install/distribution workflow assertions, and
+@# verification Git infrastructure failure messaging. Keep only the directly
+@# useful test modules/support files in iteration context; the full suite still
+@# runs through dev-scripts.include.
 @globexclude tests/boundary_test_fixture.py
-@globexclude tests/boundary_test_output.py
 @globexclude tests/boundary_test_ownership.py
 @globexclude tests/boundary_test_paths.py
 @globexclude tests/boundary_test_resolver.py
-@globexclude tests/boundary_test_support.py
-@globexclude tests/preset_test_distribution.py
-@globexclude tests/preset_test_install.py
+
 @globexclude tests/preset_test_source.py
-@globexclude tests/preset_test_support.py
-@globexclude tests/test_boundary.py
+
 @globexclude tests/test_change_boundary_schema.py
-@globexclude tests/test_preset.py
 @globexclude tests/test_validation.py
-@globexclude tests/test_verification.py
 @globexclude tests/test_workflow.py
 @globexclude tests/test_workflow_permissions.py
+
 @globexclude tests/validation_test_engine.py
 @globexclude tests/validation_test_fixture.py
 @globexclude tests/validation_test_support.py
 @globexclude tests/validation_test_tasks.py
+
 @globexclude tests/verification_test_engine.py
 @globexclude tests/verification_test_fixture.py
-@globexclude tests/verification_test_git.py
+
 @globexclude tests/workflow_test_gate.py
 @globexclude tests/workflow_test_source.py
 @endfilegroup
