@@ -32,7 +32,6 @@ INSTALLED_SCHEMA_PATH = (
 SPECKIT_VERSION = "1.0.10"
 SPECDD_UPSTREAM_CLI_VERSION = "1.1.1"
 SPECDD_PROVIDER_VERSION = "1.2.0"
-SPECDD_FRAMEWORK_VERSION = "1.5"
 
 
 def command_available(name: str) -> bool:
@@ -179,17 +178,6 @@ shutil.copyfile(
 
 
 def write_consumer_fixture(testcase, root: Path) -> Path:
-    require_success(
-        testcase,
-        run_command(
-            root,
-            "specdd",
-            "init",
-            "--version",
-            SPECDD_FRAMEWORK_VERSION,
-        ),
-    )
-
     source = root / "src" / "app.py"
     source.parent.mkdir(parents=True)
     source.write_text('VALUE = "before"\n', encoding="utf-8")
@@ -220,6 +208,10 @@ Must:
   The fixture value remains a string.
 """,
         encoding="utf-8",
+    )
+
+    testcase.assertFalse(
+        (root / ".specdd" / "bootstrap.md").exists()
     )
 
     for key, value in (

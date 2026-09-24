@@ -2,7 +2,7 @@
 
 Boundary's target architecture is defined in the focused `docs/spec*.md` documents.
 
-The current executable baseline still uses Spec Kit `1.0.10`, Codex, SpecDD framework `1.5`, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements.
+The current executable baseline still uses Spec Kit `1.0.10`, Codex, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements. Project bootstrap no longer initializes or requires the SpecDD framework bootstrap for normal Boundary operation.
 
 The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, exact dirty-state carry-forward provenance, and Git-derived actual-write authorization verification with provider-neutral diagnostics.
 
@@ -10,14 +10,7 @@ Work in the order below unless a newly discovered correctness issue requires rep
 
 ## P7 — Build the progressive agent instruction architecture
 
-Canonical Boundary procedure now lives in `skills/scope/SKILL.md`, `skills/implement/SKILL.md`, and `skills/contracts/SKILL.md`. Focused tests enforce small vendor-neutral source without volatile operation data. Runtime-specific discovery metadata still belongs to P7.3.
-
-### P7.2 — Remove framework bootstrap dependence
-
-- [ ] Stop injecting or requiring `.specdd/bootstrap.md` in normal agent context.
-- [ ] Do not replace it with another global project prompt.
-- [ ] Keep always-on Boundary policy to a very small stable set of behavioral invariants.
-- [ ] Deliver project contract semantics through `boundary inspect` and raw-contract retrieval on demand.
+Canonical Boundary procedure now lives in `skills/scope/SKILL.md`, `skills/implement/SKILL.md`, and `skills/contracts/SKILL.md`. Focused tests enforce small vendor-neutral source without volatile operation data. Boundary bootstrap no longer creates or requires the SpecDD framework bootstrap as an agent-instruction dependency. Runtime-specific discovery metadata still belongs to P7.3.
 
 ### P7.3 — Materialize skills through agent adapters
 
@@ -84,7 +77,7 @@ Done when:
 
 - [ ] Remove runtime reliance on `specdd`.
 - [ ] Remove the temporary fork-backed CLI provider.
-- [ ] Remove `.specdd/` initialization and bootstrap handling.
+- [ ] Remove remaining `.specdd/` bootstrap compatibility handling.
 - [ ] Remove `.sdd` as canonical Boundary contract source.
 - [ ] Remove SpecDD-specific resolver, lint, ownership, permission, and intended-target compatibility code.
 - [ ] Remove legacy Change Boundary and SpecDD authorization metadata.

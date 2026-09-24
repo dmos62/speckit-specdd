@@ -150,6 +150,14 @@ Every projected semantic item retains provenance.
 
 Agents may request the raw canonical contract when the projection is insufficient.
 
+## Legacy bootstrap independence
+
+Boundary installation and normal operation do not initialize or require `.specdd/bootstrap.md` as an agent-instruction source.
+
+During migration, the temporary SpecDD compatibility adapter may continue to resolve legacy `.sdd` contracts directly for parity and compatibility work. That does not make SpecDD framework bootstrap text part of Boundary policy, skill procedure, or project contract context.
+
+Existing bootstrap files in an older repository are legacy compatibility state. Boundary does not copy their instructions into another global prompt.
+
 ## No automatic full-contract loading
 
 Normal implementation must not automatically load:

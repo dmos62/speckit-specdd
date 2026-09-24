@@ -5,7 +5,6 @@ from preset_test_support import (
     EXTENSION_ROOT,
     INSTALLER_PATH,
     PRESET_ROOT,
-    SPECDD_FRAMEWORK_VERSION,
     SPECDD_PROVIDER_VERSION,
     SPECDD_UPSTREAM_CLI_VERSION,
     SPECKIT_VERSION,
@@ -67,10 +66,6 @@ class PresetSourceTests(unittest.TestCase):
                 "readonly SPECDD_COMPAT_CLI_VERSION="
                 f'"{SPECDD_PROVIDER_VERSION}"'
             ),
-            (
-                "readonly SPECDD_FRAMEWORK_VERSION="
-                f'"{SPECDD_FRAMEWORK_VERSION}"'
-            ),
         ):
             self.assertIn(
                 declaration,
@@ -131,6 +126,22 @@ class PresetSourceTests(unittest.TestCase):
             "specify preset add --dev integration/specdd-preset --priority 10",
             "specify workflow overlay add integration/specdd/workflow-overlay.yml",
             "--integration generic",
+        ):
+            self.assertNotIn(
+                obsolete,
+                content,
+            )
+
+    def test_bootstrap_does_not_require_specdd_framework_bootstrap(self):
+        content = BOOTSTRAP_PATH.read_text(
+            encoding="utf-8"
+        )
+
+        for obsolete in (
+            "SPECDD_FRAMEWORK_VERSION",
+            "specdd_framework_version",
+            "specdd init",
+            ".specdd/bootstrap.md",
         ):
             self.assertNotIn(
                 obsolete,

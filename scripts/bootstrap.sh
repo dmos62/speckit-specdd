@@ -6,7 +6,6 @@ readonly SPECDD_UPSTREAM_CLI_VERSION="1.1.1"
 readonly SPECDD_COMPAT_CLI_VERSION="1.2.0"
 readonly SPECDD_COMPAT_CLI_REPOSITORY="https://github.com/dmos62/specdd-cli.git"
 readonly SPECDD_COMPAT_CLI_REF="feature/resolve-intended-targets"
-readonly SPECDD_FRAMEWORK_VERSION="1.5"
 readonly MIN_NODE_MAJOR="22"
 readonly ACTIVE_INTEGRATION="codex"
 readonly ACTIVE_COMMANDS_DIR=".agents/skills"
@@ -52,32 +51,6 @@ specdd_resolve_supports_intended_targets() {
 specdd_compat_provider_matches_pin() {
   specdd_compat_package_matches_pin &&
     specdd_resolve_supports_intended_targets
-}
-
-specdd_framework_version() {
-  [[ -f .specdd/bootstrap.md ]] || return 1
-  awk -F: 'tolower($1) == "version" {
-    value = $2
-    sub(/^[[:space:]]+/, "", value)
-    sub(/[[:space:]]+$/, "", value)
-    print value
-    exit
-  }' .specdd/bootstrap.md | tr -d "\"'"
-}
-
-spec_kit_active_integration() {
-  [[ -f .specify/integration.json ]] || return 1
-  node -e '
-const fs = require("fs");
-try {
-  const state = JSON.parse(fs.readFileSync(".specify/integration.json", "utf8"));
-  const value = state.default_integration || state.integration;
-  if (typeof value !== "string" || value.length === 0) process.exit(1);
-  process.stdout.write(value);
-} catch {
-  process.exit(1);
-}
-'
 }
 
 check_prerequisites() {
@@ -194,8 +167,6 @@ check_initialized_state() {
     fail "current directory is not a Git working tree"
   [[ -d .specify ]] ||
     fail "Spec Kit is not initialized; run: bash scripts/bootstrap.sh"
-  [[ -f .specdd/bootstrap.md ]] ||
-    fail "SpecDD is not initialized; run: bash scripts/bootstrap.sh"
   command -v specify >/dev/null 2>&1 ||
     fail "Spec Kit CLI 'specify' is not installed; run: bash scripts/bootstrap.sh"
   command -v specdd >/dev/null 2>&1 ||
@@ -206,16 +177,28 @@ check_initialized_state() {
     "temporary typed-target provider specdd ${SPECDD_COMPAT_CLI_VERSION} is required while upstream ${SPECDD_UPSTREAM_CLI_VERSION} lacks intended-target resolution; run: bash scripts/bootstrap.sh"
   specdd_resolve_supports_intended_targets || fail \
     "installed SpecDD provider lacks the typed intended-target flag set (--file, --folder, --sdd-file); run bash scripts/bootstrap.sh to repair it"
-  local active_integration framework_version
+  local active_integration
   active_integration="$(spec_kit_active_integration || true)"
   [[ "$active_integration" == "$ACTIVE_INTEGRATION" ]] ||
     fail "Spec Kit active integration must be '${ACTIVE_INTEGRATION}'; found '${active_integration:-unknown}'"
   [[ -d "$ACTIVE_COMMANDS_DIR" ]] ||
     fail "Codex Spec Kit skills are missing at ${ACTIVE_COMMANDS_DIR}"
-  framework_version="$(specdd_framework_version || true)"
-  [[ "$framework_version" == "$SPECDD_FRAMEWORK_VERSION" ]] ||
-    fail "SpecDD framework ${SPECDD_FRAMEWORK_VERSION} is required; found '${framework_version:-unknown}'"
   check_bridge_state
+}
+
+spec_kit_active_integration() {
+  [[ -f .specify/integration.json ]] || return 1
+  node -e '
+const fs = require("fs");
+try {
+  const state = JSON.parse(fs.readFileSync(".specify/integration.json", "utf8"));
+  const value = state.default_integration || state.integration;
+  if (typeof value !== "string" || value.length === 0) process.exit(1);
+  process.stdout.write(value);
+} catch {
+  process.exit(1);
+}
+'
 }
 
 run_checks() {
@@ -263,14 +246,6 @@ apply_bootstrap() {
     active_integration="$(spec_kit_active_integration || true)"
     [[ "$active_integration" == "$ACTIVE_INTEGRATION" ]] ||
       specify integration switch "$ACTIVE_INTEGRATION" --script ps
-  fi
-  if [[ ! -f .specdd/bootstrap.md ]]; then
-    specdd init --version "$SPECDD_FRAMEWORK_VERSION"
-  else
-    local framework_version
-    framework_version="$(specdd_framework_version || true)"
-    [[ "$framework_version" == "$SPECDD_FRAMEWORK_VERSION" ]] ||
-      fail "existing SpecDD framework is '${framework_version:-unknown}', expected ${SPECDD_FRAMEWORK_VERSION}; review before updating"
   fi
   install_bridge
   run_checks

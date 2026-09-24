@@ -1,6 +1,6 @@
 Spec: Repository Bootstrap
 
-Platform: Bash/Spec Kit 1.0.10/SpecDD CLI
+Platform: Bash/Spec Kit 1.0.10/SpecDD CLI compatibility provider
 
 Purpose:
   Reproduce the tested development toolchain and install the bridge through the same thin component installer used to prove local and immutable-archive packaging.
@@ -15,26 +15,28 @@ References:
   ../integration/specdd-preset/specdd-preset.sdd
 
 Must:
-  Bootstrap pins Spec Kit `1.0.10` and SpecDD framework `1.5`, and records upstream SpecDD CLI `1.1.1` as the current stable baseline.
+  Bootstrap pins Spec Kit `1.0.10` and records upstream SpecDD CLI `1.1.1` as the current stable baseline.
   Until stable upstream SpecDD exposes typed intended-target resolution equivalent to the bridge contract, bootstrap installs the temporary resolver provider from `https://github.com/dmos62/specdd-cli.git` branch `feature/resolve-intended-targets`.
   Temporary resolver-provider validation requires package version `1.2.0` and resolver support for `--file`, `--folder`, and `--sdd-file`.
   Resolver capability, not package-version identity, determines bridge intended-target behavior outside bootstrap installation checks.
   The temporary resolver provider is removable once a stable upstream SpecDD CLI passes the focused typed intended-target parity tests.
+  Bootstrap does not run `specdd init` or require `.specdd/bootstrap.md`; the compatibility CLI is a resolver dependency rather than a source of normal agent instructions.
   The active Spec Kit integration is `codex` so extension and preset commands can be registered under tested Spec Kit `1.0.10`.
   Existing initialized repositories change active integration through supported Spec Kit integration commands.
   ./install.sh installs the extension, preset, and project workflow overlay through supported Spec Kit lifecycle commands.
   ./install.sh accepts the local checkout, a local archive, or an immutable GitHub tag, commit, or release archive as installation source.
   Remote installation rejects mutable GitHub branch archives.
   ./install.sh supports clean bridge removal, reinstall, and installation-health checks.
-  Installed extension state provides the runtime scripts and schema used by commands and workflow gates without requiring canonical bridge source in the target repository.
+  Installed extension state provides the runtime scripts and schema used by commands and workflow gates without requiring canonical bridge-development paths in the target repository.
   Bootstrap delegates bridge materialization to ./install.sh after establishing the pinned development toolchain.
-  Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, workflow-overlay resolution, and `specdd lint` without changing repository state.
+  Check mode verifies bridge command materialization, preset augmentation materialization, lifecycle hook registration, workflow-overlay resolution, and `specdd lint` without depending on SpecDD framework bootstrap state.
   Missing required host executables report dependency-specific remediation before bootstrap mutates repository state.
 
 Must not:
+  Initialize or require SpecDD framework bootstrap files merely to provide agent instructions.
   Patch generated Spec Kit commands, installed extension state, installed preset state, workflow-overlay state, or SpecDD framework files directly.
   Use npm, PyPI, or a public Spec Kit catalog as the bridge distribution requirement.
 
 Done when:
-  Bootstrap apply followed by check succeeds with the tested Spec Kit baseline, temporary typed intended-target provider, bridge, and structural workflow gates available through the active Codex integration.
+  Bootstrap apply followed by check succeeds with the tested Spec Kit baseline, temporary typed intended-target provider, bridge, and structural workflow gates available through the active Codex integration without requiring `.specdd/bootstrap.md`.
   Local checkout installation and immutable GitHub archive installation use the same native Spec Kit component operations.
