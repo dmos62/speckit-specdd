@@ -12,6 +12,7 @@ PRESET_ROOT = REPO_ROOT / "integration" / "specdd-preset"
 EXTENSION_ROOT = REPO_ROOT / "integration" / "specdd"
 AGENT_ADAPTERS_ROOT = REPO_ROOT / "adapters"
 CANONICAL_SKILLS_ROOT = REPO_ROOT / "skills"
+BOUNDARY_SOURCE_ROOT = REPO_ROOT / "src" / "boundary"
 WORKFLOW_OVERLAY_PATH = EXTENSION_ROOT / "workflow-overlay.yml"
 BOOTSTRAP_PATH = REPO_ROOT / "scripts" / "bootstrap.sh"
 BOOTSTRAP_PROVIDER_PATH = REPO_ROOT / "scripts" / "bootstrap-provider.sh"
@@ -23,7 +24,7 @@ INSTALLED_RUNTIME_PATH = (
     / "extensions"
     / "specdd"
     / "scripts"
-    / "workflow_gate.py"
+    / "adapter_gate.py"
 )
 INSTALLED_SCHEMA_PATH = (
     Path(".specify")
@@ -31,6 +32,12 @@ INSTALLED_SCHEMA_PATH = (
     / "specdd"
     / "schemas"
     / "change-boundary.schema.json"
+)
+INSTALLED_BOUNDARY_RUNTIME = (
+    Path(".specify")
+    / "boundary-runtime"
+    / "boundary"
+    / "__init__.py"
 )
 
 SPECKIT_VERSION = "1.0.10"
@@ -163,6 +170,10 @@ def archive_source(destination: Path) -> Path:
             CANONICAL_SKILLS_ROOT,
             arcname=f"{prefix}/skills",
         )
+        package.add(
+            BOUNDARY_SOURCE_ROOT,
+            arcname=f"{prefix}/src/boundary",
+        )
     return archive
 
 
@@ -194,6 +205,22 @@ def write_consumer_fixture(testcase, root: Path) -> Path:
     source.parent.mkdir(parents=True)
     source.write_text('VALUE = "before"\n', encoding="utf-8")
 
+    contract = root / "contracts" / "app.contract.md"
+    contract.parent.mkdir(parents=True)
+    contract.write_text(
+        "---\n"
+        "schema: boundary.contract/v1\n"
+        "id: app\n"
+        "owns:\n"
+        "  - src/app.py\n"
+        "applies_to: []\n"
+        "depends_on: []\n"
+        "---\n"
+        "## Invariants\n\n"
+        "- The application value remains a string.\n",
+        encoding="utf-8",
+    )
+
     feature_dir = root / "specs" / "001-runtime"
     feature_dir.mkdir(parents=True)
     (feature_dir / "plan.md").write_text(
@@ -202,7 +229,7 @@ def write_consumer_fixture(testcase, root: Path) -> Path:
     )
     (feature_dir / "tasks.md").write_text(
         "# Tasks\n\n"
-        "- [ ] T001 Update application value\n"
+        "- [ ] T001 [US1] Update application value\n"
         "  Writes: `src/app.py`\n",
         encoding="utf-8",
     )
@@ -211,7 +238,7 @@ def write_consumer_fixture(testcase, root: Path) -> Path:
         """Spec: Consumer Runtime Fixture
 
 Purpose:
-  Provide one implementation target for installed bridge lifecycle testing.
+  Preserve temporary SpecDD migration coverage beside native contracts.
 
 Owns:
   ./src/app.py

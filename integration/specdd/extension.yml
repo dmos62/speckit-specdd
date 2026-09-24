@@ -2,10 +2,10 @@ schema_version: "1.0"
 
 extension:
   id: specdd
-  name: "SpecDD Bridge"
+  name: "Boundary Spec Kit Adapter"
   version: "0.1.0"
-  description: "Project SpecDD authority into Spec Kit feature workflows without duplicating persistent system contracts."
-  author: "SpecDD contributors"
+  description: "Project structured Spec Kit implementation scope into native Boundary authorization and verification."
+  author: "Boundary contributors"
   repository: "https://github.com/specdd/specdd"
   license: "Apache-2.0"
   homepage: "https://specdd.ai"
@@ -14,49 +14,17 @@ extension:
 
 requires:
   speckit_version: "==1.0.10"
-  tools:
-    - name: specdd
-      version: "==1.2.0"
-      required: true
 
 provides:
   commands:
-    - name: speckit.specdd.context
-      file: commands/context.md
-      description: "Build or refresh the active feature's derived SpecDD Change Boundary."
-    - name: speckit.specdd.validate
-      file: commands/validate.md
-      description: "Validate Spec Kit task write scope against the current SpecDD Change Boundary."
-    - name: speckit.specdd.authorize
+    - name: speckit.boundary.authorize
       file: commands/authorize.md
-      description: "Authorize implementation against the active feature's existing SpecDD authority snapshot."
-    - name: speckit.specdd.verify
+      description: "Authorize the active Spec Kit implementation scope with Boundary."
+    - name: speckit.boundary.verify
       file: commands/verify.md
-      description: "Verify actual implementation writes against the planned SpecDD authority snapshot."
-
-hooks:
-  after_plan:
-    command: speckit.specdd.context
-    optional: false
-    priority: 10
-    description: "Refresh the feature Change Boundary after planning."
-  after_tasks:
-    command: speckit.specdd.validate
-    optional: false
-    priority: 10
-    description: "Validate final task write scope against current SpecDD authority."
-  before_implement:
-    command: speckit.specdd.authorize
-    optional: false
-    priority: 10
-    description: "Block implementation when current task scope lacks trustworthy authority."
-  after_implement:
-    command: speckit.specdd.verify
-    optional: false
-    priority: 10
-    description: "Verify actual implementation writes against the planned authority snapshot."
+      description: "Verify actual implementation writes with Boundary."
 
 tags:
-  - specdd
+  - boundary
   - integration
   - architecture

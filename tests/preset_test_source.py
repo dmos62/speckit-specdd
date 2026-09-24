@@ -31,8 +31,8 @@ class PresetSourceTests(unittest.TestCase):
             f'speckit_version: "=={SPECKIT_VERSION}"',
             extension,
         )
-        self.assertIn(
-            f'version: "=={SPECDD_PROVIDER_VERSION}"',
+        self.assertNotIn(
+            'name: specdd',
             extension,
         )
         self.assertIn(
@@ -44,18 +44,21 @@ class PresetSourceTests(unittest.TestCase):
             preset,
         )
         self.assertEqual(
-            3,
+            1,
             preset.count('strategy: "append"'),
         )
-        for command in (
-            "speckit.plan",
-            "speckit.tasks",
-            "speckit.converge",
-        ):
-            self.assertIn(
-                f'name: "{command}"',
-                preset,
-            )
+        self.assertIn(
+            'name: "speckit.tasks"',
+            preset,
+        )
+        self.assertNotIn(
+            'name: "speckit.plan"',
+            preset,
+        )
+        self.assertNotIn(
+            'name: "speckit.converge"',
+            preset,
+        )
 
         for declaration in (
             f'readonly SPECKIT_VERSION="{SPECKIT_VERSION}"',
@@ -74,38 +77,30 @@ class PresetSourceTests(unittest.TestCase):
                 bootstrap,
             )
 
-    def test_extension_declares_complete_lifecycle(self):
+    def test_extension_exposes_only_boundary_adapter_transitions(self):
         manifest = (
             EXTENSION_ROOT
             / "extension.yml"
         ).read_text(encoding="utf-8")
 
         for command in (
+            "speckit.boundary.authorize",
+            "speckit.boundary.verify",
+        ):
+            self.assertIn(command, manifest)
+
+        for obsolete in (
             "speckit.specdd.context",
             "speckit.specdd.validate",
             "speckit.specdd.authorize",
             "speckit.specdd.verify",
+            "hooks:",
+            "after_plan:",
+            "after_tasks:",
+            "before_implement:",
+            "after_implement:",
         ):
-            self.assertIn(
-                command,
-                manifest,
-            )
-
-        for event in (
-            "after_plan",
-            "after_tasks",
-            "before_implement",
-            "after_implement",
-        ):
-            self.assertIn(
-                f"{event}:",
-                manifest,
-            )
-
-        self.assertEqual(
-            4,
-            manifest.count("optional: false"),
-        )
+            self.assertNotIn(obsolete, manifest)
 
     def test_bootstrap_uses_shared_codex_installer(self):
         content = BOOTSTRAP_PATH.read_text(
@@ -151,7 +146,7 @@ class PresetSourceTests(unittest.TestCase):
                 content,
             )
 
-    def test_installer_uses_native_components_and_immutable_remote_sources(self):
+    def test_installer_materializes_native_runtime_without_specdd_requirement(self):
         installer = INSTALLER_PATH.read_text(
             encoding="utf-8"
         )
@@ -164,6 +159,7 @@ class PresetSourceTests(unittest.TestCase):
             'readonly SPECKIT_VERSION="1.0.10"',
             'readonly ACTIVE_INTEGRATION="codex"',
             'readonly CODEX_SKILL_ADAPTER="adapters/codex/materialize.py"',
+            'readonly BOUNDARY_RUNTIME_DIR=".specify/boundary-runtime"',
             'source "$INSTALL_SCRIPT_DIR/install-source.sh"',
             "archive/refs/tags/",
             "releases/download/",
@@ -172,8 +168,9 @@ class PresetSourceTests(unittest.TestCase):
             "specify workflow overlay add",
             "specify workflow overlay remove",
             "specify integration switch",
+            "materialize_boundary_runtime",
             "materialize_boundary_skills",
-            "skills/${skill}/SKILL.md",
+            "src/boundary/__init__.py",
         ):
             self.assertIn(
                 marker,
@@ -181,13 +178,15 @@ class PresetSourceTests(unittest.TestCase):
             )
 
         for forbidden in (
+            "require_command specdd",
+            "specdd resolve --help",
             "npm install",
             "pip install",
             "specify bundle install",
         ):
             self.assertNotIn(
                 forbidden,
-                content,
+                installer,
             )
 
     def test_split_shell_sources_remain_small(self):
@@ -203,57 +202,26 @@ class PresetSourceTests(unittest.TestCase):
                     250,
                 )
 
-    def test_augmentations_cover_authority_aware_lifecycle(self):
-        plan = (
-            PRESET_ROOT
-            / "commands"
-            / "plan.md"
-        ).read_text(encoding="utf-8")
+    def test_task_augmentation_uses_on_demand_inspection_and_exact_writes(self):
         tasks = (
             PRESET_ROOT
             / "commands"
             / "tasks.md"
         ).read_text(encoding="utf-8")
-        converge = (
-            PRESET_ROOT
-            / "commands"
-            / "converge.md"
-        ).read_text(encoding="utf-8")
 
         for marker in (
+            "## Boundary Write Scope",
+            "boundary inspect <target...>",
+            "Writes:",
+            "speckit.boundary.authorize",
+            "Do not create or refresh a persisted Boundary context projection",
+            "Do not add a separate validation lifecycle phase",
+        ):
+            self.assertIn(marker, tasks)
+
+        for obsolete in (
             "speckit.specdd.context",
-            "## SpecDD Impact",
-            "Do not copy `Must`, `Must not`, `Owns`, or `Can modify`",
-        ):
-            self.assertIn(
-                marker,
-                plan,
-            )
-
-        for marker in (
-            "Preserve Spec Kit user-story grouping",
-            "`SPEC_EVOLUTION_REQUIRED:`",
-            "`AUTHORITY_EVOLUTION_REQUIRED:`",
-            "speckit.specdd.authorize",
             "speckit.specdd.validate",
+            "SPECDD_AUTHORITY:",
         ):
-            self.assertIn(
-                marker,
-                tasks,
-            )
-
-        self.assertIn(
-            "speckit.specdd.verify",
-            converge,
-        )
-        for code in (
-            "SPECDD_VIOLATION",
-            "SPECDD_DRIFT",
-            "MISSING_SPEC_EVOLUTION",
-            "AUTHORITY_VIOLATION",
-            "UNPLANNED_SPEC_EVOLUTION",
-        ):
-            self.assertIn(
-                code,
-                converge,
-            )
+            self.assertNotIn(obsolete, tasks)

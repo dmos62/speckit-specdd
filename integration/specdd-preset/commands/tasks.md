@@ -1,37 +1,16 @@
-## SpecDD Task Augmentation
+## Boundary Write Scope
 
-Apply these requirements while generating the upstream `tasks.md`. Preserve the upstream checklist format, execution
-ordering, and independent user-story structure.
+Apply these requirements while generating the upstream `tasks.md`. Preserve the upstream checklist format, execution ordering, and independent user-story structure.
 
-1. Refresh the active Change Boundary with `speckit.specdd.context` before finalizing ordinary implementation write
-   sets. Use exact implementation paths from the plan and proposed tasks; unresolved paths are not authority.
-2. Preserve Spec Kit user-story grouping. A single user story may span multiple SpecDD authority domains.
-3. Within each user-story phase, prefer implementation tasks whose ordinary non-`.sdd` write set has one primary SpecDD
-   authority. When one proposed task spans owners and the work is naturally separable, split it into owner-local tasks
-   under the same user story rather than splitting the user story itself.
-4. Keep legitimate coordinated cross-domain work together when decomposition would make the work less coherent. An
-   unmarked multi-owner task executes under its participating owner domains and remains a `MULTI_AUTHORITY_TASK` warning.
-5. When one task intentionally executes all ordinary implementation writes under a single SpecDD authority, add
-   `SPECDD_AUTHORITY:` followed by that repository-relative `.sdd` path in backticks. Validation must prove that the
-   declared authority owns or has inherited `Can modify` permission for every write target.
-6. Separate ordinary implementation from durable system evolution:
-   - normal implementation uses existing contracts and authority;
-   - spec evolution uses `SPEC_EVOLUTION_REQUIRED:` and names only `.sdd` contracts;
-   - authority evolution uses `AUTHORITY_EVOLUTION_REQUIRED:` and names only `.sdd` contracts that change ownership or
-     write permission;
-   - never combine evolution `.sdd` targets with ordinary implementation or root bootstrap-control writes in one task.
-7. Treat root `.specdd/` bootstrap controls separately from implementation authority:
-   - `.specdd/bootstrap.md` is immutable and must never be generated as a write task;
-   - `.specdd/bootstrap.project.md` may be named only when the workflow deliberately selects that project override;
-   - `.specdd/bootstrap.local.md` may be named only for deliberate local-operator state and remains generated/local;
-   - other root `.specdd/` control paths must not be generated as ordinary implementation work.
-8. After deliberate spec evolution, generate a separate context refresh before dependent implementation. Dependent
-   implementation must then pass `speckit.specdd.authorize` so a new immutable authorization snapshot exists.
-9. `AUTHORITY_EVOLUTION_REQUIRED:` ends the prior authority context. Proposed authority is unusable until evolution
-   completes, context refreshes, and authorization succeeds again.
-10. Do not add custom bracket labels. Keep upstream task IDs, `[P]`, and `[US#]` semantics unchanged.
-11. After generating `tasks.md`, invoke `speckit.specdd.validate` at the `tasks` stage. Correct stale, unresolved,
-    unpermitted declared-authority, mixed evolution/implementation, or malformed evolution scope before completion.
-    Bootstrap-control authority is enforced by the authorization gate and later verified against immutable evidence.
-12. Never synchronize Spec Kit task markers with SpecDD `Tasks:` entries and never parse `.sdd` source to infer
-    ownership or modification permission.
+1. Identify exact repository-relative implementation targets rather than inferring scope from descriptive prose.
+2. Inspect candidate target context on demand with `boundary inspect <target...>` when ownership, invariants, prohibitions, or dependency interfaces are needed during task refinement.
+3. For every implementation task, add one dedicated indented `Writes:` line containing the exact repository-relative implementation paths in backticks.
+4. Treat only that `Writes:` metadata as structured implementation scope for the Spec Kit adapter. Path-looking prose elsewhere in the task remains advisory.
+5. Preserve normal Spec Kit task IDs, ordering, `[P]`, and `[US#]` semantics.
+6. Prefer owner-local tasks when work separates cleanly without harming the user-story implementation.
+7. Keep legitimate coordinated multi-owner work together when that is the clearer implementation unit; every exact path still remains independently authorized by Boundary.
+8. Keep native contract evolution separate from ordinary implementation. Use the `boundary-contracts` procedure for persistent contract changes and require fresh implementation authorization afterward.
+9. Do not put native contract files in an ordinary implementation task's `Writes:` metadata.
+10. When implementation scope changes after authorization, update structured task scope only after leaving the current implementation operation, then require fresh `speckit.boundary.authorize`.
+11. Do not create or refresh a persisted Boundary context projection during planning or task generation.
+12. Do not add a separate validation lifecycle phase. Deterministic structural enforcement occurs at authorization and verification.

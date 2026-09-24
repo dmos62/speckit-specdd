@@ -2,28 +2,19 @@
 
 Boundary's target architecture is defined in the focused `docs/spec*.md` documents.
 
-The current executable baseline still uses Spec Kit `1.0.10`, Codex, and the temporary typed-target SpecDD provider. Those are migration dependencies, not target product requirements. Project bootstrap no longer initializes or requires the SpecDD framework bootstrap for normal Boundary operation.
+The current development baseline still pins Spec Kit `1.0.10`, Codex, and the temporary typed-target SpecDD provider for migration and compatibility evidence. Those are not target product requirements. Project bootstrap no longer initializes or requires the SpecDD framework bootstrap for normal Boundary operation.
 
-The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, exact dirty-state carry-forward provenance, and Git-derived actual-write authorization verification with provider-neutral diagnostics.
+The native path provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, exact dirty-state carry-forward provenance, and Git-derived actual-write authorization verification with provider-neutral diagnostics.
 
-Canonical Boundary procedure is now deterministically materialized from `skills/*/SKILL.md` into Codex discovery state. A second concrete Claude Code materializer exercises the same canonical procedure without introducing a generalized runtime-provider framework. Materialized skill bytes contain only fixed runtime metadata plus canonical procedure and remain independent of feature or operation state.
+Canonical Boundary procedure is deterministically materialized from `skills/*/SKILL.md` into Codex discovery state. A second concrete Claude Code materializer exercises the same canonical procedure without introducing a generalized runtime-provider framework. Materialized skill bytes contain only fixed runtime metadata plus canonical procedure and remain independent of feature or operation state.
+
+The Spec Kit integration is now reduced to a change-system adapter surface. Planning and task work use on-demand Boundary inspection rather than persisted context or validation phases. Structured task `Writes:` metadata is projected into native Boundary authorization at implementation entry, and actual Git writes are verified at implementation exit. The only public Spec Kit adapter commands are `speckit.boundary.authorize` and `speckit.boundary.verify`; the workflow overlay owns those two blocking transitions. Legacy SpecDD bridge code remains only as migration evidence pending P9 cleanup.
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
 ## P8 — Reduce Spec Kit to a change-system adapter
 
 The provider-neutral change-system adapter contract is defined in `docs/spec-change-adapter.md`.
-
-### P8.2 — Simplify Spec Kit integration
-
-- [ ] Replace current public SpecDD command identity with Boundary adapter commands where still needed.
-- [ ] Make the product CLI `boundary ...`; treat `speckit.boundary.*` only as adapter wrappers.
-- [ ] Remove the public `context` lifecycle state.
-- [ ] Remove the public `validate` lifecycle state.
-- [ ] Use on-demand inspection during plan/task work.
-- [ ] Keep deterministic structural enforcement only around authorization and verification.
-- [ ] Remove duplicated extension hooks when the workflow overlay already enforces the same transition.
-- [ ] Reduce the preset to tiny skill/write-metadata integration or remove it entirely if supported skill discovery makes it unnecessary.
 
 ### P8.3 — Remove Spec Kit from product naming
 

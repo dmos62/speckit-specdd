@@ -3,7 +3,7 @@ Spec: Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard the provider-neutral core boundaries, canonical agent procedure, concrete agent materialization, and the bridge's explicit write scope, ownership projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
+  Guard the provider-neutral core boundaries, canonical agent procedure, concrete agent materialization, Spec Kit change-system projection, native authorization and verification, migration compatibility evidence, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
 
 Owns:
   ./test_boundary_core_layout.py
@@ -15,6 +15,7 @@ Owns:
   ./test_authorization_lifecycle.py
   ./test_operation_record.py
   ./test_native_verification.py
+  ./test_spec_kit_adapter.py
   ./test_agent_skills.py
   ./test_agent_skill_materialization.py
   ./test_boundary.py
@@ -61,35 +62,26 @@ Must:
   Native authorization-lifecycle tests cover implementation-before-authorization rejection, verified epoch replacement, scope expansion, exact predecessor carry-forward, concurrent dirty mutation, deletion, staging/index transitions, immutable predecessor archival, and Git HEAD changes.
   Native operation-record tests cover atomic evidence content and storage, including failed successor replacement after verified predecessor closure.
   Native verification tests derive actual writes from Git, reject undeclared writes even within an already represented owner, reject native-contract writes during implementation, fresh-resolve changed target context, keep contract-evolution write-kind checks separate from structural validation, and allow adapter-owned generated state to be excluded without hiding authorized targets.
+  Spec Kit adapter tests project task identity and exact writes only from dedicated structured `Writes:` metadata and ignore incidental path-looking prose.
+  Spec Kit adapter lifecycle tests authorize native Boundary operations from fresh task projection and exclude deterministic host-owned feature state during Git-derived verification.
+  Public Spec Kit integration exposes only Boundary authorization and verification wrappers; planning context and task validation are not public lifecycle states.
+  The Spec Kit workflow overlay owns implementation-entry authorization and implementation-exit verification without duplicated extension hooks.
+  The small task preset adds exact write metadata and on-demand inspection guidance without augmenting planning or convergence commands.
   Canonical agent-skill tests keep scope, implementation, and contract-evolution procedure small, vendor-neutral, free of volatile operation values, and explicit about deterministic lifecycle boundaries.
   Agent materialization tests cover deterministic Codex discovery paths, runtime frontmatter separated from canonical procedure, exact canonical bodies, stable bytes across unrelated feature operations, and a second concrete Claude Code materialization without generalized runtime-adapter machinery.
-  Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
-  Adapter tests preserve path normalization, resolver-backed ownership derivation, deterministic output, and schema validation coverage.
-  Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport whenever the active SpecDD provider exposes the complete intended-target capability.
-  Intended-target projection covers exact file ownership, existing directory ownership, glob ownership, ambiguous ownership, absent authority, and exact missing ownership paths whose file-versus-directory shape is unknowable.
-  Exact-file, existing-directory, and glob-owned target ownership remains stable before and after target creation when typed intended-target transport is available.
-  Compatibility tests keep any resolver without complete typed intended-target support conservative with `INTENDED_TARGET_UNSUPPORTED`, independent of package version.
-  Existing-target compatibility remains available without requiring typed intended-target capability.
-  Effective-context tests prove ownership-preserving `Must`, `Forbids`, `References`, referenced-contract, and governing-chain changes alter the deterministic context identity.
-  Authorization tests prove changed effective SpecDD context blocks snapshot creation while failed reauthorization preserves prior immutable evidence.
+  Schema tests reuse the legacy migration bridge schema validator instead of maintaining an independent JSON Schema implementation.
+  Legacy adapter tests preserve path normalization, resolver-backed ownership derivation, deterministic output, and schema validation coverage until P9 removes SpecDD migration compatibility.
+  Existing-target and intended-target compatibility remain migration evidence rather than native Boundary semantics.
+  Effective-context migration tests prove ownership-preserving legacy governing-context changes alter their deterministic compatibility identity.
+  Legacy authorization tests prove changed effective SpecDD context blocks legacy snapshot creation while failed reauthorization preserves prior compatibility evidence.
   Tests distinguish missing external executables from resolver, lint, and ownership diagnostics.
-  The real two-domain fixture exercises deterministic ownership projection when the SpecDD CLI is available.
-  The real two-domain fixture proves intended targets flow through explicit `Writes:` metadata and implementation-stage validation when typed intended-target resolution is available.
-  Task parsing accepts implementation scope only from dedicated indented `Writes:` metadata and ignores incidental path-looking prose for authorization.
-  Advisory path extraction remains covered separately for planning use.
-  Task parsing preserves task order, task IDs, user-story labels, literal filenames, and explicit SpecDD evolution classifications.
-  Validation tests cover owner-local and coordinated multi-owner tasks without synthetic task-level authority.
-  Malformed, duplicate, invalid, stale, unresolved, or conflicting declared writes fail at the appropriate lifecycle strictness.
-  Evolution tests keep `.sdd` work separate from ordinary implementation writes and require fresh resolution before dependent implementation.
-  Successful authorization stores its snapshot outside the worktree in Git metadata.
-  A later feature boundary refresh or failed reauthorization does not mutate the previous authorization snapshot.
-  Git verification separates implementation writes from generated state, feature artifacts, SpecDD specifications, and bootstrap controls.
-  Verification blocks implementation authority absent from the authorization snapshot.
-  Changed `.sdd` files do not retroactively authorize implementation in the same operation.
-  Fixture verification proves authority evolution requires fresh resolution and authorization.
-  Preset installation tests exercise registrar-backed command materialization, hooks, composition, workflow-overlay installation, Boundary skill materialization, and clean removal.
-  Distribution installation tests exercise local installation, Codex switching, stable Boundary skill bytes, clean remove/reinstall, and an immutable GitHub archive path without depending on live network access.
-  Distribution installation tests prove an isolated downstream consumer with provider contracts but no canonical bridge source can run context, task validation, authorization, and verification through installed extension runtime.
+  The real two-domain fixture remains temporary migration evidence while the repository is converted to native contracts.
+  Successful native authorization stores its operation record outside the worktree in Git metadata.
+  Git verification separates implementation writes from change-system state through adapter classification without allowing that classification to hide native contracts or authorized targets.
+  Changed persistent contracts do not retroactively authorize implementation in the same operation.
+  Preset installation tests exercise registrar-backed adapter command materialization, task composition, workflow-overlay installation, Boundary skill materialization, and clean removal.
+  Distribution installation tests exercise local installation, Codex switching, generated native Boundary runtime state, stable Boundary skill bytes, clean remove/reinstall, and an immutable GitHub archive path without depending on live network access.
+  Distribution installation tests prove an isolated downstream consumer with native contracts and no canonical Boundary implementation source can authorize and verify through installed adapter runtime.
   Distribution installation tests reject mutable GitHub branch archives.
   Static source tests cover only packaging and lifecycle wiring that is not already established more directly by behavioral or installation tests.
-  Workflow gate tests prove deterministic `error` and `blocking` diagnostics halt shell execution while warnings remain non-failing.
+  Workflow gate tests preserve legacy migration helper determinism while workflow source tests prove only native authorization and verification are structurally integrated.

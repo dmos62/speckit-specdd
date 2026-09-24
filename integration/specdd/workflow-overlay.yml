@@ -4,30 +4,16 @@ priority: 10
 enabled: true
 
 edits:
-  - insert_after: plan
-    step:
-      id: specdd-context
-      type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py context'
-      timeout: 300
-
-  - insert_after: tasks
-    step:
-      id: specdd-task-validation
-      type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py tasks'
-      timeout: 300
-
   - insert_before: implement
     step:
-      id: specdd-authorize
+      id: boundary-authorize
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py authorize'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "boundary workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/adapter_gate.py authorize'
       timeout: 300
 
   - insert_after: implement
     step:
-      id: specdd-verify
+      id: boundary-verify
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "specdd workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/workflow_gate.py verify'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "boundary workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/adapter_gate.py verify'
       timeout: 300

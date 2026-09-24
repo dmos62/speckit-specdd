@@ -8,7 +8,7 @@ from preset_test_support import (
 
 
 class WorkflowSourceTests(unittest.TestCase):
-    def test_overlay_places_four_fail_closed_structural_gates(self):
+    def test_overlay_places_only_authorization_and_verification_gates(self):
         content = WORKFLOW_OVERLAY_PATH.read_text(
             encoding="utf-8"
         )
@@ -22,7 +22,7 @@ class WorkflowSourceTests(unittest.TestCase):
             content,
         )
         self.assertEqual(
-            4,
+            2,
             content.count("type: shell"),
         )
         self.assertNotIn(
@@ -31,10 +31,16 @@ class WorkflowSourceTests(unittest.TestCase):
         )
 
         expected = (
-            ("insert_after: plan", "specdd-context", "context"),
-            ("insert_after: tasks", "specdd-task-validation", "tasks"),
-            ("insert_before: implement", "specdd-authorize", "authorize"),
-            ("insert_after: implement", "specdd-verify", "verify"),
+            (
+                "insert_before: implement",
+                "boundary-authorize",
+                "authorize",
+            ),
+            (
+                "insert_after: implement",
+                "boundary-verify",
+                "verify",
+            ),
         )
         for anchor, step, stage in expected:
             with self.subTest(step=step):
@@ -48,16 +54,26 @@ class WorkflowSourceTests(unittest.TestCase):
                     content,
                 )
 
+        for obsolete in (
+            "insert_after: plan",
+            "insert_after: tasks",
+            "specdd-context",
+            "specdd-task-validation",
+            "workflow_gate.py context",
+            "workflow_gate.py tasks",
+        ):
+            self.assertNotIn(obsolete, content)
+
         self.assertEqual(
-            4,
+            2,
             content.count("required command not found: uv"),
         )
         self.assertEqual(
-            4,
+            2,
             content.count("exit 2"),
         )
         self.assertNotIn(
-            "integration/specdd/scripts/workflow_gate.py",
+            "integration/specdd/scripts/adapter_gate.py",
             content,
         )
         self.assertNotIn(

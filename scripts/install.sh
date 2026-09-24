@@ -8,18 +8,21 @@ readonly WORKFLOW_ID="speckit"
 readonly WORKFLOW_OVERLAY_ID="specdd-bridge"
 readonly WORKFLOW_OVERLAY_PRIORITY="10"
 readonly CODEX_SKILL_ADAPTER="adapters/codex/materialize.py"
+readonly BOUNDARY_RUNTIME_DIR=".specify/boundary-runtime"
 readonly INSTALL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 ACTION="install"
 SOURCE="."
 TEMP_ROOT=""
 SOURCE_ROOT=""
+
 fail() {
   printf 'install: %s\n' "$*" >&2
   exit 1
 }
 
 source "$INSTALL_SCRIPT_DIR/install-source.sh"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -35,6 +38,7 @@ Install sources:
 Mutable GitHub branch archives are intentionally rejected.
 EOF
 }
+
 require_command() {
   local command_name="$1"
   command -v "$command_name" >/dev/null 2>&1 ||
@@ -46,23 +50,12 @@ speckit_matches_pin() {
     grep -Eq "(^|[^0-9])${SPECKIT_VERSION//./\\.}([^0-9]|$)"
 }
 
-specdd_supports_intended_targets() {
-  local help flag
-  help="$(specdd resolve --help 2>&1)" || return 1
-  for flag in --file --folder --sdd-file; do
-    grep -Fq -- "$flag" <<<"$help" || return 1
-  done
-}
-
 check_install_prerequisites() {
   require_command specify
   require_command uv
-  require_command specdd
   require_command codex
   speckit_matches_pin ||
     fail "Spec Kit ${SPECKIT_VERSION} is required"
-  specdd_supports_intended_targets ||
-    fail "SpecDD resolver must support --file, --folder, and --sdd-file"
 }
 
 active_integration() {
@@ -107,6 +100,12 @@ materialize_boundary_skills() {
     --project-root .
 }
 
+materialize_boundary_runtime() {
+  rm -rf "$BOUNDARY_RUNTIME_DIR"
+  mkdir -p "$BOUNDARY_RUNTIME_DIR"
+  cp -R "$SOURCE_ROOT/src/boundary" "$BOUNDARY_RUNTIME_DIR/boundary"
+}
+
 install_bridge() {
   ensure_codex_project
 
@@ -129,8 +128,9 @@ install_bridge() {
     "$SOURCE_ROOT/integration/specdd/workflow-overlay.yml" \
     --priority "$WORKFLOW_OVERLAY_PRIORITY"
 
+  materialize_boundary_runtime
   materialize_boundary_skills
-  printf 'Installed bridge source: %s\n' "$SOURCE"
+  printf 'Installed Boundary adapter source: %s\n' "$SOURCE"
 }
 
 remove_boundary_skills() {
@@ -161,6 +161,7 @@ remove_bridge() {
     specify extension remove "$EXTENSION_ID" --force
   fi
 
+  rm -rf "$BOUNDARY_RUNTIME_DIR"
   remove_boundary_skills
 }
 
@@ -170,16 +171,16 @@ check_bridge() {
   [[ "$(active_integration || true)" == "$ACTIVE_INTEGRATION" ]] ||
     fail "active Spec Kit integration is not ${ACTIVE_INTEGRATION}"
   [[ -d ".specify/extensions/${EXTENSION_ID}" ]] ||
-    fail "bridge extension is not installed"
+    fail "Boundary adapter extension is not installed"
   [[ -d ".specify/presets/${PRESET_ID}" ]] ||
-    fail "bridge preset is not installed"
+    fail "Boundary task preset is not installed"
+  [[ -f "$BOUNDARY_RUNTIME_DIR/boundary/__init__.py" ]] ||
+    fail "generated Boundary runtime is missing"
 
   local skill overlay_list resolved step
   for skill in \
-    speckit-specdd-context \
-    speckit-specdd-validate \
-    speckit-specdd-authorize \
-    speckit-specdd-verify \
+    speckit-boundary-authorize \
+    speckit-boundary-verify \
     boundary-scope \
     boundary-implement \
     boundary-contracts
@@ -193,12 +194,12 @@ check_bridge() {
     fail "workflow overlay is not installed"
 
   resolved="$(specify workflow resolve "$WORKFLOW_ID")"
-  for step in specdd-context specdd-task-validation specdd-authorize specdd-verify; do
+  for step in boundary-authorize boundary-verify; do
     grep -Fq "$step" <<<"$resolved" ||
       fail "resolved workflow is missing structural step: ${step}"
   done
 
-  printf '%s\n' "Spec Kit bridge installation is healthy."
+  printf '%s\n' "Boundary Spec Kit adapter installation is healthy."
 }
 
 cleanup() {

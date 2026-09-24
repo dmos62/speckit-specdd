@@ -48,7 +48,7 @@ check_prerequisites() {
   node_major="$(node_major_version 2>/dev/null)" ||
     fail "Node.js is present but its version could not be determined; repair Node.js and retry"
   (( node_major >= MIN_NODE_MAJOR )) ||
-    fail "Node.js ${MIN_NODE_MAJOR}+ is required by SpecDD; found $(node --version)"
+    fail "Node.js ${MIN_NODE_MAJOR}+ is required by migration tooling; found $(node --version)"
 }
 
 require_skill_file() {
@@ -72,11 +72,11 @@ check_workflow_overlay() {
   overlay_list="$(specify workflow overlay list speckit 2>&1)" ||
     fail "Spec Kit could not inspect workflow overlays: ${overlay_list}"
   grep -Fq "$WORKFLOW_OVERLAY_ID" <<<"$overlay_list" ||
-    fail "SpecDD workflow overlay is not installed: ${WORKFLOW_OVERLAY_ID}"
+    fail "Boundary workflow overlay is not installed: ${WORKFLOW_OVERLAY_ID}"
 
   resolved_workflow="$(specify workflow resolve speckit 2>&1)" ||
     fail "Spec Kit could not resolve the speckit workflow: ${resolved_workflow}"
-  for step_id in specdd-context specdd-task-validation specdd-authorize specdd-verify; do
+  for step_id in boundary-authorize boundary-verify; do
     grep -Fq "$step_id" <<<"$resolved_workflow" ||
       fail "resolved Spec Kit workflow is missing structural step: ${step_id}"
   done
@@ -84,18 +84,16 @@ check_workflow_overlay() {
 
 check_bridge_state() {
   [[ -d .specify/extensions/specdd ]] ||
-    fail "local SpecDD bridge extension is not installed"
+    fail "local Boundary adapter extension is not installed"
   [[ -d .specify/presets/specdd-bridge ]] ||
-    fail "local SpecDD bridge preset is not installed"
-  [[ -f .specify/extensions.yml ]] ||
-    fail "Spec Kit extension hook state is missing"
+    fail "local Boundary task preset is not installed"
+  [[ -f .specify/boundary-runtime/boundary/__init__.py ]] ||
+    fail "generated Boundary runtime is missing"
 
   local skill_name
   for skill_name in \
-    speckit-specdd-context \
-    speckit-specdd-validate \
-    speckit-specdd-authorize \
-    speckit-specdd-verify \
+    speckit-boundary-authorize \
+    speckit-boundary-verify \
     boundary-scope \
     boundary-implement \
     boundary-contracts
@@ -103,25 +101,7 @@ check_bridge_state() {
     require_skill_file "$skill_name"
   done
 
-  require_skill_contains "speckit-plan" "## SpecDD Planning Augmentation"
-  require_skill_contains "speckit-tasks" "## SpecDD Task Augmentation"
-  require_skill_contains "speckit-converge" "## SpecDD Convergence Augmentation"
-
-  local hook command_name
-  for hook in after_plan after_tasks before_implement after_implement; do
-    grep -Fq "${hook}:" .specify/extensions.yml ||
-      fail "registered hook is missing: ${hook}"
-  done
-  for command_name in \
-    speckit.specdd.context \
-    speckit.specdd.validate \
-    speckit.specdd.authorize \
-    speckit.specdd.verify
-  do
-    grep -Fq "$command_name" .specify/extensions.yml ||
-      fail "registered hook command is missing: ${command_name}"
-  done
-
+  require_skill_contains "speckit-tasks" "## Boundary Write Scope"
   check_workflow_overlay
 }
 
@@ -133,13 +113,13 @@ check_initialized_state() {
   command -v specify >/dev/null 2>&1 ||
     fail "Spec Kit CLI 'specify' is not installed; run: bash scripts/bootstrap.sh"
   command -v specdd >/dev/null 2>&1 ||
-    fail "SpecDD CLI 'specdd' is not installed; run: bash scripts/bootstrap.sh"
+    fail "SpecDD migration CLI 'specdd' is not installed; run: bash scripts/bootstrap.sh"
   speckit_matches_pin ||
     fail "Spec Kit ${SPECKIT_VERSION} is required; run: bash scripts/bootstrap.sh"
   specdd_compat_package_matches_pin || fail \
-    "temporary typed-target provider specdd ${SPECDD_COMPAT_CLI_VERSION} is required while upstream ${SPECDD_UPSTREAM_CLI_VERSION} lacks intended-target resolution; run: bash scripts/bootstrap.sh"
+    "temporary typed-target provider specdd ${SPECDD_COMPAT_CLI_VERSION} is required while migration parity remains active; run: bash scripts/bootstrap.sh"
   specdd_resolve_supports_intended_targets || fail \
-    "installed SpecDD provider lacks the typed intended-target flag set (--file, --folder, --sdd-file); run bash scripts/bootstrap.sh to repair it"
+    "installed SpecDD migration provider lacks typed intended-target flags; run bash scripts/bootstrap.sh to repair it"
 
   local active_integration
   active_integration="$(spec_kit_active_integration || true)"
@@ -179,11 +159,11 @@ run_checks() {
   printf '%s\n' '--- Spec Kit workflow overlays ---'; specify workflow overlay list speckit
   printf '%s\n' '--- Resolved Spec Kit workflow ---'; specify workflow resolve speckit
   printf '%s\n' '--- Spec Kit environment ---'; specify check
-  printf '%s\n' "--- SpecDD stable upstream CLI baseline: ${SPECDD_UPSTREAM_CLI_VERSION} ---"
-  printf '%s\n' '--- Temporary typed-target provider ---'
+  printf '%s\n' "--- SpecDD migration baseline: ${SPECDD_UPSTREAM_CLI_VERSION} ---"
+  printf '%s\n' '--- Temporary typed-target migration provider ---'
   npm list --global --depth=0 "specdd@${SPECDD_COMPAT_CLI_VERSION}"
-  printf '%s\n' '--- SpecDD resolve capabilities ---'; specdd resolve --help
-  printf '%s\n' '--- SpecDD lint ---'; specdd lint
+  printf '%s\n' '--- SpecDD migration resolver capabilities ---'; specdd resolve --help
+  printf '%s\n' '--- Legacy SpecDD parity lint ---'; specdd lint
 }
 
 install_bridge() {

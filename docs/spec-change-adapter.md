@@ -145,6 +145,27 @@ Planning tools may invoke `boundary inspect <target...>` whenever target context
 
 Adapters should not create a persisted context phase or copy canonical contract semantics into host feature artifacts merely to make them available to agents.
 
+## Concrete Spec Kit adapter
+
+The Spec Kit adapter uses the active feature directory name as its opaque change identity and preserves task order from `tasks.md`.
+
+Implementation write scope comes only from dedicated indented `Writes:` metadata attached to checklist tasks. Backticked repository-relative paths in that metadata are projected as exact writes. Incidental path-looking prose elsewhere in a task is not authorization input.
+
+The adapter exposes two host wrappers:
+
+- `speckit.boundary.authorize` at implementation entry;
+- `speckit.boundary.verify` at implementation exit.
+
+Those wrappers invoke native Boundary authorization and verification. They are adapter commands, not alternate product identities.
+
+Spec Kit planning and task refinement use `boundary inspect` on demand. There is no public persisted context phase and no public validation phase.
+
+The Spec Kit workflow overlay owns the two blocking lifecycle transitions. The extension does not duplicate them as hooks.
+
+Spec Kit feature artifacts and `.specify/` state are adapter-owned for actual-write classification unless a path is itself an authorized implementation target or a native Boundary contract. That classification cannot hide an authorized or contract path because Boundary checks those classes before consulting the adapter classifier.
+
+Legacy SpecDD bridge scripts may remain temporarily for migration and parity evidence. They are not part of the normalized Spec Kit change projection and do not grant implementation authority.
+
 ## Core isolation
 
 Boundary core must not contain assumptions about:

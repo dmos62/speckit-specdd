@@ -57,7 +57,7 @@ locate_source_root() {
 materialize_archive() {
   local archive="$1"
 
-  TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/speckit-boundary-install.XXXXXX")" ||
+  TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/boundary-install.XXXXXX")" ||
     fail "could not create temporary installation directory"
   mkdir -p "$TEMP_ROOT/extracted"
   extract_archive "$archive" "$TEMP_ROOT/extracted"
@@ -86,7 +86,7 @@ materialize_source() {
     kind="$(archive_kind "$source")" ||
       fail "remote archive must be .zip, .tar.gz, or .tgz"
     require_command curl
-    TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/speckit-boundary-install.XXXXXX")" ||
+    TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/boundary-install.XXXXXX")" ||
       fail "could not create temporary installation directory"
     archive="$TEMP_ROOT/source.${kind}"
     curl \
@@ -114,6 +114,8 @@ require_source_tree() {
     fail "workflow overlay source is missing"
   [[ -f "$SOURCE_ROOT/$CODEX_SKILL_ADAPTER" ]] ||
     fail "Codex Boundary skill adapter is missing"
+  [[ -f "$SOURCE_ROOT/src/boundary/__init__.py" ]] ||
+    fail "native Boundary runtime source is missing"
 
   local skill
   for skill in scope implement contracts; do

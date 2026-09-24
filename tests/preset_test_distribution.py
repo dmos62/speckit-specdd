@@ -10,8 +10,8 @@ from preset_test_install_support import (
 )
 from preset_test_support import (
     INSTALLER_PATH,
+    INSTALLED_BOUNDARY_RUNTIME,
     INSTALLED_RUNTIME_PATH,
-    INSTALLED_SCHEMA_PATH,
     active_integration,
     archive_source,
     command_available,
@@ -34,11 +34,10 @@ BOUNDARY_SKILLS = (
 @unittest.skipUnless(
     command_available("bash")
     and command_available("specify")
-    and command_available("specdd")
     and command_available("codex")
     and command_available("git")
     and command_available("uv"),
-    "Bash, Spec Kit, SpecDD, Codex, Git, and uv are required for distribution tests",
+    "Bash, Spec Kit, Codex, Git, and uv are required for distribution tests",
 )
 class DistributionInstallTests(unittest.TestCase):
     def _skill_bytes(self, root: Path) -> dict[str, bytes]:
@@ -61,7 +60,7 @@ class DistributionInstallTests(unittest.TestCase):
             (root / ".specify" / "presets" / "specdd-bridge").is_dir()
         )
         self.assertTrue((root / INSTALLED_RUNTIME_PATH).is_file())
-        self.assertTrue((root / INSTALLED_SCHEMA_PATH).is_file())
+        self.assertTrue((root / INSTALLED_BOUNDARY_RUNTIME).is_file())
 
         for skill in BOUNDARY_SKILLS:
             with self.subTest(skill=skill):
@@ -77,6 +76,20 @@ class DistributionInstallTests(unittest.TestCase):
                 self.assertIn(f"name: {skill}", content)
                 self.assertIn(f"# {skill}", content)
 
+        for command in (
+            "speckit-boundary-authorize",
+            "speckit-boundary-verify",
+        ):
+            self.assertTrue(
+                (
+                    root
+                    / ".agents"
+                    / "skills"
+                    / command
+                    / "SKILL.md"
+                ).is_file()
+            )
+
         overlay = run_command(
             root,
             "specify",
@@ -90,7 +103,7 @@ class DistributionInstallTests(unittest.TestCase):
         overlay_text = installed_overlay_text(root)
         self.assertIn(str(INSTALLED_RUNTIME_PATH), overlay_text)
         self.assertNotIn(
-            "integration/specdd/scripts/workflow_gate.py",
+            "integration/specdd/scripts/adapter_gate.py",
             overlay_text,
         )
 
@@ -154,6 +167,9 @@ class DistributionInstallTests(unittest.TestCase):
             self.assertFalse(
                 (root / ".specify" / "presets" / "specdd-bridge").exists()
             )
+            self.assertFalse(
+                (root / ".specify" / "boundary-runtime").exists()
+            )
             for skill in BOUNDARY_SKILLS:
                 self.assertFalse(
                     (
@@ -174,7 +190,7 @@ class DistributionInstallTests(unittest.TestCase):
             require_success(self, second)
             self._assert_bridge_installed(root)
 
-    def test_immutable_archive_runs_lifecycle_without_vendored_bridge_source(self):
+    def test_immutable_archive_runs_native_boundary_lifecycle(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             init_project(self, root)
@@ -188,10 +204,15 @@ class DistributionInstallTests(unittest.TestCase):
             skill_bytes = self._skill_bytes(root)
 
             self.assertFalse((root / "integration" / "specdd").exists())
-            self.assertFalse((root / "integration" / "specdd-preset").exists())
+            self.assertFalse(
+                (root / "integration" / "specdd-preset").exists()
+            )
             self.assertFalse((root / "adapters").exists())
             self.assertFalse((root / "skills").exists())
-            self.assertFalse((root / "scripts" / "bootstrap.sh").exists())
+            self.assertFalse((root / "src" / "boundary").exists())
+            self.assertFalse(
+                (root / "scripts" / "bootstrap.sh").exists()
+            )
 
             resolved = run_command(
                 root,
@@ -203,20 +224,6 @@ class DistributionInstallTests(unittest.TestCase):
             require_success(self, resolved)
             assert_resolved_workflow(self, resolved.stdout)
 
-            context = run_installed_gate(root, feature_dir, "context")
-            require_success(self, context)
-            context_value = json.loads(context.stdout)
-            self.assertEqual(
-                "specs/001-runtime/.specdd/boundary.json",
-                context_value["boundary"],
-            )
-            self.assertEqual(["src/app.py"], context_value["targets"])
-
-            tasks = run_installed_gate(root, feature_dir, "tasks")
-            require_success(self, tasks)
-            task_value = json.loads(tasks.stdout)
-            self.assertFalse(task_value["summary"]["blocking"])
-
             authorize = run_installed_gate(
                 root,
                 feature_dir,
@@ -224,28 +231,41 @@ class DistributionInstallTests(unittest.TestCase):
             )
             require_success(self, authorize)
             authorization = json.loads(authorize.stdout)
-            self.assertTrue(authorization["specddContextFresh"])
-            self.assertTrue(
-                authorization["authorizationSnapshot"]["stored"]
+            operation = authorization["operation"]
+            self.assertEqual("implementation", operation["kind"])
+            self.assertEqual("authorized", operation["status"])
+            self.assertEqual(
+                ["src/app.py"],
+                [
+                    item["path"]
+                    for item in operation["authorizedTargets"]
+                ],
             )
 
             (root / "src" / "app.py").write_text(
                 'VALUE = "after"\n',
                 encoding="utf-8",
             )
+            (feature_dir / "progress.md").write_text(
+                "generated host state\n",
+                encoding="utf-8",
+            )
 
-            verify = run_installed_gate(root, feature_dir, "verify")
+            verify = run_installed_gate(
+                root,
+                feature_dir,
+                "verify",
+            )
             require_success(self, verify)
             verification = json.loads(verify.stdout)
-            self.assertFalse(verification["summary"]["blocking"])
             self.assertEqual(
-                ["src/app.py"],
-                [
-                    item["path"]
-                    for item in verification["changes"]["writeTargets"]
-                ],
+                "verified",
+                verification["operation"]["status"],
             )
-            self.assertEqual(skill_bytes, self._skill_bytes(root))
+            self.assertEqual(
+                skill_bytes,
+                self._skill_bytes(root),
+            )
 
     def test_mutable_github_branch_archive_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:

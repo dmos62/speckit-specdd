@@ -156,6 +156,8 @@ Every projected semantic item retains provenance.
 
 Agents may request the raw canonical contract when the projection is insufficient.
 
+Concrete change-system integrations use this query during planning and task refinement rather than creating a persisted context lifecycle state. For the Spec Kit adapter, candidate task paths are inspected on demand and only exact structured `Writes:` declarations become authorization input.
+
 ## Legacy bootstrap independence
 
 Boundary installation and normal operation do not initialize or require `.specdd/bootstrap.md` as an agent-instruction source.
@@ -217,6 +219,8 @@ They do not require a specific agent function name or change-system command.
 A concrete runtime adapter may add discovery metadata or map those verbs to local invocation syntax.
 
 Differences that cannot be abstracted cleanly remain in the concrete adapter rather than leaking into canonical skill content.
+
+The Spec Kit adapter exposes only implementation-entry and implementation-exit wrappers. `speckit.boundary.authorize` projects fresh structured task scope into native Boundary authorization, and `speckit.boundary.verify` closes that operation from Git-derived actual writes. The workflow overlay, rather than extension hooks, owns those blocking transitions.
 
 ## Failure behavior
 

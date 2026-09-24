@@ -22,25 +22,29 @@ from preset_test_support import (
 
 @unittest.skipUnless(
     command_available("specify")
-    and command_available("specdd")
     and command_available("git"),
-    "Spec Kit, SpecDD, and Git are required for the preset install smoke test",
+    "Spec Kit and Git are required for the adapter install smoke test",
 )
 class PresetInstallTests(unittest.TestCase):
-    def test_local_install_materializes_codex_commands_and_hooks(self):
+    def test_local_install_materializes_codex_commands_and_overlay(self):
         version = run_command(PRESET_ROOT, "specify", "--version")
         require_success(self, version)
         if SPECKIT_VERSION not in version.stdout + version.stderr:
             self.skipTest(
-                f"Preset composition smoke requires Spec Kit {SPECKIT_VERSION}"
+                f"Adapter composition smoke requires Spec Kit {SPECKIT_VERSION}"
             )
 
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             baseline_bodies = initialize_codex_project(self, root)
             install_workflow_overlay(self, root)
-            hook_state_path = install_extension(self, root)
+            install_extension(self, root)
             preset_dir = install_preset(self, root)
-            remove_preset(self, root, preset_dir, baseline_bodies)
-            remove_extension(self, root, hook_state_path)
+            remove_preset(
+                self,
+                root,
+                preset_dir,
+                baseline_bodies,
+            )
+            remove_extension(self, root)
             remove_workflow_overlay(self, root)
