@@ -17,6 +17,7 @@ Provide reproducible Boundary development bootstrap and downstream integration r
 - Locked remote source is checksum-verified before extraction or installation.
 - Install, health-check, remove/reinstall, and deliberate upgrade operate from the committed Boundary lock.
 - Generated Boundary integration state remains reconstructible from canonical source and is excluded locally rather than becoming downstream canonical source.
+- Shared host registry and configuration files remain visible to Git rather than being hidden as Boundary-owned generated state.
 - Installation and removal use supported host lifecycle mechanisms rather than patching generated state directly.
 - Development bootstrap remains separate from downstream locked-source reconstruction.
 - Development bootstrap does not install or require the removed SpecDD migration provider.

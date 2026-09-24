@@ -66,7 +66,9 @@ The managed exclusions cover:
 
 Change-system feature artifacts are not broadly ignored.
 
-Shared host registries are not hidden merely because Boundary has an entry in them. Clean-consumer coverage must establish whether such files need a more precise supported treatment.
+Shared host registry and configuration files are not hidden merely because Boundary installation changes them. Those paths remain visible in Git status and are handled according to the host system's own project-state policy. If a project treats such host configuration as canonical, changes are reviewed and committed as host state rather than concealed through Boundary exclusions.
+
+Clean-consumer coverage therefore distinguishes Boundary-owned generated paths from shared host state: Boundary-owned generated paths must not appear in Git status after reconstruction, while any shared host registry delta remains explicit and reviewable.
 
 ## Lifecycle commands
 

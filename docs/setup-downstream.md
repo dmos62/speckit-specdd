@@ -96,4 +96,6 @@ Boundary maintains local Git exclusions in the worktree's Git metadata for Bound
 
 Operation authorization evidence also lives in Git metadata rather than ordinary project source.
 
-These files can be removed and reconstructed without changing native project contracts.
+Shared Spec Kit registry or configuration files are not automatically ignored by Boundary. If installation changes shared host state, that change remains visible in Git status and should be handled according to the project's Spec Kit configuration policy.
+
+Boundary-owned generated files can be removed and reconstructed without changing native project contracts.
