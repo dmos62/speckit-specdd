@@ -106,15 +106,21 @@ Canonical skill procedure is stored as plain Markdown in:
     skills/implement/SKILL.md
     skills/contracts/SKILL.md
 
-Canonical files contain Boundary procedure only. Runtime-specific frontmatter, discovery paths, command syntax, and wrappers are added by concrete agent adapters.
+Canonical files contain Boundary procedure only. They contain no runtime discovery frontmatter or runtime-specific paths.
 
-For Codex, materialization may produce:
+The concrete Codex adapter at `adapters/codex/materialize.py` produces:
 
-    .agents/skills/boundary-scope/
-    .agents/skills/boundary-implement/
-    .agents/skills/boundary-contracts/
+    .agents/skills/boundary-scope/SKILL.md
+    .agents/skills/boundary-implement/SKILL.md
+    .agents/skills/boundary-contracts/SKILL.md
+
+The concrete Claude Code adapter at `adapters/claude/materialize.py` produces the same named skills under `.claude/skills/`.
+
+Each materialized file consists only of fixed runtime discovery metadata followed by the canonical skill bytes. Materialization is deterministic and idempotent: unrelated feature, task, authorization, or operation state cannot alter generated skill bytes.
 
 Generated materializations are not canonical source.
+
+The two concrete adapters intentionally do not share a generalized runtime-provider framework. The second implementation is maintained as portability evidence while concrete differences remain small.
 
 ## Effective-context query
 
@@ -206,11 +212,11 @@ Canonical skills use product-level verbs such as:
 - verify operation;
 - evolve contracts.
 
-They do not require a specific agent function name or Spec Kit command.
+They do not require a specific agent function name or change-system command.
 
-An adapter may wrap those verbs in local syntax.
+A concrete runtime adapter may add discovery metadata or map those verbs to local invocation syntax.
 
-Differences that cannot be abstracted cleanly remain in the adapter rather than leaking into canonical skill content.
+Differences that cannot be abstracted cleanly remain in the concrete adapter rather than leaking into canonical skill content.
 
 ## Failure behavior
 
@@ -224,14 +230,16 @@ Prompt wording must never convert a deterministic failure into permission.
 
 ## Evaluation criteria
 
-The instruction architecture should be tested for:
+The instruction architecture is tested for:
 
-- correct skill discovery;
+- canonical skills remaining small and runtime-neutral;
+- concrete runtime discovery materialization;
+- preservation of the exact canonical procedure beneath runtime frontmatter;
+- stable materialized skill bytes across unrelated operations;
 - implementation staying within explicit write scope;
 - reliable scope-expansion behavior;
 - correct transition to contract evolution;
 - preservation of broader applicable constraints;
 - reduced always-loaded context;
-- stable skill bytes across unrelated operations;
 - clear provenance when a projected rule is questioned;
-- portability to at least one additional agent runtime before creating generalized adapter machinery.
+- concrete portability through Codex and Claude Code materialization without generalized adapter machinery.

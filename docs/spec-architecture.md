@@ -21,7 +21,7 @@ The core owns provider-independent mechanics:
 - provider-neutral diagnostics;
 - atomic operation evidence.
 
-The core does not know about Spec Kit command names, Codex skill directories, SpecDD sections, `.sdd`, or `.specdd/`.
+The core does not know about Spec Kit command names, agent skill directories, SpecDD sections, `.sdd`, or `.specdd/`.
 
 ### Native contract engine
 
@@ -57,7 +57,11 @@ Boundary's core semantics must not require Spec Kit-specific stages, files, comm
 
 An agent-runtime adapter materializes Boundary's canonical skills and thin entry points for an agent environment.
 
-The initial adapter is Codex.
+Codex is the active runtime for the current repository. Its concrete adapter materializes canonical skills under `.agents/skills/` and adds only runtime discovery metadata.
+
+A second concrete Claude Code materializer targets `.claude/skills/`. It exists as portability evidence and test coverage, not as the first member of a generalized runtime-provider framework.
+
+The two adapters deliberately remain concrete. Shared runtime infrastructure should be introduced only when actual divergence or repeated implementation demonstrates a useful stable interface.
 
 Canonical skill content uses Boundary concepts rather than vendor-specific tool syntax. Agent-specific wrappers may map those concepts onto local commands.
 
@@ -168,6 +172,7 @@ The canonical implementation should migrate toward a provider-neutral layout sim
     adapters/
       speckit/
       codex/
+      claude/
       specdd-compat/
 
     schemas/
@@ -231,11 +236,13 @@ The native contract engine is the product implementation.
 
 SpecDD is a migration adapter, not the first member of a permanent provider ecosystem.
 
-A generalized abstraction is justified only after another real implementation demonstrates shared requirements.
+Codex and Claude skill materializers are concrete runtime integrations. Their existence demonstrates portability but does not by itself justify dynamic agent-adapter registration or a shared provider framework.
+
+A generalized abstraction is justified only when concrete implementations demonstrate a stable shared requirement.
 
 ## Portability invariant
 
-Replacing Spec Kit, Codex, or the SpecDD compatibility layer must not require redesigning:
+Replacing Spec Kit, Codex, Claude Code, or the SpecDD compatibility layer must not require redesigning:
 
 - native contract semantics;
 - target effective-context composition;

@@ -2,8 +2,10 @@ import unittest
 
 from preset_test_support import (
     BOOTSTRAP_PATH,
+    BOOTSTRAP_PROVIDER_PATH,
     EXTENSION_ROOT,
     INSTALLER_PATH,
+    INSTALL_SOURCE_PATH,
     PRESET_ROOT,
     SPECDD_PROVIDER_VERSION,
     SPECDD_UPSTREAM_CLI_VERSION,
@@ -113,6 +115,7 @@ class PresetSourceTests(unittest.TestCase):
         for marker in (
             'readonly ACTIVE_INTEGRATION="codex"',
             'readonly ACTIVE_COMMANDS_DIR=".agents/skills"',
+            'source "$BOOTSTRAP_SCRIPT_DIR/bootstrap-provider.sh"',
             'specify integration switch "$ACTIVE_INTEGRATION" --script ps',
             "bash scripts/install.sh --source .",
         ):
@@ -149,13 +152,19 @@ class PresetSourceTests(unittest.TestCase):
             )
 
     def test_installer_uses_native_components_and_immutable_remote_sources(self):
-        content = INSTALLER_PATH.read_text(
+        installer = INSTALLER_PATH.read_text(
             encoding="utf-8"
         )
+        source_helper = INSTALL_SOURCE_PATH.read_text(
+            encoding="utf-8"
+        )
+        content = installer + "\n" + source_helper
 
         for marker in (
             'readonly SPECKIT_VERSION="1.0.10"',
             'readonly ACTIVE_INTEGRATION="codex"',
+            'readonly CODEX_SKILL_ADAPTER="adapters/codex/materialize.py"',
+            'source "$INSTALL_SCRIPT_DIR/install-source.sh"',
             "archive/refs/tags/",
             "releases/download/",
             "specify extension add",
@@ -163,6 +172,8 @@ class PresetSourceTests(unittest.TestCase):
             "specify workflow overlay add",
             "specify workflow overlay remove",
             "specify integration switch",
+            "materialize_boundary_skills",
+            "skills/${skill}/SKILL.md",
         ):
             self.assertIn(
                 marker,
@@ -178,6 +189,19 @@ class PresetSourceTests(unittest.TestCase):
                 forbidden,
                 content,
             )
+
+    def test_split_shell_sources_remain_small(self):
+        for path in (
+            BOOTSTRAP_PATH,
+            BOOTSTRAP_PROVIDER_PATH,
+            INSTALLER_PATH,
+            INSTALL_SOURCE_PATH,
+        ):
+            with self.subTest(path=path.name):
+                self.assertLessEqual(
+                    len(path.read_text(encoding="utf-8").splitlines()),
+                    250,
+                )
 
     def test_augmentations_cover_authority_aware_lifecycle(self):
         plan = (

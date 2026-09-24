@@ -74,10 +74,14 @@ class RealFixtureIntegrationTests(unittest.TestCase):
             ["src/auth/service.ts", "src/users/repository.ts"],
             [target["path"] for target in payload["targets"]],
         )
-
-        rendered = json.dumps(payload, sort_keys=True)
-        self.assertIn("1.2.0", rendered)
-        self.assertIn("1.5", rendered)
+        self.assertEqual(
+            "1.2.0",
+            payload["generation"]["specddCliVersion"],
+        )
+        self.assertEqual(
+            "not-required",
+            payload["generation"]["specddFrameworkVersion"],
+        )
 
     def test_missing_target_uses_resolver_when_supported(self):
         if not FIXTURE_ROOT.is_dir():

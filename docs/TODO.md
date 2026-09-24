@@ -6,34 +6,13 @@ The current executable baseline still uses Spec Kit `1.0.10`, Codex, and the tem
 
 The native path now provides deterministic canonical contract discovery, parsing, graph construction, target-context resolution, `boundary contracts check`, transient `boundary inspect <target...>`, fresh implementation/contract-evolution authorization, target effective-context identities, Git authorization baselines, atomic current operation records, verified authorization epochs, exact dirty-state carry-forward provenance, and Git-derived actual-write authorization verification with provider-neutral diagnostics.
 
+Canonical Boundary procedure is now deterministically materialized from `skills/*/SKILL.md` into Codex discovery state. A second concrete Claude Code materializer exercises the same canonical procedure without introducing a generalized runtime-provider framework. Materialized skill bytes contain only fixed runtime metadata plus canonical procedure and remain independent of feature or operation state.
+
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
-
-## P7 — Build the progressive agent instruction architecture
-
-Canonical Boundary procedure now lives in `skills/scope/SKILL.md`, `skills/implement/SKILL.md`, and `skills/contracts/SKILL.md`. Focused tests enforce small vendor-neutral source without volatile operation data. Boundary bootstrap no longer creates or requires the SpecDD framework bootstrap as an agent-instruction dependency. Runtime-specific discovery metadata still belongs to P7.3.
-
-### P7.3 — Materialize skills through agent adapters
-
-- [ ] Implement Codex materialization from canonical Boundary skills.
-- [ ] Keep Codex paths and frontmatter out of canonical procedure where possible.
-- [ ] Test skill discovery and invocation.
-- [ ] Test stable skill bytes across unrelated feature operations.
-- [ ] Test one additional agent runtime before introducing any generalized agent-adapter framework.
-
-Done when:
-  Ordinary implementation receives small stable procedure plus only relevant effective project context and never requires a framework bootstrap.
 
 ## P8 — Reduce Spec Kit to a change-system adapter
 
-### P8.1 — Define the change-adapter contract
-
-- [ ] Represent:
-  - active change ID;
-  - task identity;
-  - explicit writes;
-  - adapter-owned feature/generated paths;
-  - implementation lifecycle entry/exit.
-- [ ] Keep Spec Kit-specific file names, workflow stages, and constitution concepts outside Boundary core.
+The provider-neutral change-system adapter contract is defined in `docs/spec-change-adapter.md`.
 
 ### P8.2 — Simplify Spec Kit integration
 

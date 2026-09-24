@@ -3,7 +3,7 @@ Spec: Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard the provider-neutral core boundaries, canonical agent procedure, and the bridge's explicit write scope, ownership projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
+  Guard the provider-neutral core boundaries, canonical agent procedure, concrete agent materialization, and the bridge's explicit write scope, ownership projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
 
 Owns:
   ./test_boundary_core_layout.py
@@ -16,6 +16,7 @@ Owns:
   ./test_operation_record.py
   ./test_native_verification.py
   ./test_agent_skills.py
+  ./test_agent_skill_materialization.py
   ./test_boundary.py
   ./boundary_test_support.py
   ./boundary_test_paths.py
@@ -61,6 +62,7 @@ Must:
   Native operation-record tests cover atomic evidence content and storage, including failed successor replacement after verified predecessor closure.
   Native verification tests derive actual writes from Git, reject undeclared writes even within an already represented owner, reject native-contract writes during implementation, fresh-resolve changed target context, keep contract-evolution write-kind checks separate from structural validation, and allow adapter-owned generated state to be excluded without hiding authorized targets.
   Canonical agent-skill tests keep scope, implementation, and contract-evolution procedure small, vendor-neutral, free of volatile operation values, and explicit about deterministic lifecycle boundaries.
+  Agent materialization tests cover deterministic Codex discovery paths, runtime frontmatter separated from canonical procedure, exact canonical bodies, stable bytes across unrelated feature operations, and a second concrete Claude Code materialization without generalized runtime-adapter machinery.
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Adapter tests preserve path normalization, resolver-backed ownership derivation, deterministic output, and schema validation coverage.
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport whenever the active SpecDD provider exposes the complete intended-target capability.
@@ -85,8 +87,8 @@ Must:
   Verification blocks implementation authority absent from the authorization snapshot.
   Changed `.sdd` files do not retroactively authorize implementation in the same operation.
   Fixture verification proves authority evolution requires fresh resolution and authorization.
-  Preset installation tests exercise registrar-backed command materialization, hooks, composition, workflow-overlay installation, and clean removal.
-  Distribution installation tests exercise local installation, Codex switching, clean remove/reinstall, and an immutable GitHub archive path without depending on live network access.
+  Preset installation tests exercise registrar-backed command materialization, hooks, composition, workflow-overlay installation, Boundary skill materialization, and clean removal.
+  Distribution installation tests exercise local installation, Codex switching, stable Boundary skill bytes, clean remove/reinstall, and an immutable GitHub archive path without depending on live network access.
   Distribution installation tests prove an isolated downstream consumer with provider contracts but no canonical bridge source can run context, task validation, authorization, and verification through installed extension runtime.
   Distribution installation tests reject mutable GitHub branch archives.
   Static source tests cover only packaging and lifecycle wiring that is not already established more directly by behavioral or installation tests.

@@ -24,6 +24,13 @@ from preset_test_support import (
 )
 
 
+BOUNDARY_SKILLS = (
+    "boundary-scope",
+    "boundary-implement",
+    "boundary-contracts",
+)
+
+
 @unittest.skipUnless(
     command_available("bash")
     and command_available("specify")
@@ -34,6 +41,18 @@ from preset_test_support import (
     "Bash, Spec Kit, SpecDD, Codex, Git, and uv are required for distribution tests",
 )
 class DistributionInstallTests(unittest.TestCase):
+    def _skill_bytes(self, root: Path) -> dict[str, bytes]:
+        return {
+            skill: (
+                root
+                / ".agents"
+                / "skills"
+                / skill
+                / "SKILL.md"
+            ).read_bytes()
+            for skill in BOUNDARY_SKILLS
+        }
+
     def _assert_bridge_installed(self, root: Path) -> None:
         self.assertTrue(
             (root / ".specify" / "extensions" / "specdd").is_dir()
@@ -43,6 +62,20 @@ class DistributionInstallTests(unittest.TestCase):
         )
         self.assertTrue((root / INSTALLED_RUNTIME_PATH).is_file())
         self.assertTrue((root / INSTALLED_SCHEMA_PATH).is_file())
+
+        for skill in BOUNDARY_SKILLS:
+            with self.subTest(skill=skill):
+                path = (
+                    root
+                    / ".agents"
+                    / "skills"
+                    / skill
+                    / "SKILL.md"
+                )
+                self.assertTrue(path.is_file())
+                content = path.read_text(encoding="utf-8")
+                self.assertIn(f"name: {skill}", content)
+                self.assertIn(f"# {skill}", content)
 
         overlay = run_command(
             root,
@@ -56,7 +89,10 @@ class DistributionInstallTests(unittest.TestCase):
         self.assertIn("specdd-bridge", overlay.stdout)
         overlay_text = installed_overlay_text(root)
         self.assertIn(str(INSTALLED_RUNTIME_PATH), overlay_text)
-        self.assertNotIn("integration/specdd/scripts/workflow_gate.py", overlay_text)
+        self.assertNotIn(
+            "integration/specdd/scripts/workflow_gate.py",
+            overlay_text,
+        )
 
     def _install_remote_archive(
         self,
@@ -118,6 +154,15 @@ class DistributionInstallTests(unittest.TestCase):
             self.assertFalse(
                 (root / ".specify" / "presets" / "specdd-bridge").exists()
             )
+            for skill in BOUNDARY_SKILLS:
+                self.assertFalse(
+                    (
+                        root
+                        / ".agents"
+                        / "skills"
+                        / skill
+                    ).exists()
+                )
 
             second = run_command(
                 root,
@@ -140,9 +185,12 @@ class DistributionInstallTests(unittest.TestCase):
             require_success(self, installed)
             archive.unlink()
             self._assert_bridge_installed(root)
+            skill_bytes = self._skill_bytes(root)
 
             self.assertFalse((root / "integration" / "specdd").exists())
             self.assertFalse((root / "integration" / "specdd-preset").exists())
+            self.assertFalse((root / "adapters").exists())
+            self.assertFalse((root / "skills").exists())
             self.assertFalse((root / "scripts" / "bootstrap.sh").exists())
 
             resolved = run_command(
@@ -169,7 +217,11 @@ class DistributionInstallTests(unittest.TestCase):
             task_value = json.loads(tasks.stdout)
             self.assertFalse(task_value["summary"]["blocking"])
 
-            authorize = run_installed_gate(root, feature_dir, "authorize")
+            authorize = run_installed_gate(
+                root,
+                feature_dir,
+                "authorize",
+            )
             require_success(self, authorize)
             authorization = json.loads(authorize.stdout)
             self.assertTrue(authorization["specddContextFresh"])
@@ -193,6 +245,7 @@ class DistributionInstallTests(unittest.TestCase):
                     for item in verification["changes"]["writeTargets"]
                 ],
             )
+            self.assertEqual(skill_bytes, self._skill_bytes(root))
 
     def test_mutable_github_branch_archive_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:

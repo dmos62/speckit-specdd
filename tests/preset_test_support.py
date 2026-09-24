@@ -10,9 +10,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRESET_ROOT = REPO_ROOT / "integration" / "specdd-preset"
 EXTENSION_ROOT = REPO_ROOT / "integration" / "specdd"
+AGENT_ADAPTERS_ROOT = REPO_ROOT / "adapters"
+CANONICAL_SKILLS_ROOT = REPO_ROOT / "skills"
 WORKFLOW_OVERLAY_PATH = EXTENSION_ROOT / "workflow-overlay.yml"
 BOOTSTRAP_PATH = REPO_ROOT / "scripts" / "bootstrap.sh"
+BOOTSTRAP_PROVIDER_PATH = REPO_ROOT / "scripts" / "bootstrap-provider.sh"
 INSTALLER_PATH = REPO_ROOT / "scripts" / "install.sh"
+INSTALL_SOURCE_PATH = REPO_ROOT / "scripts" / "install-source.sh"
 CODEX_SKILLS_DIR = Path(".agents") / "skills"
 INSTALLED_RUNTIME_PATH = (
     Path(".specify")
@@ -150,6 +154,14 @@ def archive_source(destination: Path) -> Path:
         package.add(
             PRESET_ROOT,
             arcname=f"{prefix}/integration/specdd-preset",
+        )
+        package.add(
+            AGENT_ADAPTERS_ROOT,
+            arcname=f"{prefix}/adapters",
+        )
+        package.add(
+            CANONICAL_SKILLS_ROOT,
+            arcname=f"{prefix}/skills",
         )
     return archive
 
