@@ -8,12 +8,12 @@
 @glob scripts/install.sh
 @glob scripts/install-host.sh
 @glob scripts/install-source.sh
-@glob integration/speckit/extension.yml
-@glob integration/speckit/workflow-overlay.yml
-@glob integration/speckit-preset/preset.yml
-@glob tests/test_consumer*.py
+@glob tests/test_consumer_lifecycle.py
+@glob tests/test_consumer_release.py
 @glob tests/consumer_test_support.py
 @globexclude docs/spec-v0.1.md
+@globexclude integration/**
+@globexclude tests/test_consumer_lock.py
 @globexclude .specify/**
 @globexclude tests/fixtures/**
 @globexclude tests/test_spec_kit_adapter*.py

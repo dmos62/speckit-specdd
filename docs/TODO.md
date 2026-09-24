@@ -27,6 +27,8 @@ This local archive coverage does not replace the remaining release proof against
 - [ ] Add a clean-consumer fixture with a committed real `boundary.lock.json` containing an exact Boundary commit archive and checksum, with no canonical Boundary implementation source.
 - [ ] Run the same fresh-clone lifecycle matrix against that committed real archive fixture.
 
+Release-proof harness coverage is prepared in `tests/test_consumer_release.py`. It is opt-in with `BOUNDARY_RELEASE_ARCHIVE_TESTS=1`, and `dev-scripts.include` runs it automatically once both release lock fixtures exist. Completion still requires real published archive evidence: commit `tests/fixtures/consumer-release/boundary.lock.json` and `boundary-upgrade.lock.json` with distinct immutable Boundary sources and exact SHA-256 values. Do not substitute synthetic archive bytes for this proof.
+
 Done when:
   A fresh clone can reconstruct the same Boundary tooling and agent capabilities from the committed lock while carrying only native project contracts as persistent Boundary semantics.
 
