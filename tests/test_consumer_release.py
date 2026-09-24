@@ -45,7 +45,11 @@ def initialize_release_fixture(
         raise AssertionError(
             "tests/fixtures/consumer-release is missing"
         )
-    shutil.copytree(FIXTURE, target)
+    shutil.copytree(
+        FIXTURE,
+        target,
+        ignore=shutil.ignore_patterns("boundary-upgrade.lock.json"),
+    )
     for relative in _CANONICAL_SOURCE_DIRS:
         if (target / relative).exists():
             raise AssertionError(
@@ -87,10 +91,17 @@ class ConsumerReleaseArchiveTests(unittest.TestCase):
                 f"release archive fixture is missing {name}",
             )
 
+        initial = load_lock(FIXTURE / "boundary.lock.json")
+        upgrade = load_lock(FIXTURE / "boundary-upgrade.lock.json")
+        self.assertNotEqual(
+            initial.revision,
+            upgrade.revision,
+            "release locks must name distinct immutable commits",
+        )
+
     def test_fresh_clone_real_archive_lifecycle(self) -> None:
         initial = load_lock(FIXTURE / "boundary.lock.json")
         upgrade = load_lock(FIXTURE / "boundary-upgrade.lock.json")
-        self.assertNotEqual(initial, upgrade)
 
         with tempfile.TemporaryDirectory() as temporary:
             temp = Path(temporary)
@@ -99,6 +110,9 @@ class ConsumerReleaseArchiveTests(unittest.TestCase):
             consumer = temp / "consumer"
             clone_fixture(fixture, consumer)
 
+            self.assertFalse(
+                (consumer / "boundary-upgrade.lock.json").exists()
+            )
             self.assertEqual(0, run_consumer(consumer, "install"))
             self.assertEqual(0, run_consumer(consumer, "check"))
             assert_no_canonical_source(self, consumer)
@@ -174,6 +188,9 @@ class ConsumerReleaseArchiveTests(unittest.TestCase):
             consumer = temp / "consumer"
             clone_fixture(fixture, consumer)
 
+            self.assertFalse(
+                (consumer / "boundary-upgrade.lock.json").exists()
+            )
             self.assertEqual(2, run_consumer(consumer, "install"))
             self.assertEqual((), status_paths(consumer))
             assert_no_canonical_source(self, consumer)
