@@ -15,6 +15,7 @@ from boundary.authorization import (
     OperationRecord,
     TaskWriteSet,
     authorize_implementation_operation,
+    read_current_operation,
 )
 from boundary.verification import finalize_operation_verification
 
@@ -22,7 +23,7 @@ _TASK_RE = re.compile(
     r"^\s*-\s+\[[ xX]\]\s+(?P<id>\S+)(?:\s+(?P<body>.*))?$"
 )
 _WRITES_RE = re.compile(r"^\s+Writes:\s*(?P<value>.*?)\s*$")
-_PATH_RE = re.compile(r"`([^`]+)`")
+_WRITE_TOKEN_RE = re.compile(r"^`([^`\r\n]+)`$")
 _STORY_RE = re.compile(r"\[(US[^\]]+)\]")
 
 
@@ -125,16 +126,18 @@ def project_change(
 
 
 def parse_tasks(source: str) -> tuple[TaskWriteSet, ...]:
-    """Parse checklist task identity and dedicated indented Writes metadata."""
+    """Parse checklist task identity and directly attached Writes metadata."""
 
     tasks: list[TaskWriteSet] = []
     current_id: str | None = None
     current_story: str | None = None
-    current_writes: list[str] = []
+    current_writes: tuple[str, ...] = ()
     writes_seen = False
+    metadata_open = False
 
     def flush() -> None:
-        nonlocal current_id, current_story, current_writes, writes_seen
+        nonlocal current_id, current_story, current_writes
+        nonlocal writes_seen, metadata_open
         if current_id is None:
             return
         tasks.append(
@@ -142,13 +145,14 @@ def parse_tasks(source: str) -> tuple[TaskWriteSet, ...]:
                 order=len(tasks),
                 task_id=current_id,
                 story=current_story,
-                writes=tuple(current_writes),
+                writes=current_writes,
             )
         )
         current_id = None
         current_story = None
-        current_writes = []
+        current_writes = ()
         writes_seen = False
+        metadata_open = False
 
     for line in source.splitlines():
         task_match = _TASK_RE.match(line)
@@ -162,28 +166,33 @@ def parse_tasks(source: str) -> tuple[TaskWriteSet, ...]:
                 if story_match is not None
                 else None
             )
+            metadata_open = True
             continue
 
         writes_match = _WRITES_RE.match(line)
-        if writes_match is None:
+        if writes_match is not None:
+            if current_id is None:
+                raise SpecKitAdapterError(
+                    "Writes metadata must belong to a checklist task"
+                )
+            if not metadata_open:
+                raise SpecKitAdapterError(
+                    f"task {current_id!r} Writes metadata must be directly "
+                    "attached to the checklist task"
+                )
+            if writes_seen:
+                raise SpecKitAdapterError(
+                    f"task {current_id!r} contains duplicate Writes metadata"
+                )
+            writes_seen = True
+            current_writes = _parse_writes(
+                current_id,
+                writes_match.group("value"),
+            )
             continue
-        if current_id is None:
-            raise SpecKitAdapterError(
-                "Writes metadata must belong to a checklist task"
-            )
-        if writes_seen:
-            raise SpecKitAdapterError(
-                f"task {current_id!r} contains duplicate Writes metadata"
-            )
 
-        writes_seen = True
-        value = writes_match.group("value")
-        paths = _PATH_RE.findall(value)
-        if value and not paths:
-            raise SpecKitAdapterError(
-                f"task {current_id!r} Writes metadata must use backticked paths"
-            )
-        current_writes.extend(paths)
+        if current_id is not None and line.strip():
+            metadata_open = False
 
     flush()
     if not tasks:
@@ -211,9 +220,24 @@ def verify_feature(
 ) -> OperationRecord:
     """Verify and close the active feature's Boundary operation."""
 
+    current = read_current_operation(root)
+    if current is None:
+        raise SpecKitAdapterError(
+            "no active Boundary operation is available for this feature"
+        )
+    if current.kind != "implementation":
+        raise SpecKitAdapterError(
+            "active Boundary operation is not an implementation operation"
+        )
+    if current.change_id != feature_dir.name:
+        raise SpecKitAdapterError(
+            "active Boundary operation belongs to another Spec Kit feature"
+        )
+
     relative = feature_dir.relative_to(root).as_posix()
     return finalize_operation_verification(
         root,
+        operation_id=current.operation_id,
         classify_path=path_classifier(relative),
     )
 
@@ -233,6 +257,29 @@ def path_classifier(
         return "ordinary"
 
     return classify
+
+
+def _parse_writes(
+    task_id: str,
+    value: str,
+) -> tuple[str, ...]:
+    text = value.strip()
+    if not text:
+        raise SpecKitAdapterError(
+            f"task {task_id!r} Writes metadata must declare at least one path"
+        )
+
+    writes: list[str] = []
+    for part in text.split(","):
+        token = part.strip()
+        match = _WRITE_TOKEN_RE.fullmatch(token)
+        if match is None:
+            raise SpecKitAdapterError(
+                f"task {task_id!r} Writes metadata must contain only "
+                "comma-separated backticked paths"
+            )
+        writes.append(match.group(1))
+    return tuple(writes)
 
 
 def _feature_path(root: Path, configured: str) -> tuple[Path, str]:

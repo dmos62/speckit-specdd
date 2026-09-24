@@ -59,20 +59,29 @@ class ChangeWriteSet:
         task_ids = [task.task_id for task in tasks if task.task_id is not None]
         if len(task_ids) != len(set(task_ids)):
             raise WriteSetError("task ids must be unique when present")
+
+        declared_by: dict[str, int] = {}
+        for task in tasks:
+            for write in task.writes:
+                previous = declared_by.get(write)
+                if previous is not None:
+                    raise WriteSetError(
+                        "declared write target appears in multiple tasks: "
+                        f"{write!r} (task orders {previous} and {task.order})"
+                    )
+                declared_by[write] = task.order
+
         object.__setattr__(self, "tasks", tasks)
 
     @property
     def writes(self) -> tuple[str, ...]:
-        """Return the ordered union of all exact task writes."""
+        """Return all exact task writes in canonical task order."""
 
-        result: list[str] = []
-        seen: set[str] = set()
-        for task in self.tasks:
-            for write in task.writes:
-                if write not in seen:
-                    seen.add(write)
-                    result.append(write)
-        return tuple(result)
+        return tuple(
+            write
+            for task in self.tasks
+            for write in task.writes
+        )
 
 
 @dataclass(frozen=True, slots=True)

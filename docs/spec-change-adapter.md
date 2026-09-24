@@ -58,7 +58,7 @@ Implementation writes are exact repository-relative paths.
 
 The change-level write projection is the deterministic ordered union of task writes, preserving first occurrence.
 
-Duplicate declarations that make structured scope ambiguous should be rejected rather than silently normalized into a different task model.
+A path declared by more than one task is ambiguous structured scope and must be rejected rather than silently normalized into a different task model.
 
 A declared write expresses implementation intent only. It does not itself grant permission.
 
@@ -111,6 +111,8 @@ At implementation exit, Boundary verifies the active operation from repository s
 
 Verification derives actual writes from Git and compares them with the authorized write set while accounting for valid adapter-owned state.
 
+The adapter must ensure that the active Boundary operation belongs to the same host change before requesting closure.
+
 The adapter may allow its host workflow to continue only after the Boundary verification transition returns its result.
 
 Ordinary tests and host workflow completion do not substitute for Boundary verification.
@@ -149,7 +151,9 @@ Adapters should not create a persisted context phase or copy canonical contract 
 
 The Spec Kit adapter uses the active feature directory name as its opaque change identity and preserves task order from `tasks.md`.
 
-Implementation write scope comes only from dedicated indented `Writes:` metadata attached to checklist tasks. Backticked repository-relative paths in that metadata are projected as exact writes. Incidental path-looking prose elsewhere in a task is not authorization input.
+Implementation write scope comes only from dedicated indented `Writes:` metadata attached directly to checklist tasks. Backticked repository-relative paths in that metadata are projected as exact writes. Incidental path-looking prose elsewhere in a task is not authorization input.
+
+Malformed, empty, duplicate, or ambiguously repeated structured write declarations are blocking adapter errors.
 
 The adapter is installed with Spec Kit extension identity `boundary`. Under Spec Kit's canonical extension-command namespace, this yields the two public wrappers:
 
@@ -163,8 +167,6 @@ Spec Kit planning and task refinement use `boundary inspect` on demand. There is
 The Spec Kit workflow overlay owns the two blocking lifecycle transitions. The extension does not duplicate them as hooks.
 
 Spec Kit feature artifacts and `.specify/` state are adapter-owned for actual-write classification unless a path is itself an authorized implementation target or a native Boundary contract. That classification cannot hide an authorized or contract path because Boundary checks those classes before consulting the adapter classifier.
-
-Legacy SpecDD bridge scripts may remain temporarily for migration and parity evidence. They are not part of the normalized Spec Kit change projection and do not grant implementation authority.
 
 ## Core isolation
 
@@ -188,12 +190,12 @@ Given the same host change state, the adapter must produce the same normalized p
 
 Adapter projection must not depend on transient agent conversation state.
 
-Authorization and verification consume fresh adapter projections at their respective lifecycle transitions rather than trusting a stale planning projection.
+Authorization and verification consume fresh host state at their respective lifecycle transitions rather than trusting a stale planning projection.
 
 ## Failure behavior
 
 Malformed or ambiguous structured change state is a blocking adapter error.
 
-Missing change identity, duplicate task identity, invalid write paths, or an invalid adapter-owned path declaration must not be converted into permissive defaults.
+Missing change identity, duplicate task identity, repeated write ownership between tasks, invalid write paths, or invalid adapter-owned path declarations must not be converted into permissive defaults.
 
 When the adapter cannot represent required implementation scope, implementation remains unauthorized until the host state is corrected.

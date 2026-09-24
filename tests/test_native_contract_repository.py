@@ -29,8 +29,8 @@ class RepositoryNativeContractTests(unittest.TestCase):
             "docs/spec.md": "boundary-specifications",
             "docs/TODO.md": "boundary-documentation",
             "tests/test_native_contract_graph.py": "boundary-tests",
-            "integration/specdd/scripts/boundary.py": (
-                "boundary-change-adapter-migration"
+            "integration/speckit/scripts/spec_kit_adapter.py": (
+                "boundary-change-adapter"
             ),
         }
 

@@ -43,15 +43,15 @@ locate_source_root() {
   marker="$(
     find "$extracted" \
       -type f \
-      -path '*/integration/specdd/extension.yml' \
+      -path '*/integration/speckit/extension.yml' \
       -print \
       -quit
   )"
 
   [[ -n "$marker" ]] ||
-    fail "archive does not contain integration/specdd/extension.yml"
+    fail "archive does not contain integration/speckit/extension.yml"
 
-  SOURCE_ROOT="${marker%/integration/specdd/extension.yml}"
+  SOURCE_ROOT="${marker%/integration/speckit/extension.yml}"
 }
 
 materialize_archive() {
@@ -106,12 +106,12 @@ materialize_source() {
 }
 
 require_source_tree() {
-  [[ -f "$SOURCE_ROOT/integration/specdd/extension.yml" ]] ||
-    fail "extension source is missing"
-  [[ -f "$SOURCE_ROOT/integration/specdd-preset/preset.yml" ]] ||
-    fail "preset source is missing"
-  [[ -f "$SOURCE_ROOT/integration/specdd/workflow-overlay.yml" ]] ||
-    fail "workflow overlay source is missing"
+  [[ -f "$SOURCE_ROOT/integration/speckit/extension.yml" ]] ||
+    fail "Spec Kit adapter extension source is missing"
+  [[ -f "$SOURCE_ROOT/integration/speckit-preset/preset.yml" ]] ||
+    fail "Spec Kit task preset source is missing"
+  [[ -f "$SOURCE_ROOT/integration/speckit/workflow-overlay.yml" ]] ||
+    fail "Spec Kit workflow overlay source is missing"
   [[ -f "$SOURCE_ROOT/$CODEX_SKILL_ADAPTER" ]] ||
     fail "Codex Boundary skill adapter is missing"
   [[ -f "$SOURCE_ROOT/src/boundary/__init__.py" ]] ||

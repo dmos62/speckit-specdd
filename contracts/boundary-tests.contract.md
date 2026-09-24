@@ -9,15 +9,15 @@ owns:
 
 ## Purpose
 
-Protect native Boundary behavior, concrete integrations, and temporary migration compatibility with focused tests.
+Protect native Boundary behavior and concrete supported integrations with focused tests.
 
 ## Invariants
 
 - Tests exercise public behavior and deterministic boundaries without duplicating production implementations.
-- Native tests keep provider-neutral core behavior independent of Spec Kit and SpecDD.
-- Migration parity covers only legacy semantics that native Boundary deliberately preserves.
-- Provider-specific compatibility tests remain removable when their migration dependency disappears.
+- Native tests keep provider-neutral core behavior independent of Spec Kit and historical providers.
+- Concrete adapter tests verify projection and lifecycle behavior without redefining core authorization semantics.
 - Repository contract coverage verifies representative ownership and additive applicability of canonical native contracts.
+- Historical migration assertions do not define current Boundary semantics.
 
 ## Prohibitions
 

@@ -12,11 +12,7 @@ Boundary's mandatory lifecycle is:
 
 Planning and task generation may use Boundary context, but they do not establish implementation authority.
 
-This is deliberately smaller than the currently implemented:
-
-    context → validate → authorize → implement → verify
-
-The current `context` and `validate` behavior becomes query/analysis functionality reused by planning, task generation, and authorization.
+Persisted context refresh and separate validation gates are not part of the supported Boundary lifecycle.
 
 ## Planning
 
@@ -122,7 +118,7 @@ When requested behavior cannot satisfy current persistent contracts:
 4. use the Boundary contracts skill;
 5. modify only native contract files;
 6. run `boundary contracts check`;
-7. verify/close contract evolution;
+7. verify and close contract evolution;
 8. authorize dependent implementation against the resulting fresh graph.
 
 Contract evolution never retroactively authorizes earlier implementation.
@@ -139,7 +135,7 @@ Boundary distinguishes:
 
 Only the first two are fully deterministic Boundary-core concerns in v1.
 
-The current Spec Kit constitution is one change-system governance implementation, not a Boundary architectural layer.
+A concrete change system may impose additional governance without making it a Boundary architectural layer.
 
 ## Product CLI direction
 
@@ -156,7 +152,7 @@ These commands use Boundary terminology and do not depend on a particular change
 
 ## Spec Kit adapter
 
-The initial Spec Kit adapter may expose thin agent-facing wrappers such as:
+The Spec Kit adapter exposes thin agent-facing wrappers:
 
     speckit.boundary.authorize
     speckit.boundary.verify
@@ -165,36 +161,35 @@ Those names belong to the adapter.
 
 They are not the canonical Boundary product API.
 
-The Spec Kit workflow integration should eventually enforce only:
+The Spec Kit workflow integration enforces:
 
     tasks
       → boundary-authorize
       → implement
       → boundary-verify
 
-Planning/task augmentations may invoke Boundary skills and inspection, but they should not create redundant structural gates.
+Planning and task augmentations may invoke Boundary skills and inspection, but they do not create redundant structural gates.
 
-## Extension hooks and workflow overlays
+## Workflow overlay
 
-The current implementation registers both extension hooks and structural workflow-overlay steps for overlapping lifecycle responsibilities.
+The supported Spec Kit integration uses one deterministic structural-enforcement mechanism: the workflow overlay.
 
-The target architecture uses one mechanism for deterministic structural enforcement.
+Its ordering and nonzero shell status make the authorization and verification transitions explicit.
 
-For the current Spec Kit baseline, the workflow overlay is preferred because its ordering and nonzero shell status are explicit.
-
-Extension hooks should not duplicate authorization or verification gates.
+Extension hooks do not duplicate those gates.
 
 ## Preset role
 
-The current large SpecDD preset should not survive mechanically.
+The Spec Kit preset is intentionally narrow.
 
-If Spec Kit still needs an augmentation after native skills exist, it should be minimal, for example:
+Its task-generation augmentation:
 
-- instruct task generation to load `boundary-scope`;
-- require explicit `Writes:` metadata;
-- instruct implementation to load `boundary-implement`.
+- directs task refinement toward exact write declarations;
+- permits on-demand `boundary inspect`;
+- keeps contract evolution separate;
+- requires fresh authorization after scope change.
 
-If those responsibilities can be supplied through supported skill discovery without a preset, the preset should be removed.
+It does not create planning context state, a validation phase, or convergence-time authorization semantics.
 
 ## Adapter replacement
 

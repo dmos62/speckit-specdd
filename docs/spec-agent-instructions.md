@@ -2,7 +2,7 @@
 
 Boundary uses progressive disclosure so agent context contains stable procedure plus only the project facts relevant to the current work.
 
-The architecture deliberately avoids replacing `.specdd/bootstrap.md` with another large always-loaded instruction file.
+The architecture deliberately avoids replacing a legacy framework bootstrap with another large always-loaded instruction file.
 
 ## Instruction classes
 
@@ -158,13 +158,11 @@ Agents may request the raw canonical contract when the projection is insufficien
 
 Concrete change-system integrations use this query during planning and task refinement rather than creating a persisted context lifecycle state. For the Spec Kit adapter, candidate task paths are inspected on demand and only exact structured `Writes:` declarations become authorization input.
 
-## Legacy bootstrap independence
+## Bootstrap independence
 
-Boundary installation and normal operation do not initialize or require `.specdd/bootstrap.md` as an agent-instruction source.
+Boundary installation and normal operation do not initialize, read, or require `.specdd/bootstrap.md` or another project-wide framework bootstrap as an agent-instruction source.
 
-During migration, the temporary SpecDD compatibility adapter may continue to resolve legacy `.sdd` contracts directly for parity and compatibility work. That does not make SpecDD framework bootstrap text part of Boundary policy, skill procedure, or project contract context.
-
-Existing bootstrap files in an older repository are legacy compatibility state. Boundary does not copy their instructions into another global prompt.
+Existing legacy bootstrap files may remain in historical repositories, but Boundary does not copy their instructions into a global prompt or consult them for native authorization.
 
 ## No automatic full-contract loading
 
@@ -172,8 +170,7 @@ Normal implementation must not automatically load:
 
 - every project contract;
 - all dependency contracts recursively;
-- legacy SpecDD bootstrap text;
-- `.sdd` framework instructions;
+- legacy framework bootstrap text;
 - generated authorization records;
 - historical feature artifacts unrelated to the operation.
 

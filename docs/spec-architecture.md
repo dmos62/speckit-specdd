@@ -49,9 +49,9 @@ Its responsibilities are limited to concepts such as:
 - adapter-owned feature artifacts;
 - lifecycle integration points.
 
-The initial adapter is Spec Kit.
+The current concrete adapter is Spec Kit.
 
-Boundary's core semantics must not require Spec Kit-specific stages, files, command syntax, or constitution concepts.
+Boundary's core semantics do not require Spec Kit-specific stages, files, command syntax, or constitution concepts.
 
 ### Agent-runtime adapter
 
@@ -64,26 +64,6 @@ A second concrete Claude Code materializer targets `.claude/skills/`. It exists 
 The two adapters deliberately remain concrete. Shared runtime infrastructure should be introduced only when actual divergence or repeated implementation demonstrates a useful stable interface.
 
 Canonical skill content uses Boundary concepts rather than vendor-specific tool syntax. Agent-specific wrappers may map those concepts onto local commands.
-
-## Transitional SpecDD compatibility adapter
-
-During migration, the repository may retain a concrete SpecDD compatibility adapter.
-
-Its only purpose is to keep current behavior available while native contracts and tests are introduced.
-
-Any remaining SpecDD-specific behavior belongs behind this boundary, including:
-
-- `specdd resolve`;
-- `.sdd` parsing or resolver-output interpretation;
-- `Owns` and `Can modify`;
-- SpecDD framework bootstrap state;
-- intended-target capability probing;
-- `specdd lint`;
-- SpecDD CLI/framework identity.
-
-The compatibility adapter is temporary and is removed after repository contracts and downstream tests use native Boundary semantics.
-
-It must not define the core API.
 
 ## Core data model
 
@@ -170,14 +150,15 @@ The canonical implementation should migrate toward a provider-neutral layout sim
       contracts/
 
     adapters/
-      speckit/
       codex/
       claude/
-      specdd-compat/
+
+    integration/
+      speckit/
 
     schemas/
 
-The exact packaging may change while migration is underway, but provider names must not define core package boundaries.
+The exact packaging may change while downstream reproducibility work is underway, but provider names must not define core package boundaries.
 
 Installed/generated integration state remains separate from this canonical source.
 
@@ -234,15 +215,13 @@ Do not add:
 
 The native contract engine is the product implementation.
 
-SpecDD is a migration adapter, not the first member of a permanent provider ecosystem.
-
 Codex and Claude skill materializers are concrete runtime integrations. Their existence demonstrates portability but does not by itself justify dynamic agent-adapter registration or a shared provider framework.
 
 A generalized abstraction is justified only when concrete implementations demonstrate a stable shared requirement.
 
 ## Portability invariant
 
-Replacing Spec Kit, Codex, Claude Code, or the SpecDD compatibility layer must not require redesigning:
+Replacing Spec Kit, Codex, or Claude Code must not require redesigning:
 
 - native contract semantics;
 - target effective-context composition;

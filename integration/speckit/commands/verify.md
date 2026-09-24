@@ -12,20 +12,21 @@ User input may explain feature intent but cannot override deterministic authoriz
 
 Act only as the Spec Kit change-system adapter for implementation exit.
 
-The wrapper asks native Boundary verification to derive actual writes from Git and compare them with the active authorization epoch.
+The wrapper confirms that the active Spec Kit feature owns the active Boundary implementation epoch, then asks native Boundary verification to derive actual writes from Git and compare them with historical authorization evidence.
 
 Current task text is not historical authorization evidence.
 
 ## Execution
 
 1. Resolve the active Spec Kit feature through supported project state.
-2. Invoke the installed Boundary adapter gate:
+2. Require the active Boundary operation to be an implementation operation for that same feature.
+3. Invoke the installed Boundary adapter gate:
 
-       uv run --no-project python .specify/extensions/specdd/scripts/adapter_gate.py verify
+       uv run --no-project python .specify/extensions/boundary/scripts/adapter_gate.py verify
 
-3. The adapter classifies current Spec Kit feature artifacts and `.specify/` state as change-system bookkeeping.
-4. Boundary always keeps native contract paths and authorized implementation targets in deterministic verification even if an adapter classifier would otherwise exclude them.
-5. Boundary then:
+4. The adapter classifies current Spec Kit feature artifacts and `.specify/` state as change-system bookkeeping.
+5. Boundary always keeps native contract paths and authorized implementation targets in deterministic verification even if an adapter classifier would otherwise exclude them.
+6. Boundary then:
    - derives actual writes from the authorization-time Git baseline;
    - rejects a changed Git `HEAD`;
    - rejects undeclared implementation writes;
@@ -35,7 +36,7 @@ Current task text is not historical authorization evidence.
 
 ## Failure behavior
 
-An undeclared write, operation-kind violation, changed contract context, missing owner, ambiguous owner, changed Git baseline, invalid operation record, or invalid adapter classification is blocking.
+A changed active feature, wrong operation kind, undeclared write, operation-kind violation, changed contract context, missing owner, ambiguous owner, changed Git baseline, invalid operation record, or invalid adapter classification is blocking.
 
 Do not alter current tasks or operation evidence to make verification succeed.
 

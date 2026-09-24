@@ -65,7 +65,8 @@ import json
 import sys
 
 try:
-    data = json.load(open(sys.argv[1], encoding="utf-8"))
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        data = json.load(handle)
 except (OSError, ValueError):
     raise SystemExit(1)
 
@@ -110,7 +111,7 @@ install_adapter() {
   ensure_codex_project
 
   specify extension add \
-    "$SOURCE_ROOT/integration/specdd" \
+    "$SOURCE_ROOT/integration/speckit" \
     --dev \
     --force
 
@@ -118,14 +119,14 @@ install_adapter() {
     specify preset remove "$PRESET_ID"
   fi
   specify preset add \
-    --dev "$SOURCE_ROOT/integration/specdd-preset" \
+    --dev "$SOURCE_ROOT/integration/speckit-preset" \
     --priority 10
 
   specify workflow overlay remove \
     "$WORKFLOW_ID" \
     "$WORKFLOW_OVERLAY_ID" >/dev/null 2>&1 || true
   specify workflow overlay add \
-    "$SOURCE_ROOT/integration/specdd/workflow-overlay.yml" \
+    "$SOURCE_ROOT/integration/speckit/workflow-overlay.yml" \
     --priority "$WORKFLOW_OVERLAY_PRIORITY"
 
   materialize_boundary_runtime

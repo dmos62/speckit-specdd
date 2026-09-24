@@ -1,6 +1,6 @@
 # Boundary Specification
 
-Status: target architecture approved; current Spec Kit × SpecDD implementation is transitional  
+Status: target architecture approved; native Boundary runtime active  
 Project type: persistent-contract and operation-authorization infrastructure for coding agents
 
 ## Purpose
@@ -9,9 +9,7 @@ Boundary provides durable project contracts, effective target context, explicit 
 
 Boundary is independent of the systems used to describe and execute an individual change.
 
-The current repository uses Spec Kit because its specification-to-implementation lifecycle is explicit and extensible. It uses SpecDD because that system supplied useful early semantics for persistent contracts, ownership, and resolution. It uses Codex as the first agent runtime.
-
-None of those names define Boundary's product model.
+The repository originated with Spec Kit as its change workflow, SpecDD as migration-era persistent-contract infrastructure, and Codex as its first agent runtime. The current Boundary runtime no longer uses SpecDD. Spec Kit and agent-runtime integrations remain adapters rather than product identities.
 
 The core relationship is:
 
@@ -32,7 +30,7 @@ Boundary has the following durable concepts:
 - actual-write verification;
 - progressive agent instruction disclosure.
 
-These concepts must remain meaningful if the current change system, legacy contract provider, or agent runtime is replaced.
+These concepts must remain meaningful if the current change system or agent runtime is replaced.
 
 ## Canonical state
 
@@ -48,7 +46,7 @@ Operation evidence is historical workflow state stored outside ordinary project 
 
 ## Native persistent contracts
 
-Boundary defines a native contract format rather than standardizing SpecDD `.sdd` semantics.
+Boundary defines a native contract format rather than standardizing legacy provider semantics.
 
 Contract files:
 
@@ -125,15 +123,14 @@ A tiny stable set of Boundary behavioral invariants may be always available, but
 
 ## Adapter model
 
-Boundary currently needs three integration boundaries:
+Boundary has two permanent integration boundaries:
 
 - a change-system adapter;
-- an agent-runtime adapter;
-- a temporary SpecDD compatibility adapter during migration.
+- an agent-runtime adapter.
 
-The initial implementations are Spec Kit, Codex, and SpecDD respectively.
+The current concrete integrations are Spec Kit for change-system state and Codex plus Claude Code materializers for agent procedure.
 
-Boundary does not introduce a generalized runtime provider-plugin framework merely to abstract these implementations. Concrete adapters are preferred until a second real implementation establishes a common interface.
+Boundary does not introduce a generalized runtime provider-plugin framework merely to abstract these implementations. Concrete adapters are preferred until actual implementations demonstrate a useful stable shared interface.
 
 ## Non-goals
 
@@ -160,16 +157,17 @@ The design is split by responsibility:
 - [spec-contracts.md](spec-contracts.md): native contract syntax and semantic model.
 - [spec-agent-instructions.md](spec-agent-instructions.md): skill architecture and progressive disclosure.
 - [spec-authorization.md](spec-authorization.md): explicit writes, operation records, Git baselines, epochs, and verification.
+- [spec-change-adapter.md](spec-change-adapter.md): provider-neutral change-system projection and Spec Kit integration.
 - [spec-lifecycle.md](spec-lifecycle.md): integration with change systems, contract evolution, implementation, and convergence.
-- [change-boundary.md](change-boundary.md): legacy documentation for the currently implemented SpecDD-backed Change Boundary.
+- [change-boundary.md](change-boundary.md): legacy documentation retained temporarily for migration history.
 
-Historical v0.1 acceptance material describes how the existing bridge established its current baseline; it is not the target product architecture.
+Historical v0.1 acceptance material describes how the original bridge established its baseline; it is not the current product architecture.
 
-## Migration principle
+## Migration status
 
-Migration should replace semantics rather than mechanically rename the current architecture.
+Native Boundary semantics have replaced the migration-era provider path.
 
-In particular, Boundary should not spend a large migration preserving:
+The supported runtime no longer depends on:
 
 - persisted feature Change Boundaries;
 - refresh-time context fingerprint sidecars;
@@ -180,7 +178,7 @@ In particular, Boundary should not spend a large migration preserving:
 - SpecDD bootstrap injection;
 - duplicated extension-hook and workflow-overlay enforcement.
 
-The ordered migration is maintained in [TODO.md](TODO.md).
+Remaining cleanup is documentation, historical-material, compatibility-test, and release-packaging work rather than runtime semantic migration.
 
 ## Summary invariant
 

@@ -22,13 +22,14 @@ It does not maintain a separate context or validation lifecycle state.
 2. Require the active feature's `tasks.md`.
 3. Project checklist tasks in file order.
 4. Preserve each task ID and user-story label when present.
-5. Read implementation scope only from dedicated indented `Writes:` metadata.
-6. Ignore incidental path-looking prose for authorization scope.
-7. Invoke the installed Boundary adapter gate:
+5. Read implementation scope only from dedicated indented `Writes:` metadata attached directly to each checklist task.
+6. Reject malformed, empty, duplicate, or ambiguously repeated structured write declarations.
+7. Ignore incidental path-looking prose for authorization scope.
+8. Invoke the installed Boundary adapter gate:
 
-       uv run --no-project python .specify/extensions/specdd/scripts/adapter_gate.py authorize
+       uv run --no-project python .specify/extensions/boundary/scripts/adapter_gate.py authorize
 
-8. Boundary then:
+9. Boundary then:
    - reloads canonical native contracts;
    - resolves every declared target's current owner and effective context;
    - rejects native contract paths from implementation operations;
@@ -38,7 +39,7 @@ It does not maintain a separate context or validation lifecycle state.
 
 ## Failure behavior
 
-Malformed task state, missing structured writes, unowned targets, ambiguous ownership, invalid canonical contracts, pre-authorization target modifications without verified provenance, and stale active operations are blocking.
+Malformed task state, missing structured implementation scope, unowned targets, ambiguous ownership, invalid canonical contracts, pre-authorization target modifications without verified provenance, and stale active operations are blocking.
 
 Do not regenerate a planning projection or reinterpret descriptive task prose to make authorization succeed.
 
