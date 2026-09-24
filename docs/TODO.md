@@ -18,18 +18,11 @@ Work in the order below unless a newly discovered correctness issue requires rep
 
 ## P10 — Define the reproducible downstream Boundary experience
 
-- [ ] Define one committed immutable Boundary source/version lock.
-- [ ] Include immutable source revision and archive/content checksum.
-- [ ] Keep downstream canonical Boundary state limited to:
-  - native project contracts;
-  - change-system artifacts;
-  - the Boundary lock.
-- [ ] Make extension/adapter/skill/generated state recreatable.
-- [ ] Provide install, health-check, upgrade, remove/reinstall, and fresh-clone reconstruction.
-- [ ] Preserve deliberate upgrades rather than silently following a mutable release.
-- [ ] Add clean consumer coverage with no canonical Boundary implementation source.
-- [ ] Update ignore rules for generated integration and operation state.
-- [ ] Split downstream-user setup cleanly from Boundary developer procedures.
+The immutable lock schema, lock-aware install/check/remove/reinstall/upgrade lifecycle, generated source provenance, local generated-state exclusions, and separated downstream/development setup are implemented. Remaining work is end-to-end consumer proof against a real immutable Boundary archive.
+
+- [ ] Add a clean-consumer fixture with a committed real `boundary.lock.json` containing an exact Boundary commit archive and checksum, with no canonical Boundary implementation source.
+- [ ] Exercise fresh-clone install, health check, checksum failure, remove/reinstall, deliberate upgrade, and failed-upgrade rollback against that fixture.
+- [ ] Assert clean-consumer Git status contains no Boundary-owned generated state after reconstruction; decide explicitly how shared Spec Kit registry files are treated if they remain visible.
 
 Done when:
   A fresh clone can reconstruct the same Boundary tooling and agent capabilities from the committed lock while carrying only native project contracts as persistent Boundary semantics.

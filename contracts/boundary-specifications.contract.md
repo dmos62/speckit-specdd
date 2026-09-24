@@ -9,6 +9,7 @@ owns:
   - docs/spec-authorization.md
   - docs/spec-change-adapter.md
   - docs/spec-lifecycle.md
+  - docs/spec-distribution.md
   - docs/spec-v0.1.md
 ---
 
@@ -21,7 +22,7 @@ Define Boundary's product model through focused, orthogonal architecture specifi
 ## Invariants
 
 - Focused specifications divide product concerns by responsibility rather than by current provider.
-- Native contracts, target context, authorization, verification, change-system integration, and agent instruction delivery retain explicit responsibility boundaries.
+- Native contracts, target context, authorization, verification, change-system integration, agent instruction delivery, and downstream reconstruction retain explicit responsibility boundaries.
 - Target architecture takes precedence over historical migration behavior.
 - Historical v0.1 material remains descriptive evidence rather than a current product contract.
 

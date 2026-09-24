@@ -6,29 +6,19 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path, PurePosixPath
-import re
 import subprocess
 from typing import Callable
 
 from boundary.authorization import (
     ChangeWriteSet,
     OperationRecord,
-    TaskWriteSet,
     authorize_implementation_operation,
     read_current_operation,
 )
 from boundary.verification import finalize_operation_verification
 
-_TASK_RE = re.compile(
-    r"^\s*-\s+\[[ xX]\]\s+(?P<id>\S+)(?:\s+(?P<body>.*))?$"
-)
-_WRITES_RE = re.compile(r"^\s+Writes:\s*(?P<value>.*?)\s*$")
-_WRITE_TOKEN_RE = re.compile(r"^`([^`\r\n]+)`$")
-_STORY_RE = re.compile(r"\[(US[^\]]+)\]")
-
-
-class SpecKitAdapterError(ValueError):
-    """Raised when Spec Kit state cannot form one normalized change projection."""
+from spec_kit_errors import SpecKitAdapterError
+from task_projection import parse_tasks
 
 
 def resolve_repository_root(value: str | Path | None = None) -> Path:
@@ -125,83 +115,6 @@ def project_change(
     )
 
 
-def parse_tasks(source: str) -> tuple[TaskWriteSet, ...]:
-    """Parse checklist task identity and directly attached Writes metadata."""
-
-    tasks: list[TaskWriteSet] = []
-    current_id: str | None = None
-    current_story: str | None = None
-    current_writes: tuple[str, ...] = ()
-    writes_seen = False
-    metadata_open = False
-
-    def flush() -> None:
-        nonlocal current_id, current_story, current_writes
-        nonlocal writes_seen, metadata_open
-        if current_id is None:
-            return
-        tasks.append(
-            TaskWriteSet(
-                order=len(tasks),
-                task_id=current_id,
-                story=current_story,
-                writes=current_writes,
-            )
-        )
-        current_id = None
-        current_story = None
-        current_writes = ()
-        writes_seen = False
-        metadata_open = False
-
-    for line in source.splitlines():
-        task_match = _TASK_RE.match(line)
-        if task_match is not None:
-            flush()
-            current_id = task_match.group("id")
-            body = task_match.group("body") or ""
-            story_match = _STORY_RE.search(body)
-            current_story = (
-                story_match.group(1)
-                if story_match is not None
-                else None
-            )
-            metadata_open = True
-            continue
-
-        writes_match = _WRITES_RE.match(line)
-        if writes_match is not None:
-            if current_id is None:
-                raise SpecKitAdapterError(
-                    "Writes metadata must belong to a checklist task"
-                )
-            if not metadata_open:
-                raise SpecKitAdapterError(
-                    f"task {current_id!r} Writes metadata must be directly "
-                    "attached to the checklist task"
-                )
-            if writes_seen:
-                raise SpecKitAdapterError(
-                    f"task {current_id!r} contains duplicate Writes metadata"
-                )
-            writes_seen = True
-            current_writes = _parse_writes(
-                current_id,
-                writes_match.group("value"),
-            )
-            continue
-
-        if current_id is not None and line.strip():
-            metadata_open = False
-
-    flush()
-    if not tasks:
-        raise SpecKitAdapterError(
-            "active Spec Kit task file contains no checklist tasks"
-        )
-    return tuple(tasks)
-
-
 def authorize_feature(
     root: Path,
     feature_dir: Path,
@@ -257,29 +170,6 @@ def path_classifier(
         return "ordinary"
 
     return classify
-
-
-def _parse_writes(
-    task_id: str,
-    value: str,
-) -> tuple[str, ...]:
-    text = value.strip()
-    if not text:
-        raise SpecKitAdapterError(
-            f"task {task_id!r} Writes metadata must declare at least one path"
-        )
-
-    writes: list[str] = []
-    for part in text.split(","):
-        token = part.strip()
-        match = _WRITE_TOKEN_RE.fullmatch(token)
-        if match is None:
-            raise SpecKitAdapterError(
-                f"task {task_id!r} Writes metadata must contain only "
-                "comma-separated backticked paths"
-            )
-        writes.append(match.group(1))
-    return tuple(writes)
 
 
 def _feature_path(root: Path, configured: str) -> tuple[Path, str]:

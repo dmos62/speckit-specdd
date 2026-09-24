@@ -4,7 +4,7 @@ Apply these requirements while generating the upstream `tasks.md`. Preserve the 
 
 1. Identify exact repository-relative implementation targets rather than inferring scope from descriptive prose.
 2. Inspect candidate target context on demand with `boundary inspect <target...>` when ownership, invariants, prohibitions, or dependency interfaces are needed during task refinement.
-3. For every implementation task, add one dedicated indented `Writes:` line directly below the checklist task. It must contain one or more exact repository-relative implementation paths in backticks, separated only by commas.
+3. For every implementation task, add one dedicated indented `Writes:` line directly below the checklist task. It must contain one or more exact repository-relative implementation paths in backticks. Separate multiple backticked path tokens with commas or whitespace, with no prose between tokens.
 4. Treat only that `Writes:` metadata as structured implementation scope for the Spec Kit adapter. Path-looking prose elsewhere in the task remains advisory.
 5. Do not declare the same write target in more than one task. Repeated structured ownership is ambiguous and Boundary authorization rejects it.
 6. Preserve normal Spec Kit task IDs, ordering, `[P]`, and `[US#]` semantics.

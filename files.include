@@ -1,16 +1,22 @@
 @filegroup
 @glob docs/TODO.md
 @glob docs/spec*.md
+@glob docs/setup-*.md
 @glob contracts/**
 @glob src/boundary/**
 @glob adapters/**
 @glob scripts/**
 @glob integration/speckit/**
 @glob integration/speckit-preset/**
+@glob tests/test_spec_kit_adapter*.py
+@glob tests/test_consumer*.py
 @globexclude docs/spec-v0.1.md
 @globexclude .specify/**
+@globexclude adapters/claude/**
+@globexclude src/boundary/authorization/**
+@globexclude src/boundary/context/**
+@globexclude src/boundary/verification/**
 @globexclude **/*.sdd
-@globexclude tests/**
 @globexclude tests/fixtures/**
 @globexclude tests/__pycache__/**
 @globexclude **/__pycache__/**

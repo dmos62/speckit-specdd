@@ -18,6 +18,7 @@ Document the current Boundary architecture, development state, and migration wit
 - Migration work remains separated from target architecture statements.
 - Documentation stays focused and delegates detailed semantics to the focused specification that owns them.
 - Historical material is clearly distinguishable from current target behavior.
+- Downstream consumer reconstruction is documented separately from Boundary source-development setup.
 
 ## Prohibitions
 

@@ -28,7 +28,8 @@ Boundary has the following durable concepts:
 - historical operation evidence;
 - persistent-contract evolution;
 - actual-write verification;
-- progressive agent instruction disclosure.
+- progressive agent instruction disclosure;
+- immutable downstream source reconstruction.
 
 These concepts must remain meaningful if the current change system or agent runtime is replaced.
 
@@ -38,11 +39,13 @@ The target downstream canonical state consists of:
 
 - change-system artifacts that define the requested change;
 - native Boundary contracts under `contracts/`;
-- one immutable Boundary source/version pin.
+- one `boundary.lock.json` pinning an exact Boundary source revision and archive checksum.
 
-Generated integration state, effective-context projections, installed skills, caches, and operation evidence are not persistent system contracts.
+Generated integration state, effective-context projections, installed skills, caches, install provenance, and operation evidence are not persistent system contracts.
 
 Operation evidence is historical workflow state stored outside ordinary project source, preferably in current-worktree Git metadata.
+
+The Boundary lock identifies implementation source but does not duplicate Boundary implementation into the downstream canonical tree.
 
 ## Native persistent contracts
 
@@ -132,6 +135,18 @@ The current concrete integrations are Spec Kit for change-system state and Codex
 
 Boundary does not introduce a generalized runtime provider-plugin framework merely to abstract these implementations. Concrete adapters are preferred until actual implementations demonstrate a useful stable shared interface.
 
+## Downstream reconstruction invariant
+
+A downstream repository must be able to reconstruct Boundary tooling from its committed `boundary.lock.json`.
+
+The lock identifies an immutable source revision and the exact downloaded archive checksum.
+
+Generated runtime, extension, preset, workflow, and skill state is recreated from that source and does not become canonical Boundary implementation source in the consumer project.
+
+Upgrades replace the lock deliberately. Installation must not silently follow a mutable branch, tag alias, or latest release.
+
+Detailed downstream semantics are defined in [spec-distribution.md](spec-distribution.md).
+
 ## Non-goals
 
 Boundary does not:
@@ -147,7 +162,8 @@ Boundary does not:
 - create a global catch-all cross-contract prompt;
 - provide implicit contract override semantics;
 - introduce a generalized adapter marketplace or plugin framework;
-- automatically evolve persistent contracts to make implementation pass.
+- automatically evolve persistent contracts to make implementation pass;
+- silently follow a mutable Boundary release during downstream installation.
 
 ## Focused specifications
 
@@ -159,6 +175,7 @@ The design is split by responsibility:
 - [spec-authorization.md](spec-authorization.md): explicit writes, operation records, Git baselines, epochs, and verification.
 - [spec-change-adapter.md](spec-change-adapter.md): provider-neutral change-system projection and Spec Kit integration.
 - [spec-lifecycle.md](spec-lifecycle.md): integration with change systems, contract evolution, implementation, and convergence.
+- [spec-distribution.md](spec-distribution.md): immutable downstream source locks, reconstruction, generated state, and upgrades.
 - [change-boundary.md](change-boundary.md): legacy documentation retained temporarily for migration history.
 
 Historical v0.1 acceptance material describes how the original bridge established its baseline; it is not the current product architecture.
@@ -184,4 +201,4 @@ Remaining cleanup is documentation, historical-material, compatibility-test, and
 
 Boundary remains coherent while:
 
-> project contracts are canonical and independently scoped; change systems provide explicit change intent; skills provide procedure; queries provide current facts; and deterministic code provides authorization and verification.
+> project contracts are canonical and independently scoped; change systems provide explicit change intent; skills provide procedure; queries provide current facts; deterministic code provides authorization and verification; and downstream tooling is reconstructed from an immutable committed source lock.
