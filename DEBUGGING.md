@@ -1,48 +1,46 @@
-# Active debugging: immutable distribution lifecycle regression
+# SpecDD framework-bootstrap regression
 
 ## Current failure
 
-The full Python test suite has one failure:
+The distribution test `test_immutable_archive_runs_lifecycle_without_vendored_bridge_source` fails when the installed workflow gate runs its `context` stage.
 
-- `preset_test_distribution.DistributionInstallTests.test_immutable_archive_runs_lifecycle_without_vendored_bridge_source`
+Observed diagnostic:
 
-The installed downstream runtime reaches verification, but verification reports `AUTHORITY_VIOLATION` for `src/app.py`.
+    workflow_gate.py: Could not determine the SpecDD framework version from <consumer-root>
 
-Observed verification state:
+The focused preset suite and the full test suite both have this single failure. Canonical agent-skill tests pass.
 
-- actual target: `src/app.py`
-- actual authority: the downstream temporary `.sdd` authority
-- planned target count: `0`
-- planned authorities: empty
-- authorization Git baseline otherwise exists and is readable
-- generated installation files are correctly classified as preauthorization state
-- SpecDD lint succeeds
+## Expected behavior
 
-This means the immediate problem is not inability to install or execute the immutable distribution. The authorization snapshot reaching verification contains no planned implementation target for `src/app.py`.
+The isolated downstream consumer intentionally has no `.specdd/bootstrap.md`.
 
-## Working hypothesis
+This is required by the current Boundary architecture:
 
-Recent explicit-write authorization behavior likely made the immutable-distribution fixture stale.
+- Boundary bootstrap does not initialize or require the SpecDD framework bootstrap for normal operation.
+- The temporary SpecDD compatibility CLI remains a resolver dependency during migration.
+- Legacy `.sdd` contracts may still be resolved by the compatibility adapter without making SpecDD framework bootstrap state an agent-instruction or runtime prerequisite.
+- `scripts/scripts.sdd` already states that bootstrap/check mode must not depend on SpecDD framework bootstrap state.
 
-The supported bridge semantics require implementation scope to come from dedicated `Writes:` metadata rather than incidental path-looking task prose. If this distribution test still constructs a task without explicit write metadata, authorization can legitimately produce an empty planned target set and verification will later reject the real write.
+Do not fix this by creating `.specdd/bootstrap.md` in the consumer fixture or weakening the distribution test.
 
-Do not weaken explicit-write authorization merely to make this fixture pass.
+## Investigation target
 
-## Investigation order
+Inspect `integration/specdd/scripts/workflow_gate.py` and its local imports for framework-version discovery.
 
-1. Read `preset_test_distribution.py` and its setup helpers to find the exact generated task text used by the failing test.
-2. Confirm whether the task that drives authorization declares `Writes: src/app.py` using the syntax accepted by the installed bridge.
-3. If explicit write metadata is absent, update the fixture/setup and keep production authorization strict.
-4. If metadata is already present, trace the installed archive command path through authorization and determine where the write declaration is lost.
-5. Re-run the single failing distribution test.
-6. Re-run `test_verification.py`.
-7. Run bootstrap check.
-8. Re-run the full `test_*.py` suite.
+Determine why the runtime still attempts to discover a SpecDD framework version before the `context` stage can execute. Remove that dependency where it is unrelated to resolver capability or canonical compatibility behavior.
 
-## Constraints
+Preserve capability-based checks for typed intended-target support. The compatibility behavior should depend on resolver capabilities such as `--file`, `--folder`, and `--sdd-file`, not on framework-bootstrap files.
 
-- Preserve the requirement that authorization scope comes only from explicit structured writes.
-- Preserve the immutable-archive test's purpose: a downstream consumer without vendored canonical bridge source must complete the supported installed lifecycle.
-- Do not hide the regression by excluding the distribution test from the full suite.
-- Keep generated installation state classified outside implementation writes.
-- Delete this file once the regression is resolved and the focused/full suites pass.
+Also inspect focused workflow-gate tests for assumptions that still require framework initialization and update them to cover operation without `.specdd/bootstrap.md`.
+
+## Verification
+
+Run in this order:
+
+    PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_workflow.py'
+
+    PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_preset.py'
+
+    PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_*.py'
+
+Delete this file once the regression is fixed and the focused/full suites pass.
