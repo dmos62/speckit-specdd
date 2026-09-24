@@ -2,40 +2,35 @@
 
 Boundary's target architecture is defined in the focused `docs/spec*.md` documents.
 
-The current integration baseline still pins Spec Kit `1.0.10` and Codex for development and compatibility coverage. Those are integration choices rather than target product requirements.
+Native contracts under `contracts/` are the only persistent Boundary contract source. Boundary no longer installs, invokes, or requires SpecDD for normal operation. Authorization and verification use fresh native contract state, exact structured writes, Git baselines, atomic operation records, verified authorization epochs, and exact dirty-state carry-forward provenance.
 
-Boundary no longer installs, invokes, or requires SpecDD for normal operation. Native contracts under `contracts/` are the only persistent Boundary contract source. Authorization and verification use fresh native contract state, exact structured writes, Git baselines, atomic operation records, verified authorization epochs, and exact dirty-state carry-forward provenance.
+Canonical Boundary procedure is materialized from `skills/*/SKILL.md` into concrete Codex and Claude Code discovery state. The Spec Kit integration is a change-system adapter only: structured task `Writes:` metadata is projected into native Boundary authorization at implementation entry, and actual Git writes are verified at implementation exit.
 
-Canonical Boundary procedure is deterministically materialized from `skills/*/SKILL.md` into Codex discovery state. A second concrete Claude Code materializer exercises the same canonical procedure without introducing a generalized runtime-provider framework. Materialized skill bytes contain only fixed runtime metadata plus canonical procedure and remain independent of feature or operation state.
+The supported downstream lifecycle, immutable lock schema, generated-source provenance, generated-state exclusions, and separated downstream/development setup are implemented.
 
-The Spec Kit integration is a change-system adapter only. Planning and task work use on-demand Boundary inspection rather than persisted context or validation phases. Structured task `Writes:` metadata is projected into native Boundary authorization at implementation entry, and actual Git writes are verified at implementation exit. The adapter uses Boundary host identities, so its public Spec Kit commands are `speckit.boundary.authorize` and `speckit.boundary.verify`; the workflow overlay owns those two blocking transitions.
+Current verification baseline:
 
-Repository contract conversion is complete. Canonical native contracts under `contracts/` cover provider-neutral core subdomains, agent procedure and concrete runtime adapters, repository tooling, documentation and focused specifications, tests, and the concrete Spec Kit change adapter. Nested ownership preserves broader core and documentation constraints additively, while the authorization/verification relationship is represented by a narrowly scoped applicability contract.
+- native contract check passes with 15 contracts;
+- consumer tests pass with 10 tests, of which the two published-archive tests are skipped;
+- the release proof remains unavailable because two suitable published immutable Boundary revisions have not yet been established.
 
-Historical migration fixtures and v0.1 documentation may still describe SpecDD behavior, but they are not runtime inputs. Final terminology, historical-material, and compatibility-test cleanup remains P11 work.
-
-Work in the order below unless a newly discovered correctness issue requires reprioritization.
+Work in the order below. P10 remains first priority, but its remaining work is externally publication-blocked; see `HUMAN-REQUEST.md`. While that evidence is unavailable, continue P11 cleanup that does not alter release-proof semantics. Return to P10 as soon as the release-candidate harness reports two usable archives.
 
 ## P10 — Define the reproducible downstream Boundary experience
 
-The immutable lock schema, lock-aware install/check/remove/reinstall/upgrade lifecycle, generated source provenance, local generated-state exclusions, and separated downstream/development setup are implemented.
+The local checksum-verified archive lifecycle already covers fresh-clone install, health check, checksum failure, remove/reinstall, deliberate upgrade, failed-upgrade rollback, generated-state exclusions, and visible shared host registry changes.
 
-Checksum-verified archive lifecycle coverage now exercises a fresh cloned consumer repository through install, health check, checksum failure, remove/reinstall, deliberate upgrade, and failed-upgrade rollback without placing canonical Boundary implementation source in the consumer. It also verifies that Boundary-owned generated paths stay out of Git status while shared host registry changes remain visible and reviewable.
+Release-proof coverage is implemented in `tests/test_consumer_release.py` and enabled with `BOUNDARY_RELEASE_ARCHIVE_TESTS=1`.
 
-Release fixture initialization excludes the harness-only `boundary-upgrade.lock.json` from the simulated downstream repository, so the clean consumer carries only its active `boundary.lock.json`. Release coverage also requires the initial and upgrade locks to name distinct immutable revisions.
+Remaining work:
 
-This local archive coverage does not replace the remaining release proof against a published immutable Boundary commit archive.
+- [ ] Commit `tests/fixtures/consumer-release/boundary.lock.json` and `boundary-upgrade.lock.json` using two distinct, publicly retrievable immutable Boundary commit archives and their exact SHA-256 values.
+- [ ] Run the fresh-clone release lifecycle matrix against those committed real archive fixtures.
+- [ ] Delete `HUMAN-REQUEST.md` after the two published archive identities are established and verified.
 
-- [ ] Add a clean-consumer fixture with a committed real `boundary.lock.json` containing an exact Boundary commit archive and checksum, with no canonical Boundary implementation source.
-- [ ] Run the same fresh-clone lifecycle matrix against that committed real archive fixture.
+`dev-scripts.include` fetches published refs and reports release candidates. A candidate is usable only when the required downstream source and release-proof implementation are present and the exact anonymous GitHub commit archive can be downloaded and checksummed.
 
-Release-proof harness coverage is prepared in `tests/test_consumer_release.py`. It is opt-in with `BOUNDARY_RELEASE_ARCHIVE_TESTS=1`, and `dev-scripts.include` runs it automatically once both release lock fixtures exist. Completion still requires real published archive evidence: commit `tests/fixtures/consumer-release/boundary.lock.json` and `boundary-upgrade.lock.json` with distinct immutable Boundary sources and exact SHA-256 values. Do not substitute synthetic archive bytes for this proof.
-
-The repository publication identity is now known as `https://github.com/dmos62/speckit-specdd.git`. At the latest captured check, published remote HEAD was `a016187ce6107d7b1abc1e108669d463a104cb82`, while local HEAD was `6d3a0c658c5c2c7097b95e1571c7f5abea8318fd` and was not contained by a remote branch. Two published commits containing the current release-proof implementation are therefore not yet established.
-
-`dev-scripts.include` now fetches published refs, searches remote history for the newest two commits containing the complete downstream consumer and release-proof source, and attempts an anonymous download of each exact GitHub commit archive to calculate its SHA-256. Treat a candidate as usable only when both revisions are published and both archive checksums are successfully reported. The older candidate is the initial fixture and the newer candidate is the upgrade fixture.
-
-The publication step that cannot be manufactured by repository code is tracked in `HUMAN-REQUEST.md`. Once suitable commits are published and the candidate report provides two exact revisions, URLs, and checksums, add the two real lock fixtures, run the release lifecycle test, remove the human request, and complete P10.
+Do not substitute unpublished revisions, mutable branch or tag archives, authenticated-only downloads, synthetic archives, or fabricated checksums.
 
 Done when:
   A fresh clone can reconstruct the same Boundary tooling and agent capabilities from the committed lock while carrying only native project contracts as persistent Boundary semantics.
@@ -45,7 +40,7 @@ Done when:
 - [ ] Remove obsolete Spec Kit × SpecDD product terminology from non-historical documentation.
 - [ ] Mark or archive historical v0.1 material.
 - [ ] Delete the legacy `change-boundary.md` guide after no supported runtime uses that model.
-- [ ] Remove compatibility-only tests/helpers and shrink `files.include` accordingly. The obsolete native-contract migration test that imported the removed SpecDD adapter has been deleted; audit remaining compatibility helpers before completing this item.
+- [ ] Remove compatibility-only tests/helpers and shrink `files.include` accordingly. The obsolete native-contract migration test that imported the removed SpecDD adapter has already been deleted.
 - [ ] Keep all code and documentation files below 250 lines.
 - [ ] Run the complete supported bootstrap, native contract, authorization, adapter, packaging, and fresh-clone test matrix.
 
