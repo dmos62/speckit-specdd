@@ -11,6 +11,8 @@ Owns:
   ./test_native_contract_graph.py
   ./test_native_contract_context.py
   ./test_native_contract_cli.py
+  ./test_native_contract_migration.py
+  ./test_native_contract_repository.py
   ./test_authorization_model.py
   ./test_authorization_lifecycle.py
   ./test_operation_record.py
@@ -58,6 +60,8 @@ Must:
   Native contract parsing tests cover deterministic discovery under contracts/, boundary.contract/v1 frontmatter, exact and subtree scope grammar, recognized semantic-section extraction, source provenance, and deterministic content identities.
   Native contract graph/context tests cover deterministic indexes, exact and nested ownership, additive applicability, ambiguity rejection, missing intended targets, direct dependency interfaces, semantic provenance, and deterministic projection.
   Native CLI tests cover contract-check diagnostics, multi-target inspection of absent intended targets, stable provenance-rich output, and absence of persisted projections.
+  Native migration parity tests compare representative native owner resolution with the temporary SpecDD adapter only for ownership semantics Boundary deliberately preserves; compatibility-only permission, bootstrap, and provider behavior is not parity surface.
+  Repository native-contract tests cover representative ownership across core source, adapters, skills, scripts, documentation, tests, migration adapter source, nested additive applicability, and the absence of a global catch-all scope.
   Native authorization-model tests cover canonical explicit task writes, task identity/order preservation, duplicate rejection, and ordered change-level write projection.
   Native authorization-lifecycle tests cover implementation-before-authorization rejection, verified epoch replacement, scope expansion, exact predecessor carry-forward, concurrent dirty mutation, deletion, staging/index transitions, immutable predecessor archival, and Git HEAD changes.
   Native operation-record tests cover atomic evidence content and storage, including failed successor replacement after verified predecessor closure.

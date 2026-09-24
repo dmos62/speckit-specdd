@@ -12,23 +12,13 @@ The Spec Kit integration is now reduced to a change-system adapter surface. Plan
 
 The current `specdd/speckit-boundary` repository/distribution slug and migration-era source layout remain transitional until release ownership and P9 cleanup are complete. They are not runtime or product identities.
 
+The representative two-domain migration fixture now carries native Auth and Users contracts alongside its legacy `.sdd` evidence. Migration parity coverage compares only ownership semantics Boundary deliberately preserves. Legacy `Can modify`, framework/bootstrap, and authority-domain permission behavior is intentionally not translated into native contracts.
+
+Repository contract conversion is complete. Canonical native contracts under `contracts/` now cover provider-neutral core subdomains, agent procedure and concrete runtime adapters, repository tooling, documentation and focused specifications, tests, and the temporary change-adapter migration source. Nested ownership preserves broader core and documentation constraints additively, while the authorization/verification relationship is represented by a narrowly scoped applicability contract.
+
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
 
 ## P9 — Migrate this repository off SpecDD
-
-### P9.1 — Introduce native contracts alongside legacy fixtures
-
-- [ ] Translate representative existing `.sdd` ownership and durable semantics into native contracts.
-- [ ] Add parity tests only for semantics Boundary deliberately preserves.
-- [ ] Do not preserve SpecDD behavior merely because it exists.
-- [ ] Use the temporary SpecDD adapter only as migration evidence.
-
-### P9.2 — Convert repository contracts
-
-- [ ] Create native contracts for current Boundary source, adapters, scripts, docs, and tests.
-- [ ] Preserve useful hierarchical constraints through nested ownership plus additive applicability.
-- [ ] Replace broad cross-contract prose with narrowly scoped relationship contracts only where the relationship is durable and useful.
-- [ ] Avoid a repository-wide catch-all contract.
 
 ### P9.3 — Remove legacy provider state
 
