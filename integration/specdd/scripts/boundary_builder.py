@@ -10,7 +10,6 @@ from typing import Any, Iterable, Mapping
 
 from boundary_paths import normalize_target
 from boundary_runtime import (
-    framework_version,
     specdd_cli_version,
     specdd_resolve_supports_intended_targets,
 )
@@ -29,6 +28,8 @@ from cli_output import (
     load_boundary_context_evidence as _load_boundary_context_evidence,
     write_boundary_context_evidence as _write_boundary_context_evidence,
 )
+
+SPECDD_FRAMEWORK_NOT_REQUIRED = "not-required"
 
 
 def build_change_boundary(
@@ -73,7 +74,7 @@ def build_change_boundary(
 
     cli_version = cli_version or specdd_cli_version(root, executable, runner)
     specdd_framework_version = (
-        specdd_framework_version or framework_version(root)
+        specdd_framework_version or SPECDD_FRAMEWORK_NOT_REQUIRED
     )
     has_missing = any(
         not target.absolute_path.exists() for target in normalized.values()

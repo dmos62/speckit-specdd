@@ -144,16 +144,21 @@ class WorkflowGateExitTests(unittest.TestCase):
                     )
                 )
 
-    def test_task_stage_boundary_can_represent_empty_write_scope(self):
+    def test_task_stage_boundary_can_represent_empty_write_scope_without_framework_bootstrap(
+        self,
+    ):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
+            self.assertFalse(
+                (root / ".specdd" / "bootstrap.md").exists()
+            )
+
             value = boundary.build_change_boundary(
                 root,
                 (),
                 feature="001-empty",
                 schema=boundary.load_schema(REPO_ROOT),
                 cli_version="1.1.1",
-                specdd_framework_version="1.5",
                 allow_empty=True,
             )
 
@@ -161,6 +166,10 @@ class WorkflowGateExitTests(unittest.TestCase):
         self.assertEqual([], value["authorities"])
         self.assertEqual([], value["unresolved"])
         self.assertFalse(value["crossBoundary"])
+        self.assertEqual(
+            "not-required",
+            value["generation"]["specddFrameworkVersion"],
+        )
 
 
 class WorkflowFeaturePathTests(unittest.TestCase):

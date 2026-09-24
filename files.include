@@ -4,15 +4,17 @@
 @glob docs/spec-architecture.md
 @glob docs/spec-agent-instructions.md
 @glob docs/spec-lifecycle.md
+@glob skills/scope/SKILL.md
+@glob skills/implement/SKILL.md
+@glob skills/contracts/SKILL.md
 @glob integration/specdd/extension.yml
 @glob integration/specdd/workflow-overlay.yml
-@glob integration/specdd/scripts/*.py
-@glob integration/specdd/scripts/scripts.sdd
-@glob integration/specdd/schemas/change-boundary.schema.json
+@glob integration/specdd/commands/*.md
 @glob integration/specdd-preset/preset.yml
+@glob integration/specdd-preset/commands/*.md
 @glob scripts/bootstrap.sh
 @glob scripts/install.sh
-@glob scripts/scripts.sdd
+@glob tests/test_agent_skills.py
 @glob tests/test_preset.py
 @glob tests/preset_test_support.py
 @glob tests/preset_test_install_support.py
@@ -23,7 +25,6 @@
 @glob tests/workflow_test_source.py
 @glob tests/workflow_test_gate.py
 @glob tests/tests.sdd
-@glob DEBUGGING.md
 @globexclude **/__pycache__/**
 @globexclude **/*.pyc
 @endfilegroup

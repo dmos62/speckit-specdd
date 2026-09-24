@@ -56,6 +56,8 @@ Must:
   Unresolved target records conform to the Change Boundary schema and carry a stable diagnostic `code`.
   Generated Change Boundary output remains deterministic for equivalent resolver input.
   Change Boundary validation rejects cross-field inconsistency before generated or loaded boundary state can influence validation, authorization, or verification.
+  Compatibility Change Boundary generation does not inspect or require SpecDD framework bootstrap state.
+  The legacy `specddFrameworkVersion` generation field uses the stable `not-required` marker unless a compatibility caller explicitly supplies a framework version.
   Boundary refresh records deterministic SHA-256 identities of normalized resolver-returned governing spec sections for each resolved target without copying rule text.
   Refresh-time context evidence is bound to the exact generated Change Boundary and stored as replaceable current-worktree Git metadata rather than authorization evidence.
   Authorization fresh-resolves boundary targets and blocks when effective SpecDD context fingerprints or resolver generation identity differ from refresh-time evidence.
