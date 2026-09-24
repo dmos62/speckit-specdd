@@ -4,11 +4,15 @@
 @glob docs/spec-architecture.md
 @glob docs/spec-agent-instructions.md
 @glob docs/spec-lifecycle.md
+@glob skills/**
 @glob src/boundary/**
+@glob integration/specdd/extension.yml
+@glob integration/specdd/commands/**
 @glob integration/specdd-preset/**
+@glob integration/specdd/workflow-overlay.yml
 @glob integration/specdd/workflow-overlay.sdd
-@glob integration/specdd/scripts/**
 @glob scripts/**
+@glob tests/test_agent_skills.py
 @glob tests/test_preset.py
 @glob tests/preset_test_*.py
 @glob tests/tests.sdd
@@ -19,7 +23,6 @@
 @globexclude src/boundary/contracts/**
 @globexclude src/boundary/context/**
 @globexclude src/boundary/repository/**
-@globexclude integration/specdd/scripts/verification_*.py
 @globexclude tests/test_operation_record.py
 @globexclude tests/test_authorization_lifecycle.py
 @globexclude tests/test_native_verification.py

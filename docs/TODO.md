@@ -10,13 +10,7 @@ Work in the order below unless a newly discovered correctness issue requires rep
 
 ## P7 — Build the progressive agent instruction architecture
 
-### P7.1 — Create canonical Boundary skills
-
-- [ ] Add `boundary-scope`.
-- [ ] Add `boundary-implement`.
-- [ ] Add `boundary-contracts`.
-- [ ] Keep canonical skill text free of current feature IDs, paths, hashes, owners, versions, and generated operation state.
-- [ ] Keep each skill focused and below 250 lines.
+Canonical Boundary procedure now lives in `skills/scope/SKILL.md`, `skills/implement/SKILL.md`, and `skills/contracts/SKILL.md`. Focused tests enforce small vendor-neutral source without volatile operation data. Runtime-specific discovery metadata still belongs to P7.3.
 
 ### P7.2 — Remove framework bootstrap dependence
 

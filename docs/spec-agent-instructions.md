@@ -100,17 +100,15 @@ This skill is not loaded during ordinary implementation unless the operation tra
 
 ## Skill source and materialization
 
-Canonical skill content belongs to Boundary source, independent of an agent vendor.
+Canonical skill procedure is stored as plain Markdown in:
 
-Target source layout:
+    skills/scope/SKILL.md
+    skills/implement/SKILL.md
+    skills/contracts/SKILL.md
 
-    skills/scope/
-    skills/implement/
-    skills/contracts/
+Canonical files contain Boundary procedure only. Runtime-specific frontmatter, discovery paths, command syntax, and wrappers are added by concrete agent adapters.
 
-Agent adapters materialize these capabilities into their supported form.
-
-For Codex this may produce:
+For Codex, materialization may produce:
 
     .agents/skills/boundary-scope/
     .agents/skills/boundary-implement/

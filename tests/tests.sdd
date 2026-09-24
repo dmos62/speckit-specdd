@@ -3,7 +3,7 @@ Spec: Boundary Tests
 Platform: Python/unittest
 
 Purpose:
-  Guard the provider-neutral core boundaries and the bridge's explicit write scope, ownership projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
+  Guard the provider-neutral core boundaries, canonical agent procedure, and the bridge's explicit write scope, ownership projection, lifecycle gates, verification behavior, installation wiring, packaging path, and deterministic output with focused tests that avoid duplicating production logic.
 
 Owns:
   ./test_boundary_core_layout.py
@@ -15,6 +15,7 @@ Owns:
   ./test_authorization_lifecycle.py
   ./test_operation_record.py
   ./test_native_verification.py
+  ./test_agent_skills.py
   ./test_boundary.py
   ./boundary_test_support.py
   ./boundary_test_paths.py
@@ -59,6 +60,7 @@ Must:
   Native authorization-lifecycle tests cover implementation-before-authorization rejection, verified epoch replacement, scope expansion, exact predecessor carry-forward, concurrent dirty mutation, deletion, staging/index transitions, immutable predecessor archival, and Git HEAD changes.
   Native operation-record tests cover atomic evidence content and storage, including failed successor replacement after verified predecessor closure.
   Native verification tests derive actual writes from Git, reject undeclared writes even within an already represented owner, reject native-contract writes during implementation, fresh-resolve changed target context, keep contract-evolution write-kind checks separate from structural validation, and allow adapter-owned generated state to be excluded without hiding authorized targets.
+  Canonical agent-skill tests keep scope, implementation, and contract-evolution procedure small, vendor-neutral, free of volatile operation values, and explicit about deterministic lifecycle boundaries.
   Schema tests reuse the bridge schema validator instead of maintaining an independent JSON Schema implementation.
   Adapter tests preserve path normalization, resolver-backed ownership derivation, deterministic output, and schema validation coverage.
   Adapter tests cover typed intended ordinary-file, directory, and `.sdd` resolver transport whenever the active SpecDD provider exposes the complete intended-target capability.
