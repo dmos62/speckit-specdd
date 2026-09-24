@@ -9,7 +9,9 @@ readonly SPECDD_COMPAT_CLI_REF="feature/resolve-intended-targets"
 readonly MIN_NODE_MAJOR="22"
 readonly ACTIVE_INTEGRATION="codex"
 readonly ACTIVE_COMMANDS_DIR=".agents/skills"
-readonly WORKFLOW_OVERLAY_ID="specdd-bridge"
+readonly BOUNDARY_EXTENSION_ID="boundary"
+readonly BOUNDARY_PRESET_ID="boundary"
+readonly WORKFLOW_OVERLAY_ID="boundary"
 readonly BOOTSTRAP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly MODE="${1:-apply}"
 
@@ -82,11 +84,11 @@ check_workflow_overlay() {
   done
 }
 
-check_bridge_state() {
-  [[ -d .specify/extensions/specdd ]] ||
-    fail "local Boundary adapter extension is not installed"
-  [[ -d .specify/presets/specdd-bridge ]] ||
-    fail "local Boundary task preset is not installed"
+check_adapter_state() {
+  [[ -d ".specify/extensions/${BOUNDARY_EXTENSION_ID}" ]] ||
+    fail "Boundary Spec Kit adapter extension is not installed"
+  [[ -d ".specify/presets/${BOUNDARY_PRESET_ID}" ]] ||
+    fail "Boundary task preset is not installed"
   [[ -f .specify/boundary-runtime/boundary/__init__.py ]] ||
     fail "generated Boundary runtime is missing"
 
@@ -128,7 +130,7 @@ check_initialized_state() {
   [[ -d "$ACTIVE_COMMANDS_DIR" ]] ||
     fail "Codex Spec Kit skills are missing at ${ACTIVE_COMMANDS_DIR}"
 
-  check_bridge_state
+  check_adapter_state
 }
 
 spec_kit_active_integration() {
@@ -166,7 +168,7 @@ run_checks() {
   printf '%s\n' '--- Legacy SpecDD parity lint ---'; specdd lint
 }
 
-install_bridge() {
+install_adapter() {
   bash scripts/install.sh --source .
 }
 
@@ -196,7 +198,7 @@ apply_bootstrap() {
       specify integration switch "$ACTIVE_INTEGRATION" --script ps
   fi
 
-  install_bridge
+  install_adapter
   run_checks
 }
 

@@ -23,6 +23,7 @@ Must:
   The active Spec Kit integration is `codex` so adapter commands and task augmentation can be materialized under the tested Spec Kit `1.0.10`.
   Existing initialized repositories change active integration through supported Spec Kit integration commands.
   ./install.sh installs the Spec Kit adapter extension, small task preset, and project workflow overlay through supported Spec Kit lifecycle commands.
+  The installed extension, preset, and workflow-overlay identities are `boundary`; migration-era source directory names are not public Boundary product identities.
   ./install.sh materializes native Boundary runtime code as generated `.specify/boundary-runtime` state for the adapter wrappers.
   ./install.sh accepts the local checkout, a local archive, or an immutable GitHub tag, commit, or release archive as installation source.
   Remote installation rejects mutable GitHub branch archives.

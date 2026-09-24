@@ -6,9 +6,11 @@ import unittest
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = REPOSITORY_ROOT / "src"
 SCRIPT_ROOT = REPOSITORY_ROOT / "integration" / "specdd" / "scripts"
-if str(SCRIPT_ROOT) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_ROOT))
+for path in (SCRIPT_ROOT, SOURCE_ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 from spec_kit_adapter import (
     SpecKitAdapterError,

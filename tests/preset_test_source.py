@@ -10,6 +10,7 @@ from preset_test_support import (
     SPECDD_PROVIDER_VERSION,
     SPECDD_UPSTREAM_CLI_VERSION,
     SPECKIT_VERSION,
+    WORKFLOW_OVERLAY_PATH,
 )
 
 
@@ -76,6 +77,55 @@ class PresetSourceTests(unittest.TestCase):
                 declaration,
                 bootstrap,
             )
+
+    def test_adapter_uses_boundary_public_identities(self):
+        extension = (
+            EXTENSION_ROOT
+            / "extension.yml"
+        ).read_text(encoding="utf-8")
+        preset = (
+            PRESET_ROOT
+            / "preset.yml"
+        ).read_text(encoding="utf-8")
+        overlay = WORKFLOW_OVERLAY_PATH.read_text(
+            encoding="utf-8"
+        )
+        installer = INSTALLER_PATH.read_text(
+            encoding="utf-8"
+        )
+        bootstrap = BOOTSTRAP_PATH.read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("id: boundary", extension)
+        self.assertIn('name: "Boundary Spec Kit Adapter"', extension)
+        self.assertNotIn("homepage: https://specdd.ai", extension)
+
+        self.assertIn('id: "boundary"', preset)
+        self.assertIn("- id: boundary", preset)
+        self.assertIn('id: "boundary"', overlay)
+
+        for declaration in (
+            'readonly EXTENSION_ID="boundary"',
+            'readonly PRESET_ID="boundary"',
+            'readonly WORKFLOW_OVERLAY_ID="boundary"',
+        ):
+            self.assertIn(declaration, installer)
+
+        for declaration in (
+            'readonly BOUNDARY_EXTENSION_ID="boundary"',
+            'readonly BOUNDARY_PRESET_ID="boundary"',
+            'readonly WORKFLOW_OVERLAY_ID="boundary"',
+        ):
+            self.assertIn(declaration, bootstrap)
+
+        for stale in (
+            "id: specdd\n",
+            'id: "specdd-bridge"',
+        ):
+            self.assertNotIn(stale, extension)
+            self.assertNotIn(stale, preset)
+            self.assertNotIn(stale, overlay)
 
     def test_extension_exposes_only_boundary_adapter_transitions(self):
         manifest = (

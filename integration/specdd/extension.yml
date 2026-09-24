@@ -1,14 +1,13 @@
 schema_version: "1.0"
 
 extension:
-  id: specdd
+  id: boundary
   name: "Boundary Spec Kit Adapter"
   version: "0.1.0"
   description: "Project structured Spec Kit implementation scope into native Boundary authorization and verification."
   author: "Boundary contributors"
-  repository: "https://github.com/specdd/specdd"
+  repository: "https://github.com/specdd/speckit-boundary"
   license: "Apache-2.0"
-  homepage: "https://specdd.ai"
   category: integration
   effect: read-write
 

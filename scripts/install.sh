@@ -2,10 +2,10 @@
 set -euo pipefail
 readonly SPECKIT_VERSION="1.0.10"
 readonly ACTIVE_INTEGRATION="codex"
-readonly EXTENSION_ID="specdd"
-readonly PRESET_ID="specdd-bridge"
+readonly EXTENSION_ID="boundary"
+readonly PRESET_ID="boundary"
 readonly WORKFLOW_ID="speckit"
-readonly WORKFLOW_OVERLAY_ID="specdd-bridge"
+readonly WORKFLOW_OVERLAY_ID="boundary"
 readonly WORKFLOW_OVERLAY_PRIORITY="10"
 readonly CODEX_SKILL_ADAPTER="adapters/codex/materialize.py"
 readonly BOUNDARY_RUNTIME_DIR=".specify/boundary-runtime"
@@ -106,7 +106,7 @@ materialize_boundary_runtime() {
   cp -R "$SOURCE_ROOT/src/boundary" "$BOUNDARY_RUNTIME_DIR/boundary"
 }
 
-install_bridge() {
+install_adapter() {
   ensure_codex_project
 
   specify extension add \
@@ -140,7 +140,7 @@ remove_boundary_skills() {
   done
 }
 
-remove_bridge() {
+remove_adapter() {
   require_command specify
 
   if [[ ! -d .specify ]]; then
@@ -165,13 +165,13 @@ remove_bridge() {
   remove_boundary_skills
 }
 
-check_bridge() {
+check_adapter() {
   check_install_prerequisites
 
   [[ "$(active_integration || true)" == "$ACTIVE_INTEGRATION" ]] ||
     fail "active Spec Kit integration is not ${ACTIVE_INTEGRATION}"
   [[ -d ".specify/extensions/${EXTENSION_ID}" ]] ||
-    fail "Boundary adapter extension is not installed"
+    fail "Boundary Spec Kit adapter extension is not installed"
   [[ -d ".specify/presets/${PRESET_ID}" ]] ||
     fail "Boundary task preset is not installed"
   [[ -f "$BOUNDARY_RUNTIME_DIR/boundary/__init__.py" ]] ||
@@ -239,12 +239,12 @@ case "$ACTION" in
     check_install_prerequisites
     materialize_source "$SOURCE"
     require_source_tree
-    install_bridge
+    install_adapter
     ;;
   check)
-    check_bridge
+    check_adapter
     ;;
   remove)
-    remove_bridge
+    remove_adapter
     ;;
 esac

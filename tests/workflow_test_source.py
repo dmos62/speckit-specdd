@@ -14,7 +14,7 @@ class WorkflowSourceTests(unittest.TestCase):
         )
 
         self.assertIn(
-            'id: "specdd-bridge"',
+            'id: "boundary"',
             content,
         )
         self.assertIn(

@@ -1,4 +1,4 @@
-id: "specdd-bridge"
+id: "boundary"
 extends: "speckit"
 priority: 10
 enabled: true
@@ -8,12 +8,12 @@ edits:
     step:
       id: boundary-authorize
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "boundary workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/adapter_gate.py authorize'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "boundary workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/boundary/scripts/adapter_gate.py authorize'
       timeout: 300
 
   - insert_after: implement
     step:
       id: boundary-verify
       type: shell
-      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "boundary workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/specdd/scripts/adapter_gate.py verify'
+      run: 'command -v uv >/dev/null 2>&1 || { printf "%s\n" "boundary workflow gate: required command not found: uv; install uv before retrying" >&2; exit 2; }; uv run --no-project python .specify/extensions/boundary/scripts/adapter_gate.py verify'
       timeout: 300

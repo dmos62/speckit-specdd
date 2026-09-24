@@ -22,14 +22,14 @@ CODEX_SKILLS_DIR = Path(".agents") / "skills"
 INSTALLED_RUNTIME_PATH = (
     Path(".specify")
     / "extensions"
-    / "specdd"
+    / "boundary"
     / "scripts"
     / "adapter_gate.py"
 )
 INSTALLED_SCHEMA_PATH = (
     Path(".specify")
     / "extensions"
-    / "specdd"
+    / "boundary"
     / "schemas"
     / "change-boundary.schema.json"
 )

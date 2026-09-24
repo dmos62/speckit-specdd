@@ -151,7 +151,7 @@ The Spec Kit adapter uses the active feature directory name as its opaque change
 
 Implementation write scope comes only from dedicated indented `Writes:` metadata attached to checklist tasks. Backticked repository-relative paths in that metadata are projected as exact writes. Incidental path-looking prose elsewhere in a task is not authorization input.
 
-The adapter exposes two host wrappers:
+The adapter is installed with Spec Kit extension identity `boundary`. Under Spec Kit's canonical extension-command namespace, this yields the two public wrappers:
 
 - `speckit.boundary.authorize` at implementation entry;
 - `speckit.boundary.verify` at implementation exit.

@@ -15,7 +15,7 @@ from preset_test_support import (
     skill_file,
 )
 
-BRIDGE_COMMANDS = (
+ADAPTER_COMMANDS = (
     "speckit.boundary.authorize",
     "speckit.boundary.verify",
 )
@@ -58,7 +58,7 @@ def installed_overlay_text(root: Path) -> str:
 
 def assert_resolved_workflow(testcase, output: str) -> None:
     for step in WORKFLOW_STEPS:
-        testcase.assertIn(f"• {step}: project:specdd-bridge", output)
+        testcase.assertIn(f"• {step}: project:boundary", output)
     positions = [output.index(f"• {step}:") for step in WORKFLOW_ORDER]
     testcase.assertEqual(sorted(positions), positions)
 
@@ -112,7 +112,7 @@ def install_workflow_overlay(testcase, root: Path) -> None:
         "speckit",
     )
     require_success(testcase, overlay_list)
-    testcase.assertIn("specdd-bridge", overlay_list.stdout)
+    testcase.assertIn("boundary", overlay_list.stdout)
     resolved = run_command(
         root,
         "specify",
@@ -156,17 +156,17 @@ def install_extension(testcase, root: Path) -> None:
         item["id"]: item
         for item in json.loads(extension_list.stdout)
     }
-    testcase.assertIn("specdd", installed)
-    testcase.assertTrue(installed["specdd"]["enabled"])
+    testcase.assertIn("boundary", installed)
+    testcase.assertTrue(installed["boundary"]["enabled"])
     testcase.assertEqual(
         2,
-        installed["specdd"]["provides"]["commands"],
+        installed["boundary"]["provides"]["commands"],
     )
     testcase.assertEqual(
         0,
-        installed["specdd"]["provides"].get("hooks", 0),
+        installed["boundary"]["provides"].get("hooks", 0),
     )
-    for command in BRIDGE_COMMANDS:
+    for command in ADAPTER_COMMANDS:
         testcase.assertTrue(skill_file(root, command).is_file())
 
 
@@ -184,7 +184,7 @@ def install_preset(testcase, root: Path) -> Path:
             "10",
         ),
     )
-    preset_dir = root / ".specify" / "presets" / "specdd-bridge"
+    preset_dir = root / ".specify" / "presets" / "boundary"
     composed_dir = preset_dir / ".composed"
     for command, markers in COMPOSED_EXPECTATIONS.items():
         filename, upstream, augmentation = markers
@@ -219,7 +219,7 @@ def remove_preset(
             "specify",
             "preset",
             "remove",
-            "specdd-bridge",
+            "boundary",
         ),
     )
     testcase.assertFalse(preset_dir.exists())
@@ -240,7 +240,7 @@ def remove_extension(testcase, root: Path) -> None:
             "specify",
             "extension",
             "remove",
-            "specdd",
+            "boundary",
             "--force",
         ),
     )
@@ -257,8 +257,8 @@ def remove_extension(testcase, root: Path) -> None:
         item["id"]
         for item in json.loads(extension_list.stdout)
     }
-    testcase.assertNotIn("specdd", remaining)
-    for command in BRIDGE_COMMANDS:
+    testcase.assertNotIn("boundary", remaining)
+    for command in ADAPTER_COMMANDS:
         testcase.assertFalse(skill_file(root, command).exists())
 
 
@@ -272,7 +272,7 @@ def remove_workflow_overlay(testcase, root: Path) -> None:
             "overlay",
             "remove",
             "speckit",
-            "specdd-bridge",
+            "boundary",
         ),
     )
     overlay_list = run_command(
@@ -284,4 +284,4 @@ def remove_workflow_overlay(testcase, root: Path) -> None:
         "speckit",
     )
     require_success(testcase, overlay_list)
-    testcase.assertNotIn("specdd-bridge", overlay_list.stdout)
+    testcase.assertNotIn("boundary", overlay_list.stdout)

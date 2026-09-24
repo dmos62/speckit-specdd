@@ -64,7 +64,8 @@ Must:
   Native verification tests derive actual writes from Git, reject undeclared writes even within an already represented owner, reject native-contract writes during implementation, fresh-resolve changed target context, keep contract-evolution write-kind checks separate from structural validation, and allow adapter-owned generated state to be excluded without hiding authorized targets.
   Spec Kit adapter tests project task identity and exact writes only from dedicated structured `Writes:` metadata and ignore incidental path-looking prose.
   Spec Kit adapter lifecycle tests authorize native Boundary operations from fresh task projection and exclude deterministic host-owned feature state during Git-derived verification.
-  Public Spec Kit integration exposes only Boundary authorization and verification wrappers; planning context and task validation are not public lifecycle states.
+  Public Spec Kit integration uses Boundary extension, preset, and workflow identities and exposes only `speckit.boundary.authorize` and `speckit.boundary.verify`.
+  Planning context and task validation are not public lifecycle states.
   The Spec Kit workflow overlay owns implementation-entry authorization and implementation-exit verification without duplicated extension hooks.
   The small task preset adds exact write metadata and on-demand inspection guidance without augmenting planning or convergence commands.
   Canonical agent-skill tests keep scope, implementation, and contract-evolution procedure small, vendor-neutral, free of volatile operation values, and explicit about deterministic lifecycle boundaries.

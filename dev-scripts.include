@@ -1,5 +1,3 @@
-@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_spec_kit_adapter.py'"
-@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_preset.py'"
-@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_workflow.py'"
-@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_boundary_core_layout.py'"
+@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_native_contract_*.py'"
+@cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_boundary.py'"
 @cli! bash -lic "PYTHONPATH=src uv run --no-project python -m unittest discover -s tests -p 'test_*.py'"

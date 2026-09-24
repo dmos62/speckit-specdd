@@ -8,24 +8,11 @@ The native path provides deterministic canonical contract discovery, parsing, gr
 
 Canonical Boundary procedure is deterministically materialized from `skills/*/SKILL.md` into Codex discovery state. A second concrete Claude Code materializer exercises the same canonical procedure without introducing a generalized runtime-provider framework. Materialized skill bytes contain only fixed runtime metadata plus canonical procedure and remain independent of feature or operation state.
 
-The Spec Kit integration is now reduced to a change-system adapter surface. Planning and task work use on-demand Boundary inspection rather than persisted context or validation phases. Structured task `Writes:` metadata is projected into native Boundary authorization at implementation entry, and actual Git writes are verified at implementation exit. The only public Spec Kit adapter commands are `speckit.boundary.authorize` and `speckit.boundary.verify`; the workflow overlay owns those two blocking transitions. Legacy SpecDD bridge code remains only as migration evidence pending P9 cleanup.
+The Spec Kit integration is now reduced to a change-system adapter surface. Planning and task work use on-demand Boundary inspection rather than persisted context or validation phases. Structured task `Writes:` metadata is projected into native Boundary authorization at implementation entry, and actual Git writes are verified at implementation exit. The adapter uses Boundary host identities, so its public Spec Kit commands are `speckit.boundary.authorize` and `speckit.boundary.verify`; the workflow overlay owns those two blocking transitions. Legacy SpecDD bridge code remains only as migration evidence pending P9 cleanup.
+
+The current `specdd/speckit-boundary` repository/distribution slug and migration-era source layout remain transitional until release ownership and P9 cleanup are complete. They are not runtime or product identities.
 
 Work in the order below unless a newly discovered correctness issue requires reprioritization.
-
-## P8 — Reduce Spec Kit to a change-system adapter
-
-The provider-neutral change-system adapter contract is defined in `docs/spec-change-adapter.md`.
-
-### P8.3 — Remove Spec Kit from product naming
-
-- [ ] Use `Boundary` as the display/product identity.
-- [ ] Use `boundary` for extension/runtime/CLI identities where the host permits it.
-- [ ] Keep Spec Kit naming only in the Spec Kit adapter.
-- [ ] Treat the current repository/distribution slug as transitional until release ownership is finalized.
-- [ ] Add stale-public-identity tests after the migration is atomic enough to avoid false positives.
-
-Done when:
-  Replacing Spec Kit requires a new change adapter rather than changes to native contracts, authorization, skills, or verification.
 
 ## P9 — Migrate this repository off SpecDD
 

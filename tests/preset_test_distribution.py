@@ -52,12 +52,12 @@ class DistributionInstallTests(unittest.TestCase):
             for skill in BOUNDARY_SKILLS
         }
 
-    def _assert_bridge_installed(self, root: Path) -> None:
+    def _assert_adapter_installed(self, root: Path) -> None:
         self.assertTrue(
-            (root / ".specify" / "extensions" / "specdd").is_dir()
+            (root / ".specify" / "extensions" / "boundary").is_dir()
         )
         self.assertTrue(
-            (root / ".specify" / "presets" / "specdd-bridge").is_dir()
+            (root / ".specify" / "presets" / "boundary").is_dir()
         )
         self.assertTrue((root / INSTALLED_RUNTIME_PATH).is_file())
         self.assertTrue((root / INSTALLED_BOUNDARY_RUNTIME).is_file())
@@ -99,7 +99,7 @@ class DistributionInstallTests(unittest.TestCase):
             "speckit",
         )
         require_success(self, overlay)
-        self.assertIn("specdd-bridge", overlay.stdout)
+        self.assertIn("boundary", overlay.stdout)
         overlay_text = installed_overlay_text(root)
         self.assertIn(str(INSTALLED_RUNTIME_PATH), overlay_text)
         self.assertNotIn(
@@ -144,7 +144,7 @@ class DistributionInstallTests(unittest.TestCase):
             )
             require_success(self, first)
             self.assertEqual("codex", active_integration(root))
-            self._assert_bridge_installed(root)
+            self._assert_adapter_installed(root)
 
             check = run_command(
                 root,
@@ -162,10 +162,10 @@ class DistributionInstallTests(unittest.TestCase):
             )
             require_success(self, removed)
             self.assertFalse(
-                (root / ".specify" / "extensions" / "specdd").exists()
+                (root / ".specify" / "extensions" / "boundary").exists()
             )
             self.assertFalse(
-                (root / ".specify" / "presets" / "specdd-bridge").exists()
+                (root / ".specify" / "presets" / "boundary").exists()
             )
             self.assertFalse(
                 (root / ".specify" / "boundary-runtime").exists()
@@ -188,7 +188,7 @@ class DistributionInstallTests(unittest.TestCase):
                 str(INSTALLER_PATH.parents[1]),
             )
             require_success(self, second)
-            self._assert_bridge_installed(root)
+            self._assert_adapter_installed(root)
 
     def test_immutable_archive_runs_native_boundary_lifecycle(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -200,7 +200,7 @@ class DistributionInstallTests(unittest.TestCase):
             installed = self._install_remote_archive(root, archive)
             require_success(self, installed)
             archive.unlink()
-            self._assert_bridge_installed(root)
+            self._assert_adapter_installed(root)
             skill_bytes = self._skill_bytes(root)
 
             self.assertFalse((root / "integration" / "specdd").exists())

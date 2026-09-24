@@ -1,18 +1,18 @@
 schema_version: "1.0"
 
 preset:
-  id: "specdd-bridge"
+  id: "boundary"
   name: "Boundary Spec Kit Task Integration"
   version: "0.1.0"
   description: "Add exact Boundary write metadata guidance to Spec Kit task generation."
   author: "Boundary contributors"
-  repository: "https://github.com/specdd/specdd"
+  repository: "https://github.com/specdd/speckit-boundary"
   license: "Apache-2.0"
 
 requires:
   speckit_version: "==1.0.10"
   extensions:
-    - id: specdd
+    - id: boundary
       version: "==0.1.0"
       required: true
 
